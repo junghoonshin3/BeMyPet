@@ -1,34 +1,44 @@
 package kr.sjh.core.ktor.model.response
 
 import kotlinx.serialization.Serializable
+import kr.sjh.core.ktor.model.Response
+import nl.adaptivity.xmlutil.serialization.XmlElement
+import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
 @Serializable
+@XmlSerialName("response")
 data class SigunguResponse(
-    val response: Response
-) {
+    @XmlElement val header: Header, @XmlElement val body: Body
+) : Response {
     @Serializable
-    data class Response(
-        val header: Header, val body: Body
+    @XmlSerialName("header")
+    data class Header(
+        @XmlElement val reqNo: Int,
+        @XmlElement val resultCode: String,
+        @XmlElement val resultMsg: String
+    )
+
+    @Serializable
+    @XmlSerialName("body")
+    data class Body(
+        @XmlElement val items: Items,
+        @XmlElement val numOfRows: Int,
+        @XmlElement val pageNo: Int,
+        @XmlElement val totalCount: Int
     ) {
         @Serializable
-        data class Header(
-            val reqNo: Int, val resultCode: String, val resultMsg: String
-        )
-
-        @Serializable
-        data class Body(
-            val items: Items, val numOfRows: Int, val pageNo: Int, val totalCount: Int
+        @XmlSerialName("items")
+        data class Items(
+            @XmlElement val item: List<Item>
         ) {
-            @Serializable
-            data class Items(
-                val item: List<Item>
-            ) {
 
-                @Serializable
-                data class Item(
-                    val uprCd: String, val orgCd: String, val orgdownNm: String
-                )
-            }
+            @Serializable
+            @XmlSerialName("item")
+            data class Item(
+                @XmlElement val uprCd: String,
+                @XmlElement val orgCd: String,
+                @XmlElement val orgdownNm: String
+            )
         }
     }
 }

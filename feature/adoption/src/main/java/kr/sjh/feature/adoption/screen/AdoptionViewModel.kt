@@ -30,7 +30,7 @@ class AdoptionViewModel @Inject constructor(
     init {
         getAbandonmentPublic(
             AbandonmentPublicRequest(
-                pageNo = 1, numOfRows = 30
+                pageNo = 1, numOfRows = 20
             )
         )
     }
@@ -38,7 +38,6 @@ class AdoptionViewModel @Inject constructor(
     fun onEvent(event: AdoptionEvent) {
         when (event) {
             AdoptionEvent.Refresh -> {
-                Log.d("sjh", "Refresh")
                 getAbandonmentPublic()
             }
         }

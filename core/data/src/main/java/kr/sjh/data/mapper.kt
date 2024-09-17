@@ -1,10 +1,9 @@
 package kr.sjh.data
 
-import kr.sjh.core.ktor.model.response.AbandonmentPublic
 import kr.sjh.core.ktor.model.response.AbandonmentPublicResponse
 import kr.sjh.core.model.adoption.Pet
 
-fun AbandonmentPublic.toPets(): List<Pet> {
+fun AbandonmentPublicResponse.toPets(): List<Pet> {
     return this.body.items.item.map {
         Pet(
             desertionNo = it.desertionNo,

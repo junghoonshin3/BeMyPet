@@ -4,4 +4,5 @@
     <string name="chat">채팅</string>
     <string name="mypage">내정보</string>
     <string name="review">입양후기</string>
+    <string name="refreshing">불러오고 있어요~</string>
 </resources>

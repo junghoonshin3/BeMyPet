@@ -1,37 +1,40 @@
 package kr.sjh.core.ktor.model.response
 
 import kotlinx.serialization.Serializable
+import kr.sjh.core.ktor.model.Response
+import nl.adaptivity.xmlutil.serialization.XmlElement
+import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
 @Serializable
+@XmlSerialName("response")
 data class ShelterResponse(
-    val response: Response
-) {
+    @XmlElement val header: Header,
+    @XmlElement val body: Body
+) : Response {
     @Serializable
-    data class Response(
-        val header: Header,
-        val body: Body
+    @XmlSerialName("header")
+    data class Header(
+        @XmlElement val reqNo: Int,
+        @XmlElement val resultCode: String,
+        @XmlElement val resultMsg: String
+    )
+
+    @Serializable
+    @XmlSerialName("body")
+    data class Body(
+        @XmlElement val items: Items
     ) {
         @Serializable
-        data class Header(
-            val reqNo: Int,
-            val resultCode: String,
-            val resultMsg: String
-        )
-
-        @Serializable
-        data class Body(
-            val items: Items
+        @XmlSerialName("items")
+        data class Items(
+            @XmlElement val item: List<Item>
         ) {
             @Serializable
-            data class Items(
-                val item: List<Item>
-            ) {
-                @Serializable
-                data class Item(
-                    val careRegNo: String,
-                    val careNm: String
-                )
-            }
+            @XmlSerialName("item")
+            data class Item(
+                @XmlElement val careRegNo: String,
+                @XmlElement val careNm: String
+            )
         }
     }
 }

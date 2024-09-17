@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":feature:login"))
     implementation(project(":feature:login-register"))
     implementation(project(":feature:adoption"))
+    implementation(project(":feature:adoption-filter"))
     implementation(project(":feature:review"))
     implementation(project(":feature:chat"))
     implementation(project(":feature:mypage"))

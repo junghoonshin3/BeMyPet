@@ -6,9 +6,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kr.sjh.core.ktor.model.ApiResult
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
-import kr.sjh.core.ktor.model.response.AbandonmentPublic
-import kr.sjh.core.ktor.model.response.AbandonmentPublicResponse
-import kr.sjh.core.ktor.model.response.Error
 import kr.sjh.core.ktor.repository.AdoptionService
 import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.Pet
@@ -22,8 +19,8 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
         flow {
             emit(Response.Loading)
             when (val res = service.getAbandonmentPublic(req)) {
-                is ApiResult.Error -> {
-                    val err = res.error as Error
+                is ApiResult.ServiceError -> {
+                    val err = res.error
                     val exception =
                         RuntimeException("${err.cmmMsgHeader.errMsg}:${err.cmmMsgHeader.returnAuthMsg}")
                     emit(Response.Failure(exception))
@@ -34,7 +31,7 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
                 }
 
                 is ApiResult.Success -> {
-                    val pets = (res.data as AbandonmentPublic).toPets()
+                    val pets = res.data.toPets()
                     emit(Response.Success(pets))
                 }
             }

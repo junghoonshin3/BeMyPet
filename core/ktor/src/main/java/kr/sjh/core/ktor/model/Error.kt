@@ -1,7 +1,6 @@
-package kr.sjh.core.ktor.model.response
+package kr.sjh.core.ktor.model
 
 import kotlinx.serialization.Serializable
-import kr.sjh.core.ktor.model.Response
 import nl.adaptivity.xmlutil.serialization.XmlElement
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
@@ -9,7 +8,7 @@ import nl.adaptivity.xmlutil.serialization.XmlSerialName
 @XmlSerialName("OpenAPI_ServiceResponse")
 data class Error(
     @XmlElement(true) val cmmMsgHeader: CmmMsgHeader
-) : Response
+)
 
 @Serializable
 @XmlSerialName("cmmMsgHeader")

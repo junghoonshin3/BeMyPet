@@ -73,13 +73,6 @@ private fun AdoptionScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        TopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
-            title = "유기 동물",
-            rightRes = R.drawable.baseline_filter_list_24,
-            onRight = {})
-
         PullToRefreshBox(modifier = Modifier.fillMaxSize(),
             isRefreshing = adoptionUiState.isLoading,
             state = pullToRefreshState,
@@ -183,7 +176,7 @@ private fun RefreshIndicator(
         }
 
         if (isRefreshing) {
-            Text(text = "불러오고 있어요~", fontSize = 25.sp)
+            Text(text = context.resources.getString(R.string.refreshing), fontSize = 25.sp)
         } else {
             Image(imageVector = imageVector, contentDescription = "animal")
         }
