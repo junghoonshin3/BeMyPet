@@ -1,3 +1,6 @@
+@file:Suppress("UnstableApiUsage")
+
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -12,6 +15,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -22,10 +26,15 @@ dependencyResolutionManagement {
 
 rootProject.name = "BeMyPet"
 include(":app")
-include(":feature:splash")
 include(":core:firebase")
 include(":core:google")
 include(":core:designsystem")
 include(":core:model")
+include(":feature:login-register")
 include(":feature:login")
-include(":feature:login-profile")
+include(":core:data")
+include(":core:ktor")
+include(":feature:chat")
+include(":feature:review")
+include(":feature:adoption")
+include(":feature:mypage")

@@ -1,3 +1,5 @@
+import kr.sjh.convention.ext.androidTestImplementation
+
 plugins {
     alias(libs.plugins.bemypet.android.library)
     alias(libs.plugins.bemypet.android.hilt)
@@ -11,4 +13,5 @@ android {
 
 dependencies {
     implementation(project(":core:model"))
+    androidTestImplementation(libs.androidx.espresso.core)
 }

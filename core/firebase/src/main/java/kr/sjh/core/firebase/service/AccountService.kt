@@ -10,7 +10,6 @@ interface AccountService {
     val userId: String?
     val email: String?
     val firebaseUser: FirebaseUser?
-    suspend fun reloadFirebaseUser(): ReloadUserResponse
     fun signOut()
     suspend fun revokeAccess(): Result<Unit>
 }

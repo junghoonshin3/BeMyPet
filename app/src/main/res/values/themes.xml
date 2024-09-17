@@ -4,11 +4,13 @@
     <style name="Theme.BeMyPet" parent="android:Theme.Material.Light.NoActionBar" />
 
     <style name="Theme.Splash.BeMyPet" parent="Theme.SplashScreen">
-        <item name="android:windowSplashScreenBackground" tools:targetApi="S">#e5e2d8</item>
-        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="S">@mipmap/ic_launcher</item>
-        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="S">
+        <item name="windowSplashScreenBackground">#e5e2d8</item>
+        <item name="windowSplashScreenAnimatedIcon">
+            @mipmap/ic_launcher
+        </item>
+        <item name="windowSplashScreenIconBackgroundColor">
             @color/beige
         </item>
-        <item name="postSplashScreenTheme">@style/Theme.BeMyPet</item>
+        <item name="postSplashScreenTheme" tools:targetApi="S">@style/Theme.BeMyPet</item>
     </style>
 </resources>

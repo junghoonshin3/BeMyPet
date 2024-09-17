@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="adoption">펫</string>
+    <string name="chat">채팅</string>
+    <string name="mypage">내정보</string>
+    <string name="review">입양후기</string>
+</resources>

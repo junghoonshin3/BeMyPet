@@ -44,5 +44,9 @@ gradlePlugin {
             id = "bemypet.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
+        register("ktor") {
+            id = "bemypet.ktor"
+            implementationClass = "KtorConventionPlugin"
+        }
     }
 }

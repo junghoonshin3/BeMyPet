@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.core.splashscreen)
+//    implementation(libs.core.splashscreen)
     implementation(project(":core:firebase"))
+//    implementation(project(":feature:login"))
 }

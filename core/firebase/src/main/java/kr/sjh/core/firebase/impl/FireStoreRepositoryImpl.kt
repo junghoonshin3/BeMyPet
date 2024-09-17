@@ -25,7 +25,7 @@ class FireStoreRepositoryImpl @Inject constructor(
 
     override suspend fun isUserInDatabase(email: String) = runCatching {
         val querySnapshot = userColRef.whereEqualTo("email", email).get().await()
-        querySnapshot.documents.isEmpty()
+        querySnapshot.size() > 0
     }
 
     override suspend fun getUser(): User = accountService.userId?.let { userId ->

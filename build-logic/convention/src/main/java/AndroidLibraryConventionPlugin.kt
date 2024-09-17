@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import kr.sjh.convention.configureKotlinAndroid
 import kr.sjh.convention.ext.testImplementation
 import org.gradle.api.Plugin

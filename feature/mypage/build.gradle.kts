@@ -4,9 +4,10 @@ plugins {
 }
 
 android {
-    namespace = "kr.sjh.login_profile"
+    namespace = "kr.sjh.feature.mypage"
+
 }
 
 dependencies {
-    implementation(project(":core:designsystem"))
+    implementation(project(":core:firebase"))
 }

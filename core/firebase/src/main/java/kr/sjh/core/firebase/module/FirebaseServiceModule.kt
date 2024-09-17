@@ -1,7 +1,7 @@
 package kr.sjh.core.firebase.module
 
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.core.firebase.impl.AccountServiceImpl
@@ -10,16 +10,22 @@ import kr.sjh.core.firebase.impl.StorageRepositoryImpl
 import kr.sjh.core.firebase.service.AccountService
 import kr.sjh.core.firebase.service.FireStoreRepository
 import kr.sjh.core.firebase.service.StorageRepository
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface FirebaseServiceModule {
-    @Binds
-    fun provideAccountService(impl: AccountServiceImpl): AccountService
+object FirebaseServiceModule {
 
-    @Binds
-    fun provideFireStoreService(impl: FireStoreRepositoryImpl): FireStoreRepository
+    @Provides
+    @Singleton
+    fun provideStorageRepository(impl: StorageRepositoryImpl): StorageRepository = impl
 
-    @Binds
-    fun provideStorageService(impl: StorageRepositoryImpl): StorageRepository
+    @Provides
+    @Singleton
+    fun provideAccountService(impl: AccountServiceImpl): AccountService = impl
+
+    @Provides
+    @Singleton
+    fun provideFireStoreRepository(impl: FireStoreRepositoryImpl): FireStoreRepository = impl
 }
+

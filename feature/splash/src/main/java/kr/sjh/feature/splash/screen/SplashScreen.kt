@@ -14,7 +14,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kr.sjh.core.designsystem.theme.background_color
+import kr.sjh.core.designsystem.R
+import kr.sjh.feature.designsystem.theme.background_color
 import kr.sjh.feature.splash.state.AccountState
 
 @Composable
@@ -47,7 +48,6 @@ internal fun SplashRoute(
 
 @Composable
 private fun SplashScreen() {
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -56,7 +56,7 @@ private fun SplashScreen() {
     ) {
         Image(
             modifier = Modifier.size(160.dp),
-            painter = painterResource(id = kr.sjh.core.designsystem.R.drawable.dog),
+            painter = painterResource(id = R.drawable.dog),
             contentDescription = "icon"
         )
     }

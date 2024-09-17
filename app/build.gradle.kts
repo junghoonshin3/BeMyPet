@@ -1,10 +1,13 @@
+import kr.sjh.convention.ext.androidTestImplementation
+import kr.sjh.convention.ext.implementation
+
 plugins {
     alias(libs.plugins.bemypet.android.application)
     alias(libs.plugins.bemypet.android.application.compose)
     alias(libs.plugins.bemypet.android.hilt)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.bemypet.android.application.firebase)
-
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -51,6 +54,23 @@ android {
 }
 
 dependencies {
-    implementation(project(":feature:splash"))
+    implementation(libs.core.splashscreen)
+    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.junit)
+
+    implementation(project(":feature:login"))
+    implementation(project(":feature:login-register"))
+    implementation(project(":feature:adoption"))
+    implementation(project(":feature:review"))
+    implementation(project(":feature:chat"))
+    implementation(project(":feature:mypage"))
+    implementation(project(":core:ktor"))
+    implementation(project(":core:firebase"))
+    implementation(project(":core:google"))
+    implementation(project(":core:model"))
+    implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
+
+
 }

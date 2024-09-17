@@ -4,9 +4,14 @@ plugins {
 }
 
 android {
-    namespace = "kr.sjh.core.login"
+    namespace = "kr.sjh.feature.login"
+
 }
 
 dependencies {
-    implementation(project(":core:designsystem"))
+    implementation(project(":core:google"))
+    implementation(project(":core:data"))
+    implementation(project(":core:firebase"))
+    implementation(libs.play.services.auth)
+    implementation(libs.firebase.auth)
 }
