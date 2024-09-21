@@ -1,21 +1,15 @@
 package kr.sjh.feature.adoption.screen
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,11 +36,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.rememberLottieRetrySignal
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.TopAppBar
+import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
+import kr.sjh.core.designsystem.components.FilterBar
 import kr.sjh.core.designsystem.convertDpToPx
 import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
+import kr.sjh.core.model.adoption.AdoptionFilterType
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionUiState
@@ -73,22 +76,29 @@ private fun AdoptionScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        FilterBar(modifier = Modifier
+            .fillMaxWidth(),
+            items = AdoptionFilterType.entries,
+            onFilterType = {
+                Log.d("sjh", it.filterName)
+            },
+            showFilter = {
+
+            })
         PullToRefreshBox(modifier = Modifier.fillMaxSize(),
-            isRefreshing = adoptionUiState.isLoading,
+            isRefreshing = adoptionUiState.isRefreshing,
             state = pullToRefreshState,
             onRefresh = { onEvent(AdoptionEvent.Refresh) },
             indicator = {
                 RefreshIndicator(
                     modifier = Modifier.fillMaxWidth(),
                     state = pullToRefreshState,
-                    isRefreshing = adoptionUiState.isLoading,
+                    isRefreshing = adoptionUiState.isRefreshing,
                     threshold = threshold
                 )
             }) {
             adoptionUiState.pets?.let { pets ->
-                LazyVerticalGrid(
-                    state = gridState,
-                    columns = GridCells.Fixed(3),
+                EndlessLazyGridColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .offset {
@@ -98,37 +108,39 @@ private fun AdoptionScreen(
                                 )).toInt()
                             )
                         },
-                    contentPadding = PaddingValues(5.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    userScrollEnabled = !adoptionUiState.isLoading
-                ) {
-                    items(pets, key = { it.desertionNo }) { pet ->
-                        Pet(pet)
-                    }
+                    gridState = gridState,
+                    userScrollEnabled = !adoptionUiState.isRefreshing,
+                    items = pets,
+                    itemKey = { it.desertionNo },
+                    loadMore = { onEvent(AdoptionEvent.LoadMore) },
+                ) { item ->
+                    Pet(item)
                 }
             }
-
         }
     }
-
 }
 
 
 @Composable
 private fun Pet(pet: Pet) {
+    val context = LocalContext.current
+    val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
+
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
         .size(100.dp, 200.dp)
         .clickable { }) {
-        AsyncImage(
-            contentScale = ContentScale.Crop,
+        SubcomposeAsyncImage(contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
-            model = pet.popfile,
-            contentDescription = "Pet"
-        )
+            model = imageRequest,
+            contentDescription = "Pet",
+            loading = {
+                LottieLoading()
+            })
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,3 +195,20 @@ private fun RefreshIndicator(
     }
 }
 
+@Composable
+private fun LottieLoading() {
+    val retrySignal = rememberLottieRetrySignal()
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
+        onRetry = { failCount, exception ->
+            retrySignal.awaitRetry()
+            true
+        })
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+    )
+}

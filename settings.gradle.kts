@@ -1,9 +1,4 @@
 @file:Suppress("UnstableApiUsage")
-
-include(":feature:adoption-filter")
-
-
-
 pluginManagement {
     includeBuild("build-logic")
     repositories {

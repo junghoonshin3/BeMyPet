@@ -18,6 +18,6 @@ data class AbandonmentPublicRequest(
     val state: String? = null, // 상태 (optional)
     val neuter_yn: String? = null, // 중성화 여부 (optional)
     val pageNo: Int = 1, // 페이지 번호 (기본값 1)
-    val numOfRows: Int = 10, // 페이지당 개수 (기본값 10)
+    val numOfRows: Int = 20, // 페이지당 개수 (기본값 10)
     val _type: String = JSON // 응답 형식 (기본값 xml)
 )

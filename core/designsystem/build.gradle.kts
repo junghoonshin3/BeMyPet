@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "kr.sjh.core.designsystem"
 }
+
+dependencies {
+    implementation(project(":core:model"))
+}

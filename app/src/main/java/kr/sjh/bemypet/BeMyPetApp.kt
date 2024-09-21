@@ -15,10 +15,7 @@ import androidx.compose.ui.unit.dp
 import kr.sjh.bemypet.navigation.BeMyPetBottomNavigation
 import kr.sjh.bemypet.navigation.BeMyPetNavHost
 import kr.sjh.bemypet.navigation.LoginGraph
-import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.TopAppBar
 import kr.sjh.feature.adoption.navigation.Adoption
-import kr.sjh.feature.adoption_filter.navigation.AdoptionFilter
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -33,25 +30,23 @@ fun BeMyPetApp(
     Surface {
         Scaffold(modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding(), topBar = {
-            TopAppBar(modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-                title = "유기 동물",
-                rightRes = R.drawable.baseline_filter_list_24,
-                onRight = {
-                    appState.navController.navigate(AdoptionFilter)
-                })
-        }, bottomBar = {
-            Log.d("sjh", "appState : ${appState.currentDestination?.route}")
-            BeMyPetBottomNavigation(
-                modifier = Modifier.fillMaxWidth(),
-                destinations = appState.topLevelDestination,
-                currentTopLevelDestination = appState.currentTopLevelDestination,
-                currentDestination = appState.currentDestination,
-                navigateToTopLevelDestination = appState::navigateToTopLevelDestination
-            )
-        }) {
+            .statusBarsPadding(),
+            topBar = {
+                TopAppBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    currentTopLevelDestination = appState.currentTopLevelDestination,
+                )
+            }, bottomBar = {
+                BeMyPetBottomNavigation(
+                    modifier = Modifier.fillMaxWidth(),
+                    destinations = appState.topLevelDestination,
+                    currentTopLevelDestination = appState.currentTopLevelDestination,
+                    currentDestination = appState.currentDestination,
+                    navigateToTopLevelDestination = appState::navigateToTopLevelDestination
+                )
+            }) {
             BeMyPetNavHost(
                 startDestination = startDestination,
                 appState = appState,

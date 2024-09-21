@@ -11,4 +11,5 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:ktor"))
     implementation(libs.coil.compose)
+    implementation(libs.airbnb.lottie)
 }

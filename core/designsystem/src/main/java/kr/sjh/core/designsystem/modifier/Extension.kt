@@ -42,3 +42,4 @@ fun Modifier.centerPullToRefreshIndicator(
     }
     .background(color = containerColor, shape = shape)
     .zIndex(-1f)
+

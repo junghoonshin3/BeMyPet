@@ -1,6 +1,5 @@
 package kr.sjh.bemypet.navigation
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -24,6 +23,7 @@ fun BeMyPetBottomNavigation(
     currentDestination: NavDestination?
 ) {
     if (currentTopLevelDestination == null) return
+
     BottomAppBar(modifier = modifier) {
         destinations.forEach { destination ->
             val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
