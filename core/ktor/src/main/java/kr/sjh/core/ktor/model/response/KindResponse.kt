@@ -23,10 +23,7 @@ data class KindResponse(
     @Serializable
     @XmlSerialName("body")
     data class Body(
-        @XmlElement val items: Items,
-        @XmlElement val numOfRows: Int,
-        @XmlElement val pageNo: Int,
-        @XmlElement val totalCount: Int
+        @XmlElement val items: Items
     ) {
         @Serializable
         @XmlSerialName("items")
@@ -37,7 +34,7 @@ data class KindResponse(
             @XmlSerialName("item")
             data class Item(
                 @XmlElement val kindCd: String,
-                @XmlElement val knm: String
+                @XmlElement val KNm: String
             )
         }
     }

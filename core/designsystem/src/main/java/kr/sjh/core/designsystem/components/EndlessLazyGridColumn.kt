@@ -23,6 +23,7 @@ fun <T> EndlessLazyGridColumn(
     gridState: LazyGridState = rememberLazyGridState(),
     userScrollEnabled: Boolean,
     items: List<T>,
+    columns: GridCells = GridCells.Fixed(3),
     itemKey: (T) -> Any,
     loadMore: () -> Unit,
     itemContent: @Composable (T) -> Unit,
@@ -39,7 +40,7 @@ fun <T> EndlessLazyGridColumn(
     LazyVerticalGrid(
         modifier = modifier,
         state = gridState,
-        columns = GridCells.Fixed(3),
+        columns = columns,
         contentPadding = PaddingValues(5.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

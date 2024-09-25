@@ -28,8 +28,6 @@ class AdoptionServiceImpl @Inject constructor(private val client: HttpClient) : 
         return try {
             val res = client.get("sido?") {
                 parameter("serviceKey", sidoRequest.serviceKey)
-                parameter("numOfRows", sidoRequest.numOfRows)
-                parameter("pageNo", sidoRequest.pageNo)
                 parameter("_type", sidoRequest._type)
             }
             res.successOrError<SidoResponse>()

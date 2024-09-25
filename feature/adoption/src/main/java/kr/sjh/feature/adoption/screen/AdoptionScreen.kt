@@ -1,32 +1,39 @@
 package kr.sjh.feature.adoption.screen
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
@@ -44,26 +51,44 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieRetrySignal
+import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
-import kr.sjh.core.designsystem.components.FilterBar
+import kr.sjh.core.designsystem.components.ExpandableLazyColumn
+import kr.sjh.core.designsystem.components.FilterModalBottomSheet
+import kr.sjh.core.designsystem.components.MultiSelectionFilterList
+import kr.sjh.core.designsystem.components.SectionHeader
 import kr.sjh.core.designsystem.convertDpToPx
 import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
-import kr.sjh.core.model.adoption.AdoptionFilterType
+import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.feature.adoption.filter.Area
+import kr.sjh.feature.adoption.filter.DateRange
+import kr.sjh.feature.adoption.filter.Neuter
+import kr.sjh.feature.adoption.filter.State
+import kr.sjh.feature.adoption.filter.UpKind
 import kr.sjh.feature.adoption.state.AdoptionEvent
+import kr.sjh.feature.adoption.state.AdoptionFilterCategory
+import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 
 @Composable
 fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
-    AdoptionScreen(adoptionUiState, onEvent = viewModel::onEvent)
+    val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
+    AdoptionScreen(
+        adoptionUiState = adoptionUiState,
+        adoptionFilterState = adoptionFilterState,
+        onEvent = viewModel::onEvent
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdoptionScreen(
-    adoptionUiState: AdoptionUiState, onEvent: (AdoptionEvent) -> Unit
+    adoptionUiState: AdoptionUiState,
+    adoptionFilterState: AdoptionFilterState,
+    onEvent: (AdoptionEvent) -> Unit
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
 
@@ -73,17 +98,51 @@ private fun AdoptionScreen(
 
     val gridState = rememberLazyGridState()
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val categories: List<AdoptionFilterCategory> = listOf(
+        AdoptionFilterCategory.DateRange(
+            categoryName = "기간"
+        ), AdoptionFilterCategory.UpKind(
+            categoryName = "축종"
+        ), AdoptionFilterCategory.Area(
+            categoryName = "지역"
+        ), AdoptionFilterCategory.State(
+            categoryName = "상태"
+        ), AdoptionFilterCategory.Neuter(
+            categoryName = "중성화 여부",
+        )
+    )
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        FilterBar(modifier = Modifier
-            .fillMaxWidth(),
-            items = AdoptionFilterType.entries,
-            onFilterType = {
-                Log.d("sjh", it.filterName)
+        MultiSelectionFilterList(modifier = Modifier.fillMaxWidth(),
+            items = categories,
+            selectedItems = adoptionFilterState.selectedCategories,
+            onFilterType = { category ->
+                if (!adoptionFilterState.selectedCategories.contains(category)) {
+                    onEvent(
+                        AdoptionEvent.FilterBottomSheetOpen(
+                            bottomSheetState = FilterBottomSheetState.SHOW
+                        )
+                    )
+                }
+                onEvent(
+                    AdoptionEvent.SelectedCategory(
+                        category = category
+                    )
+                )
+
             },
             showFilter = {
-
+                onEvent(
+                    AdoptionEvent.FilterBottomSheetOpen(
+                        bottomSheetState = FilterBottomSheetState.SHOW
+                    )
+                )
             })
         PullToRefreshBox(modifier = Modifier.fillMaxSize(),
             isRefreshing = adoptionUiState.isRefreshing,
@@ -97,24 +156,103 @@ private fun AdoptionScreen(
                     threshold = threshold
                 )
             }) {
-            adoptionUiState.pets?.let { pets ->
-                EndlessLazyGridColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .offset {
-                            IntOffset(
-                                0, (pullToRefreshState.distanceFraction * threshold.convertDpToPx(
-                                    context
-                                )).toInt()
+            EndlessLazyGridColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset {
+                        IntOffset(
+                            0, (pullToRefreshState.distanceFraction * threshold.convertDpToPx(
+                                context
+                            )).toInt()
+                        )
+                    },
+                gridState = gridState,
+                userScrollEnabled = !adoptionUiState.isRefreshing,
+                items = adoptionUiState.pets,
+                itemKey = { it.desertionNo },
+                loadMore = { onEvent(AdoptionEvent.LoadMore) },
+            ) { item ->
+                Pet(item)
+            }
+            FilterModalBottomSheet(
+                containerColor = Color.White,
+                onDismissRequest = {
+                    onEvent(
+                        AdoptionEvent.FilterBottomSheetOpen(
+                            bottomSheetState = FilterBottomSheetState.HIDE
+                        )
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(top = 30.dp),
+                sheetState = sheetState,
+                bottomSheetType = adoptionFilterState.filterBottomSheetState,
+            ) {
+                ExpandableLazyColumn(modifier = Modifier.weight(1f),
+                    headerItems = categories,
+                    header = { category ->
+                        SectionHeader(category = category, optionContent = { category ->
+                            when (category) {
+                                is AdoptionFilterCategory.DateRange -> {
+                                    DateRange(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        adoptionFilterState = adoptionFilterState,
+                                        onEvent = onEvent,
+                                    )
+                                }
+
+                                is AdoptionFilterCategory.Neuter -> {
+                                    Neuter(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onEvent = onEvent,
+                                        adoptionFilterState = adoptionFilterState
+                                    )
+                                }
+
+                                is AdoptionFilterCategory.State -> {
+                                    State(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onEvent = onEvent,
+                                        adoptionFilterState = adoptionFilterState
+                                    )
+                                }
+
+                                is AdoptionFilterCategory.UpKind -> {
+                                    UpKind(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onEvent = onEvent,
+                                        adoptionFilterState = adoptionFilterState
+                                    )
+                                }
+
+                                is AdoptionFilterCategory.Area -> {
+                                    Area(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onEvent = onEvent,
+                                        adoptionFilterState = adoptionFilterState
+                                    )
+                                }
+                            }
+                        })
+                    })
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            gridState.scrollToItem(0)
+                        }
+                        onEvent(
+                            AdoptionEvent.Apply
+                        )
+                        onEvent(
+                            AdoptionEvent.FilterBottomSheetOpen(
+                                bottomSheetState = FilterBottomSheetState.HIDE
                             )
-                        },
-                    gridState = gridState,
-                    userScrollEnabled = !adoptionUiState.isRefreshing,
-                    items = pets,
-                    itemKey = { it.desertionNo },
-                    loadMore = { onEvent(AdoptionEvent.LoadMore) },
-                ) { item ->
-                    Pet(item)
+                        )
+                    }) {
+                        Text("적용하기")
+                    }
                 }
             }
         }
@@ -126,7 +264,6 @@ private fun AdoptionScreen(
 private fun Pet(pet: Pet) {
     val context = LocalContext.current
     val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
-
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
         .size(100.dp, 200.dp)
@@ -198,7 +335,8 @@ private fun RefreshIndicator(
 @Composable
 private fun LottieLoading() {
     val retrySignal = rememberLottieRetrySignal()
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loading),
         onRetry = { failCount, exception ->
             retrySignal.awaitRetry()
             true

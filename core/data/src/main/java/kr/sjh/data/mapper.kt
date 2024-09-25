@@ -1,7 +1,13 @@
 package kr.sjh.data
 
 import kr.sjh.core.ktor.model.response.AbandonmentPublicResponse
+import kr.sjh.core.ktor.model.response.KindResponse
+import kr.sjh.core.ktor.model.response.SidoResponse
+import kr.sjh.core.ktor.model.response.SigunguResponse
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.core.model.adoption.filter.Kind
+import kr.sjh.core.model.adoption.filter.Sido
+import kr.sjh.core.model.adoption.filter.Sigungu
 
 fun AbandonmentPublicResponse.toPets(): List<Pet> {
     return this.body.items.item.map {
@@ -29,5 +35,30 @@ fun AbandonmentPublicResponse.toPets(): List<Pet> {
             chargeNm = it.chargeNm,
             officetel = it.officetel
         )
+    }
+}
+
+fun SidoResponse.toSidoList(): List<Sido> {
+    return this.body.items.item.map {
+        Sido(
+            orgCd = it.orgCd, orgdownNm = it.orgdownNm
+        )
+    }
+}
+
+fun SigunguResponse.toSigunguList(): List<Sigungu> {
+    return this.body.items.item.map {
+        Sigungu(
+            orgCd = it.orgCd, orgdownNm = it.orgdownNm, uprCd = it.uprCd
+        )
+    }
+}
+
+fun KindResponse.toKindList(): List<Kind> {
+    return this.body.items.item.map {
+        Kind(
+            kindCd = it.kindCd, knm = it.KNm
+        )
+
     }
 }

@@ -22,9 +22,6 @@ data class SigunguResponse(
     @XmlSerialName("body")
     data class Body(
         @XmlElement val items: Items,
-        @XmlElement val numOfRows: Int,
-        @XmlElement val pageNo: Int,
-        @XmlElement val totalCount: Int
     ) {
         @Serializable
         @XmlSerialName("items")
