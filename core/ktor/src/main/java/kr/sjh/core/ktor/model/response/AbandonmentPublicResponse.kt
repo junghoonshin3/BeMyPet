@@ -55,8 +55,9 @@ data class AbandonmentPublicResponse(
                 @XmlElement val careTel: String,
                 @XmlElement val careAddr: String,
                 @XmlElement val orgNm: String,
-                @XmlElement val chargeNm: String,
-                @XmlElement val officetel: String
+                @XmlElement val chargeNm: String? = null,
+                @XmlElement val officetel: String,
+                @XmlElement val noticeComment: String? = null
             )
         }
     }

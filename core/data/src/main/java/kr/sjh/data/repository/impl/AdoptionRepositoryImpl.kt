@@ -25,10 +25,9 @@ import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionService) :
     AdoptionRepository {
-    override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<List<Pet>>> =
+    override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =
         flow {
             emit(Response.Loading)
-            Log.d("sjh", "req: $req")
             when (val res = service.getAbandonmentPublic(req)) {
                 is ApiResult.ServiceError -> {
                     val err = res.error
@@ -42,8 +41,9 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
                 }
 
                 is ApiResult.Success -> {
-                    val pets = res.data.toPets()
-                    emit(Response.Success(pets))
+                    val totalCount = res.data.body.totalCount
+                    val pets = res.data.body.items.toPets()
+                    emit(Response.Success(Pair(pets, totalCount)))
                 }
             }
         }.flowOn(Dispatchers.IO)

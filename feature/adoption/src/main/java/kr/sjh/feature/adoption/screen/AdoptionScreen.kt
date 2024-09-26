@@ -25,6 +25,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -69,6 +71,7 @@ import kr.sjh.feature.adoption.filter.State
 import kr.sjh.feature.adoption.filter.UpKind
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterCategory
+import kr.sjh.feature.adoption.state.AdoptionFilterOptionState
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 
@@ -76,9 +79,11 @@ import kr.sjh.feature.adoption.state.AdoptionUiState
 fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
     val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
+    val selectedFilterOptions by viewModel.selectedFilterOptions.collectAsStateWithLifecycle()
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
         adoptionFilterState = adoptionFilterState,
+        selectedFilterOptions = selectedFilterOptions,
         onEvent = viewModel::onEvent
     )
 }
@@ -88,6 +93,7 @@ fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
     adoptionFilterState: AdoptionFilterState,
+    selectedFilterOptions: AdoptionFilterOptionState,
     onEvent: (AdoptionEvent) -> Unit
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -120,8 +126,7 @@ private fun AdoptionScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         MultiSelectionFilterList(modifier = Modifier.fillMaxWidth(),
-            items = categories,
-            selectedItems = adoptionFilterState.selectedCategories,
+            selectedItems = categories,
             onFilterType = { category ->
                 if (!adoptionFilterState.selectedCategories.contains(category)) {
                     onEvent(
@@ -144,6 +149,13 @@ private fun AdoptionScreen(
                     )
                 )
             })
+        Text(
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = 5.dp),
+            text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}건"
+        )
+
         PullToRefreshBox(modifier = Modifier.fillMaxSize(),
             isRefreshing = adoptionUiState.isRefreshing,
             state = pullToRefreshState,
@@ -198,7 +210,7 @@ private fun AdoptionScreen(
                                 is AdoptionFilterCategory.DateRange -> {
                                     DateRange(
                                         modifier = Modifier.fillMaxWidth(),
-                                        adoptionFilterState = adoptionFilterState,
+                                        optionState = selectedFilterOptions,
                                         onEvent = onEvent,
                                     )
                                 }
@@ -207,7 +219,7 @@ private fun AdoptionScreen(
                                     Neuter(
                                         modifier = Modifier.fillMaxWidth(),
                                         onEvent = onEvent,
-                                        adoptionFilterState = adoptionFilterState
+                                        optionState = selectedFilterOptions,
                                     )
                                 }
 
@@ -215,7 +227,7 @@ private fun AdoptionScreen(
                                     State(
                                         modifier = Modifier.fillMaxWidth(),
                                         onEvent = onEvent,
-                                        adoptionFilterState = adoptionFilterState
+                                        optionState = selectedFilterOptions,
                                     )
                                 }
 
@@ -223,7 +235,7 @@ private fun AdoptionScreen(
                                     UpKind(
                                         modifier = Modifier.fillMaxWidth(),
                                         onEvent = onEvent,
-                                        adoptionFilterState = adoptionFilterState
+                                        optionState = selectedFilterOptions,
                                     )
                                 }
 
@@ -231,7 +243,8 @@ private fun AdoptionScreen(
                                     Area(
                                         modifier = Modifier.fillMaxWidth(),
                                         onEvent = onEvent,
-                                        adoptionFilterState = adoptionFilterState
+                                        adoptionFilterState = adoptionFilterState,
+                                        optionState = selectedFilterOptions,
                                     )
                                 }
                             }
@@ -239,16 +252,18 @@ private fun AdoptionScreen(
                     })
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Button(onClick = {
+                        onEvent(
+                            AdoptionEvent.SelectedInit
+                        )
+                    }) {
+                        Text("선택 초기화")
+                    }
+                    Button(onClick = {
                         coroutineScope.launch {
-                            gridState.scrollToItem(0)
+                            gridState.animateScrollToItem(0)
                         }
                         onEvent(
                             AdoptionEvent.Apply
-                        )
-                        onEvent(
-                            AdoptionEvent.FilterBottomSheetOpen(
-                                bottomSheetState = FilterBottomSheetState.HIDE
-                            )
                         )
                     }) {
                         Text("적용하기")

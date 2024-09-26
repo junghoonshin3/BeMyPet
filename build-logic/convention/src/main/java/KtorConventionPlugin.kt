@@ -14,6 +14,7 @@ class KtorConventionPlugin : Plugin<Project> {
                 implementation(libs.findLibrary("ktor-client-logging").get())
                 implementation(libs.findLibrary("ktor.serialization.kotlinx.xml").get())
                 implementation(libs.findLibrary("ktor.serialization.kotlinx.json").get())
+                implementation(libs.findLibrary("org.slf4j.android").get())
             }
         }
     }

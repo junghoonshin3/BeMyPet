@@ -19,6 +19,6 @@ sealed interface AdoptionEvent {
     data class SelectedState(val state: State) : AdoptionEvent
     data class SelectedNeuter(val neuter: Neuter) : AdoptionEvent
     data class FilterBottomSheetOpen(val bottomSheetState: FilterBottomSheetState) : AdoptionEvent
-
+    data object SelectedInit : AdoptionEvent
     data object Apply : AdoptionEvent
 }

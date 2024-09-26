@@ -27,6 +27,6 @@ class BeMyPetApplication : Application(), ImageLoaderFactory {
                     .build()
             }.diskCachePolicy(CachePolicy.ENABLED).diskCache {
                 DiskCache.Builder().maxSizePercent(0.03).directory(cacheDir).build()
-            }.logger(DebugLogger()).build()
+            }.build()
     }
 }

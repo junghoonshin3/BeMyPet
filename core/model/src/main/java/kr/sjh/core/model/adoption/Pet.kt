@@ -21,6 +21,7 @@ data class Pet(
     val careTel: String,
     val careAddr: String,
     val orgNm: String,
-    val chargeNm: String,
-    val officetel: String
+    val chargeNm: String? = null,
+    val officetel: String,
+    val noticeComment: String? = null
 )

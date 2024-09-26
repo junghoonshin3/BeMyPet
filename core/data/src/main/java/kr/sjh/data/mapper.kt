@@ -9,8 +9,8 @@ import kr.sjh.core.model.adoption.filter.Kind
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 
-fun AbandonmentPublicResponse.toPets(): List<Pet> {
-    return this.body.items.item.map {
+fun AbandonmentPublicResponse.Body.Items.toPets(): List<Pet> {
+    return this.item.map {
         Pet(
             desertionNo = it.desertionNo,
             filename = it.filename,
@@ -33,7 +33,7 @@ fun AbandonmentPublicResponse.toPets(): List<Pet> {
             careAddr = it.careAddr,
             orgNm = it.orgNm,
             chargeNm = it.chargeNm,
-            officetel = it.officetel
+            officetel = it.officetel,
         )
     }
 }

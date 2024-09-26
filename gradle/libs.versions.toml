@@ -38,7 +38,7 @@ kotlinxCollectionsImmutable = "0.3.6"
 ktor = "2.3.12"
 ktor_client_loggin = "2.3.2"
 lottieVersion = "6.5.2"
-
+slf4j="1.7.36"
 
 [libraries]
 # Compose
@@ -108,6 +108,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
 #ktor
+org-slf4j-android = {group = "org.slf4j", name="slf4j-android", version.ref="slf4j"}
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }

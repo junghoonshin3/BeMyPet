@@ -32,7 +32,6 @@ import kr.sjh.core.model.FilterCategory
 @Composable
 fun <T : FilterCategory> MultiSelectionFilterList(
     modifier: Modifier = Modifier,
-    items: List<T>,
     selectedItems: List<T>,
     onFilterType: (T) -> Unit,
     showFilter: () -> Unit
@@ -45,7 +44,7 @@ fun <T : FilterCategory> MultiSelectionFilterList(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items(items) { item ->
+            items(selectedItems) { item ->
                 FilterItem(
                     modifier = Modifier.clip(RoundedCornerShape(20.dp)),
                     item = item,

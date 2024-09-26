@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kr.sjh.core.designsystem.components.DropDownMenu
 import kr.sjh.feature.adoption.state.AdoptionEvent
+import kr.sjh.feature.adoption.state.AdoptionFilterOptionState
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,6 +27,7 @@ fun Area(
     modifier: Modifier = Modifier,
     onEvent: (AdoptionEvent) -> Unit,
     adoptionFilterState: AdoptionFilterState,
+    optionState: AdoptionFilterOptionState,
 ) {
     var expandedSido: Boolean by remember {
         mutableStateOf(false)
@@ -39,7 +41,7 @@ fun Area(
         Column(modifier = Modifier.weight(1f)) {
             DropDownMenu(list = adoptionFilterState.sidoList,
                 expanded = expandedSido,
-                selectedItem = adoptionFilterState.selectedSido,
+                selectedItem = optionState.selectedSido,
                 onExpandedChange = {
                     expandedSido = it
                 },
@@ -73,7 +75,7 @@ fun Area(
         Column(modifier = Modifier.weight(1f)) {
             DropDownMenu(list = adoptionFilterState.sigunguList,
                 expanded = expandedSigungu,
-                selectedItem = adoptionFilterState.selectedSigungu,
+                selectedItem = optionState.selectedSigungu,
                 onExpandedChange = {
                     expandedSigungu = it
                 },

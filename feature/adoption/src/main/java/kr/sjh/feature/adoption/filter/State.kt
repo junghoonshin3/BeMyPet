@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.model.adoption.filter.State
 import kr.sjh.feature.adoption.state.AdoptionEvent
+import kr.sjh.feature.adoption.state.AdoptionFilterOptionState
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.StateOptions
 
@@ -14,13 +15,13 @@ import kr.sjh.feature.adoption.state.StateOptions
 fun State(
     modifier: Modifier = Modifier,
     onEvent: (AdoptionEvent) -> Unit,
-    adoptionFilterState: AdoptionFilterState
+    optionState: AdoptionFilterOptionState
 ) {
     Column(modifier = modifier) {
         StateOptions.entries.forEach { option ->
             CheckBoxButton(
                 title = option.title,
-                selected = option.value == adoptionFilterState.selectedState.value
+                selected = option.value == optionState.selectedState.value
             ) {
                 onEvent(
                     AdoptionEvent.SelectedState(

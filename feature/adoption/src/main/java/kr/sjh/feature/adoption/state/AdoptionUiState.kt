@@ -37,21 +37,24 @@ enum class NeuterOptions(val title: String, val value: String?) {
 
 data class AdoptionFilterState(
     val selectedCategories: List<AdoptionFilterCategory> = listOf(),
+    val filterOptions: AdoptionFilterOptionState = AdoptionFilterOptionState(),
+    val filterBottomSheetState: FilterBottomSheetState = FilterBottomSheetState.HIDE,
+    val sidoList: List<Sido> = emptyList(),
+    val sigunguList: List<Sigungu> = emptyList(),
+)
+
+data class AdoptionFilterOptionState(
     val selectedSido: Sido = Sido(),
     val selectedSigungu: Sigungu = Sigungu(),
     val selectedArea: Area = Area(),
     val selectedUpKind: UpKind = UpKind(),
     val selectedState: State = State(),
     val selectedNeuter: Neuter = Neuter(),
-    val filterBottomSheetState: FilterBottomSheetState = FilterBottomSheetState.HIDE,
-    val kinds: List<Kind> = emptyList(),
-    val sidoList: List<Sido> = emptyList(),
-    val sigunguList: List<Sigungu> = emptyList(),
 )
 
 data class AdoptionUiState(
     val isRefreshing: Boolean = false,
     val isMore: Boolean = false,
     val pets: List<Pet> = emptyList(),
-    val pageNo: Int = 1,
+    val totalCount: Int = 0
 )

@@ -53,8 +53,7 @@ fun <T : FilterCategory> ExpandableLazyColumn(
 
 @Composable
 fun <T : FilterCategory> SectionHeader(
-    category: T,
-    optionContent: @Composable (T) -> Unit
+    category: T, optionContent: @Composable (T) -> Unit
 ) {
     Column {
         Row(
@@ -64,8 +63,7 @@ fun <T : FilterCategory> SectionHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                fontSize = 20.sp,
-                text = category.categoryName, modifier = Modifier.weight(1f)
+                fontSize = 20.sp, text = category.categoryName, modifier = Modifier.weight(1f)
             )
         }
         optionContent(category)
