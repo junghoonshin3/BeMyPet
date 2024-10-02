@@ -12,13 +12,20 @@ import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
 import kr.sjh.core.model.FilterBottomSheetState
+import kr.sjh.core.model.FilterCategory
 import kr.sjh.core.model.Response
+import kr.sjh.core.model.adoption.filter.DateRange
+import kr.sjh.core.model.adoption.filter.Location
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.feature.adoption.state.AdoptionEvent
-import kr.sjh.feature.adoption.state.AdoptionFilterOptionState
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
+import kr.sjh.feature.adoption.state.Category
+import kr.sjh.feature.adoption.state.FilterOption
+import kr.sjh.feature.adoption.state.NeuterOptions
+import kr.sjh.feature.adoption.state.StateOptions
+import kr.sjh.feature.adoption.state.UpKindOptions
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,26 +39,11 @@ class AdoptionViewModel @Inject constructor(
     private val _adoptionFilterState = MutableStateFlow(AdoptionFilterState())
     val adoptionFilterState = _adoptionFilterState.asStateFlow()
 
-    private val _selectedFilterOptions = MutableStateFlow(AdoptionFilterOptionState())
-    val selectedFilterOptions = _selectedFilterOptions.asStateFlow()
-
     private var pageNo = 1
 
 
     init {
-        val req = adoptionFilterState.value.filterOptions.run {
-            AbandonmentPublicRequest(
-                bgnde = selectedArea.start,
-                endde = selectedArea.end,
-                upkind = selectedUpKind.upKindCd,
-                upr_cd = selectedSido.orgCd,
-                org_cd = selectedSigungu.orgCd,
-                state = selectedState.value,
-                neuter_yn = selectedNeuter.value,
-                pageNo = pageNo
-            )
-        }
-        getAbandonmentPublic(req)
+        getAbandonmentPublic()
         getSido()
     }
 
@@ -59,47 +51,39 @@ class AdoptionViewModel @Inject constructor(
         when (event) {
             AdoptionEvent.Refresh -> {
                 pageNo = 1
-                getAbandonmentPublic(adoptionFilterState.value.filterOptions.run {
+                getAbandonmentPublic(
                     AbandonmentPublicRequest(
-                        bgnde = selectedArea.start,
-                        endde = selectedArea.end,
-                        upkind = selectedUpKind.upKindCd,
-                        upr_cd = selectedSido.orgCd,
-                        org_cd = selectedSigungu.orgCd,
-                        state = selectedState.value,
-                        neuter_yn = selectedNeuter.value,
+                        upkind = adoptionFilterState.value.selectedUpKind.value,
+                        state = adoptionFilterState.value.selectedState.value,
+                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
+                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
+                        endde = adoptionFilterState.value.selectedDateRange.endDate,
+                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
+                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd
                     )
-                })
+                )
             }
 
             is AdoptionEvent.LoadMore -> {
                 pageNo++
-                getLoadMore(adoptionFilterState.value.filterOptions.run {
+                getLoadMore(
                     AbandonmentPublicRequest(
-                        bgnde = selectedArea.start,
-                        endde = selectedArea.end,
-                        upkind = selectedUpKind.upKindCd,
-                        upr_cd = selectedSido.orgCd,
-                        org_cd = selectedSigungu.orgCd,
-                        state = selectedState.value,
-                        neuter_yn = selectedNeuter.value,
+                        upkind = adoptionFilterState.value.selectedUpKind.value,
+                        state = adoptionFilterState.value.selectedState.value,
+                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
+                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
+                        endde = adoptionFilterState.value.selectedDateRange.endDate,
+                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
+                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd,
                         pageNo = pageNo
                     )
-                })
+                )
             }
 
             is AdoptionEvent.SelectedCategory -> {
-                _adoptionFilterState.update { state ->
-                    val updateCategories = state.selectedCategories.toMutableList().apply {
-                        if (!contains(event.category)) {
-                            add(event.category)
-                        } else {
-                            remove(event.category)
-                        }
-                    }
-                    Log.d("sjh", "updateCategories : ${updateCategories}")
-                    state.copy(
-                        selectedCategories = updateCategories
+                _adoptionFilterState.update {
+                    it.copy(
+                        filterBottomSheetState = FilterBottomSheetState.SHOW
                     )
                 }
             }
@@ -110,92 +94,114 @@ class AdoptionViewModel @Inject constructor(
                         filterBottomSheetState = event.bottomSheetState,
                     )
                 }
-                _selectedFilterOptions.update {
-                    adoptionFilterState.value.filterOptions
-                }
             }
 
-            is AdoptionEvent.SelectedSigungu -> {
-                _selectedFilterOptions.update {
+            is AdoptionEvent.SelectedDateRange -> {
+                _adoptionFilterState.update {
                     it.copy(
-                        selectedSigungu = event.sigungu
+                        selectedDateRange = event.dateRange,
+                    )
+                }
+
+            }
+
+            AdoptionEvent.Apply -> {
+                pageNo = 1
+                _adoptionFilterState.update {
+                    it.copy(selectedCategory = it.selectedCategory.toMutableList().apply {
+                        if (it.selectedUpKind != UpKindOptions.ALL) {
+                            add(Category.UP_KIND)
+                        } else {
+                            remove(Category.UP_KIND)
+                        }
+
+                        if (it.selectedState != StateOptions.ALL) {
+                            add(Category.STATE)
+                        } else {
+                            remove(Category.STATE)
+                        }
+
+                        if (it.selectedNeuter != NeuterOptions.ALL) {
+                            add(Category.NEUTER)
+                        } else {
+                            remove(Category.NEUTER)
+                        }
+
+                        if (it.selectedLocation.sido.orgCd != null) {
+                            add(Category.LOCATION)
+                        } else {
+                            remove(Category.LOCATION)
+                        }
+
+                        if (it.selectedDateRange.isValidation() && it.selectedDateRange != DateRange()
+                        ) {
+                            add(Category.DATE_RANGE)
+                        } else {
+                            remove(Category.DATE_RANGE)
+                        }
+                    })
+                }
+                getAbandonmentPublic(
+                    request = AbandonmentPublicRequest(
+                        upkind = adoptionFilterState.value.selectedUpKind.value,
+                        state = adoptionFilterState.value.selectedState.value,
+                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
+                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
+                        endde = adoptionFilterState.value.selectedDateRange.endDate,
+                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
+                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd
+                    )
+                )
+            }
+
+            AdoptionEvent.SelectedInit -> {
+                //초기화
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedUpKind = UpKindOptions.ALL,
+                        selectedState = StateOptions.ALL,
+                        selectedNeuter = NeuterOptions.ALL,
+                        selectedLocation = Location(),
+                        selectedDateRange = DateRange(),
+//                        selectedCategory = emptyList()
                     )
                 }
             }
 
-            is AdoptionEvent.SelectedSido -> {
+            is AdoptionEvent.SelectedLocation -> {
+                _adoptionFilterState.update {
+                    if (event.fetchDate) {
+                        getSigungu(SigunguRequest(upr_cd = event.location.sido.orgCd))
+                    }
 
-                _selectedFilterOptions.update {
                     it.copy(
-                        selectedSido = event.sido, selectedSigungu = Sigungu(
-                            //Sigungu 에선 시도는 uprCd..
-                            uprCd = event.sido.orgCd
-                        )
+                        selectedLocation = event.location
                     )
                 }
 
-                event.sido.orgCd?.let {
-                    getSigungu(SigunguRequest(upr_cd = it))
-                }
-            }
-
-            is AdoptionEvent.SelectedArea -> {
-                _selectedFilterOptions.update {
-                    it.copy(
-                        selectedArea = event.area
-                    )
-                }
-            }
-
-            is AdoptionEvent.SelectedUpKind -> {
-                _selectedFilterOptions.update {
-                    it.copy(
-                        selectedUpKind = event.upKind
-                    )
-                }
-            }
-
-            is AdoptionEvent.SelectedState -> {
-                _selectedFilterOptions.update {
-                    it.copy(
-                        selectedState = event.state
-                    )
-                }
             }
 
             is AdoptionEvent.SelectedNeuter -> {
-                _selectedFilterOptions.update {
+                _adoptionFilterState.update {
                     it.copy(
                         selectedNeuter = event.neuter
                     )
                 }
             }
 
-            AdoptionEvent.Apply -> {
-                pageNo = 1
+            is AdoptionEvent.SelectedState -> {
                 _adoptionFilterState.update {
                     it.copy(
-                        filterOptions = selectedFilterOptions.value,
-                        filterBottomSheetState = FilterBottomSheetState.HIDE
+                        selectedState = event.state
                     )
                 }
-                getAbandonmentPublic(adoptionFilterState.value.filterOptions.run {
-                    AbandonmentPublicRequest(
-                        bgnde = selectedArea.start,
-                        endde = selectedArea.end,
-                        upkind = selectedUpKind.upKindCd,
-                        upr_cd = selectedSido.orgCd,
-                        org_cd = selectedSigungu.orgCd,
-                        state = selectedState.value,
-                        neuter_yn = selectedNeuter.value,
-                    )
-                })
-
             }
 
-            AdoptionEvent.SelectedInit -> {
-                _selectedFilterOptions.update {
-                    AdoptionFilterOptionState()
+            is AdoptionEvent.SelectedUpKind -> {
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedUpKind = event.upKind
+                    )
                 }
             }
         }
@@ -313,14 +319,13 @@ class AdoptionViewModel @Inject constructor(
                     Response.Loading -> {}
                     is Response.Success -> {
                         _adoptionFilterState.update {
-                            Log.d("sjh", "result.data : ${result.data}")
                             it.copy(
                                 sigunguList = result.data
+
                             )
                         }
                     }
                 }
-
             }
         }
     }

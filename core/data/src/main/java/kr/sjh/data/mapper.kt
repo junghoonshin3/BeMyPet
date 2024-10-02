@@ -39,26 +39,25 @@ fun AbandonmentPublicResponse.Body.Items.toPets(): List<Pet> {
 }
 
 fun SidoResponse.toSidoList(): List<Sido> {
-    return this.body.items.item.map {
+    return this.body?.items?.item?.map {
         Sido(
             orgCd = it.orgCd, orgdownNm = it.orgdownNm
         )
-    }
+    } ?: emptyList()
 }
 
 fun SigunguResponse.toSigunguList(): List<Sigungu> {
-    return this.body.items.item.map {
+    return this.body?.items?.item?.map {
         Sigungu(
             orgCd = it.orgCd, orgdownNm = it.orgdownNm, uprCd = it.uprCd
         )
-    }
+    } ?: emptyList()
 }
 
 fun KindResponse.toKindList(): List<Kind> {
-    return this.body.items.item.map {
+    return this.body?.items?.item?.map {
         Kind(
             kindCd = it.kindCd, knm = it.KNm
         )
-
-    }
+    } ?: emptyList()
 }

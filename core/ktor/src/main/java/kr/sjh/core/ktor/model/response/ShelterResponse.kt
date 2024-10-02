@@ -1,7 +1,9 @@
 package kr.sjh.core.ktor.model.response
 
 import kotlinx.serialization.Serializable
+import kr.sjh.core.ktor.model.Header
 import kr.sjh.core.ktor.model.Response
+import kr.sjh.core.ktor.model.response.SigunguResponse.Body
 import nl.adaptivity.xmlutil.serialization.XmlElement
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
@@ -9,15 +11,8 @@ import nl.adaptivity.xmlutil.serialization.XmlSerialName
 @XmlSerialName("response")
 data class ShelterResponse(
     @XmlElement val header: Header,
-    @XmlElement val body: Body
+    @XmlElement val body: SigunguResponse.Body? = null
 ) : Response {
-    @Serializable
-    @XmlSerialName("header")
-    data class Header(
-        @XmlElement val reqNo: Int,
-        @XmlElement val resultCode: String,
-        @XmlElement val resultMsg: String
-    )
 
     @Serializable
     @XmlSerialName("body")

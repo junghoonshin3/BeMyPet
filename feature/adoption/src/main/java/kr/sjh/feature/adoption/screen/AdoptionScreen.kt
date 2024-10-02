@@ -1,20 +1,23 @@
 package kr.sjh.feature.adoption.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -23,22 +26,21 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -53,25 +55,16 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieRetrySignal
-import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
-import kr.sjh.core.designsystem.components.ExpandableLazyColumn
 import kr.sjh.core.designsystem.components.FilterModalBottomSheet
-import kr.sjh.core.designsystem.components.MultiSelectionFilterList
-import kr.sjh.core.designsystem.components.SectionHeader
+import kr.sjh.core.designsystem.components.FilterCategoryList
 import kr.sjh.core.designsystem.convertDpToPx
 import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
 import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.feature.adoption.filter.Area
-import kr.sjh.feature.adoption.filter.DateRange
-import kr.sjh.feature.adoption.filter.Neuter
-import kr.sjh.feature.adoption.filter.State
-import kr.sjh.feature.adoption.filter.UpKind
+import kr.sjh.feature.adoption.screen.filter.FilterScreen
 import kr.sjh.feature.adoption.state.AdoptionEvent
-import kr.sjh.feature.adoption.state.AdoptionFilterCategory
-import kr.sjh.feature.adoption.state.AdoptionFilterOptionState
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 
@@ -79,11 +72,9 @@ import kr.sjh.feature.adoption.state.AdoptionUiState
 fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
     val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
-    val selectedFilterOptions by viewModel.selectedFilterOptions.collectAsStateWithLifecycle()
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
         adoptionFilterState = adoptionFilterState,
-        selectedFilterOptions = selectedFilterOptions,
         onEvent = viewModel::onEvent
     )
 }
@@ -93,7 +84,6 @@ fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
     adoptionFilterState: AdoptionFilterState,
-    selectedFilterOptions: AdoptionFilterOptionState,
     onEvent: (AdoptionEvent) -> Unit
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -106,49 +96,41 @@ private fun AdoptionScreen(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val coroutineScope = rememberCoroutineScope()
-
-    val categories: List<AdoptionFilterCategory> = listOf(
-        AdoptionFilterCategory.DateRange(
-            categoryName = "기간"
-        ), AdoptionFilterCategory.UpKind(
-            categoryName = "축종"
-        ), AdoptionFilterCategory.Area(
-            categoryName = "지역"
-        ), AdoptionFilterCategory.State(
-            categoryName = "상태"
-        ), AdoptionFilterCategory.Neuter(
-            categoryName = "중성화 여부",
-        )
-    )
+    LaunchedEffect(adoptionUiState.isRefreshing) {
+        if (!adoptionUiState.isRefreshing) {
+            gridState.animateScrollToItem(0)
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        MultiSelectionFilterList(modifier = Modifier.fillMaxWidth(),
-            selectedItems = categories,
-            onFilterType = { category ->
-                if (!adoptionFilterState.selectedCategories.contains(category)) {
+        FilterCategoryList(modifier = Modifier.fillMaxWidth(),
+            items = adoptionFilterState.categories.keys.toList(),
+            onShow = { onEvent(AdoptionEvent.FilterBottomSheetOpen(FilterBottomSheetState.SHOW)) }) { category ->
+            Box(modifier = Modifier
+                .padding(5.dp)
+                .border(
+                    1.dp, if (adoptionFilterState.selectedCategory.contains(category)) {
+                        Color.Red
+                    } else {
+                        Color.LightGray
+                    }, RoundedCornerShape(10.dp)
+                )
+                .clip(RoundedCornerShape(10.dp))
+                .clickable {
                     onEvent(
-                        AdoptionEvent.FilterBottomSheetOpen(
-                            bottomSheetState = FilterBottomSheetState.SHOW
+                        AdoptionEvent.SelectedCategory(
+                            category
                         )
                     )
-                }
-                onEvent(
-                    AdoptionEvent.SelectedCategory(
-                        category = category
-                    )
+                }) {
+                Text(
+                    modifier = Modifier.padding(10.dp), text = category.displayName
                 )
+            }
 
-            },
-            showFilter = {
-                onEvent(
-                    AdoptionEvent.FilterBottomSheetOpen(
-                        bottomSheetState = FilterBottomSheetState.SHOW
-                    )
-                )
-            })
+        }
         Text(
             modifier = Modifier
                 .align(Alignment.End)
@@ -194,6 +176,9 @@ private fun AdoptionScreen(
                             bottomSheetState = FilterBottomSheetState.HIDE
                         )
                     )
+                    onEvent(
+                        AdoptionEvent.SelectedInit
+                    )
                 },
                 modifier = Modifier
                     .fillMaxSize()
@@ -202,73 +187,11 @@ private fun AdoptionScreen(
                 sheetState = sheetState,
                 bottomSheetType = adoptionFilterState.filterBottomSheetState,
             ) {
-                ExpandableLazyColumn(modifier = Modifier.weight(1f),
-                    headerItems = categories,
-                    header = { category ->
-                        SectionHeader(category = category, optionContent = { category ->
-                            when (category) {
-                                is AdoptionFilterCategory.DateRange -> {
-                                    DateRange(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        optionState = selectedFilterOptions,
-                                        onEvent = onEvent,
-                                    )
-                                }
-
-                                is AdoptionFilterCategory.Neuter -> {
-                                    Neuter(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onEvent = onEvent,
-                                        optionState = selectedFilterOptions,
-                                    )
-                                }
-
-                                is AdoptionFilterCategory.State -> {
-                                    State(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onEvent = onEvent,
-                                        optionState = selectedFilterOptions,
-                                    )
-                                }
-
-                                is AdoptionFilterCategory.UpKind -> {
-                                    UpKind(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onEvent = onEvent,
-                                        optionState = selectedFilterOptions,
-                                    )
-                                }
-
-                                is AdoptionFilterCategory.Area -> {
-                                    Area(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onEvent = onEvent,
-                                        adoptionFilterState = adoptionFilterState,
-                                        optionState = selectedFilterOptions,
-                                    )
-                                }
-                            }
-                        })
-                    })
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Button(onClick = {
-                        onEvent(
-                            AdoptionEvent.SelectedInit
-                        )
-                    }) {
-                        Text("선택 초기화")
-                    }
-                    Button(onClick = {
-                        coroutineScope.launch {
-                            gridState.animateScrollToItem(0)
-                        }
-                        onEvent(
-                            AdoptionEvent.Apply
-                        )
-                    }) {
-                        Text("적용하기")
-                    }
-                }
+                FilterScreen(
+                    modifier = Modifier.weight(1f),
+                    adoptionFilterState = adoptionFilterState,
+                    onEvent = onEvent
+                )
             }
         }
     }
@@ -279,17 +202,33 @@ private fun AdoptionScreen(
 private fun Pet(pet: Pet) {
     val context = LocalContext.current
     val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
-    Box(modifier = Modifier
-        .clip(RoundedCornerShape(10.dp))
-        .size(100.dp, 200.dp)
-        .clickable { }) {
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { }
+    ) {
         SubcomposeAsyncImage(contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(10.dp)),
             model = imageRequest,
             contentDescription = "Pet",
             loading = {
                 LottieLoading()
             })
+        Text(
+            fontWeight = FontWeight.Bold,
+            text = "품종 : ${pet.kindCd}",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            fontWeight = FontWeight.Bold,
+            text = "나이 : ${pet.age}",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

@@ -41,9 +41,11 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
                 }
 
                 is ApiResult.Success -> {
-                    val totalCount = res.data.body.totalCount
-                    val pets = res.data.body.items.toPets()
-                    emit(Response.Success(Pair(pets, totalCount)))
+                    res.data.body?.let { body ->
+                        val totalCount = body.totalCount
+                        val pets = body.items.toPets()
+                        emit(Response.Success(Pair(pets, totalCount)))
+                    }
                 }
             }
         }.flowOn(Dispatchers.IO)

@@ -30,11 +30,11 @@ import kr.sjh.core.designsystem.R
 import kr.sjh.core.model.FilterCategory
 
 @Composable
-fun <T : FilterCategory> MultiSelectionFilterList(
+fun <T : FilterCategory> FilterCategoryList(
     modifier: Modifier = Modifier,
-    selectedItems: List<T>,
-    onFilterType: (T) -> Unit,
-    showFilter: () -> Unit
+    items: List<T>,
+    onShow: () -> Unit,
+    itemContent: @Composable (T) -> Unit,
 ) {
 
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -44,19 +44,14 @@ fun <T : FilterCategory> MultiSelectionFilterList(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items(selectedItems) { item ->
-                FilterItem(
-                    modifier = Modifier.clip(RoundedCornerShape(20.dp)),
-                    item = item,
-                    onFilterType = onFilterType,
-                    isSelected = selectedItems.contains(item)
-                )
+            items(items) { item ->
+                itemContent(item)
             }
         }
         Icon(modifier = Modifier
             .clip(CircleShape)
             .clickable {
-                showFilter()
+                onShow()
             }
             .padding(5.dp)
             .size(30.dp),
@@ -67,22 +62,23 @@ fun <T : FilterCategory> MultiSelectionFilterList(
 
 @Composable
 fun <T : FilterCategory> FilterItem(
-    modifier: Modifier = Modifier, item: T, isSelected: Boolean, onFilterType: (T) -> Unit
+    modifier: Modifier = Modifier, item: T, onFilterType: (T) -> Unit
 ) {
-    val selectedColor by remember(isSelected) {
+    val selectedColor by remember {
         derivedStateOf {
-            if (isSelected) {
+            if (false) {
                 Color.Red
             } else {
                 Color.LightGray
             }
         }
     }
+
     Box(modifier = modifier
         .border(1.dp, selectedColor, RoundedCornerShape(20.dp))
         .clickable { onFilterType(item) }
         .padding(5.dp)
         .sizeIn(minWidth = 50.dp, minHeight = 30.dp), contentAlignment = Alignment.Center) {
-        Text(text = item.categoryName)
+        Text(text = item.displayName)
     }
 }

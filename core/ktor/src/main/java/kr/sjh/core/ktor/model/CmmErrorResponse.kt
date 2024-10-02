@@ -6,14 +6,14 @@ import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
 @Serializable
 @XmlSerialName("OpenAPI_ServiceResponse")
-data class Error(
-    @XmlElement(true) val cmmMsgHeader: CmmMsgHeader
-)
+data class CmmErrorResponse(
+    @XmlElement val cmmMsgHeader: CmmMsgHeader
+) : Response
 
 @Serializable
 @XmlSerialName("cmmMsgHeader")
 data class CmmMsgHeader(
-    @XmlElement(true) val errMsg: String = "",
-    @XmlElement(true) val returnAuthMsg: String = "",
-    @XmlElement(true) val returnReasonCode: String = ""
+    @XmlElement val errMsg: String = "",
+    @XmlElement val returnAuthMsg: String = "",
+    @XmlElement val returnReasonCode: String = ""
 )

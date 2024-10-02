@@ -1,10 +1,15 @@
 package kr.sjh.core.designsystem.components
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -13,21 +18,21 @@ fun <T> DropDownMenu(
     modifier: Modifier = Modifier,
     list: List<T>,
     expanded: Boolean,
-    selectedItem: T,
     onExpandedChange: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
-    selectedText: @Composable ExposedDropdownMenuBoxScope.(T) -> Unit,
-    menuItem: @Composable ColumnScope.(T) -> Unit
+    selectedText: @Composable ExposedDropdownMenuBoxScope.() -> Unit,
+    itemContent: @Composable (T) -> Unit,
 ) {
+
     ExposedDropdownMenuBox(
         modifier = modifier,
         expanded = expanded,
         onExpandedChange = onExpandedChange
     ) {
-        selectedText(selectedItem)
+        selectedText()
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
             list.forEach { sido ->
-                menuItem(sido)
+                itemContent(sido)
             }
         }
     }
