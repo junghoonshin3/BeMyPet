@@ -1,13 +1,18 @@
 package kr.sjh.core.model.adoption.filter
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd(E)")
 
 data class DateRange(
-    val startDate: String = LocalDate.now().minusMonths(3L).format(dateTimeFormatter),
-    val endDate: String = LocalDate.now().format(dateTimeFormatter)
+    val startDate: LocalDateTime = LocalDateTime.now().minusDays(7),
+    val endDate: LocalDateTime = LocalDateTime.now()
 ) {
-    fun isValidation(): Boolean = startDate <= endDate
+    fun isInitSameDate(): Boolean {
+        return startDate.format(dateTimeFormatter) == LocalDateTime.now().minusDays(7)
+            .format(dateTimeFormatter) && endDate.format(dateTimeFormatter) == LocalDateTime.now()
+            .format(dateTimeFormatter)
+    }
 }

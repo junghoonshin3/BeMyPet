@@ -1,23 +1,19 @@
 package kr.sjh.data.repository.impl
 
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kr.sjh.core.ktor.model.ApiResult
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
-import kr.sjh.core.ktor.model.request.KindRequest
 import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
 import kr.sjh.core.ktor.repository.AdoptionService
 import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.core.model.adoption.filter.Kind
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
-import kr.sjh.data.toKindList
 import kr.sjh.data.toPets
 import kr.sjh.data.toSidoList
 import kr.sjh.data.toSigunguList
@@ -41,6 +37,11 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
                 }
 
                 is ApiResult.Success -> {
+                    if (res.data.header.errorMsg != null) {
+                        emit(Response.Failure(Exception(res.data.header.errorMsg)))
+                        return@flow
+                    }
+
                     res.data.body?.let { body ->
                         val totalCount = body.totalCount
                         val pets = body.items.toPets()
@@ -65,6 +66,10 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
             }
 
             is ApiResult.Success -> {
+                if (res.data.header.errorMsg != null) {
+                    emit(Response.Failure(Exception(res.data.header.errorMsg)))
+                    return@flow
+                }
                 val sidoList = res.data.toSidoList().toMutableList().apply {
                     add(0, Sido())
                 }.toList()
@@ -88,6 +93,10 @@ class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionSe
             }
 
             is ApiResult.Success -> {
+                if (res.data.header.errorMsg != null) {
+                    emit(Response.Failure(Exception(res.data.header.errorMsg)))
+                    return@flow
+                }
                 val sigunguList = res.data.toSigunguList().toMutableList().apply {
                     add(0, Sigungu())
                 }.toList()

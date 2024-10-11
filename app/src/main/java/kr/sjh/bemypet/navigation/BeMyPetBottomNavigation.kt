@@ -1,6 +1,7 @@
 package kr.sjh.bemypet.navigation
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
@@ -11,32 +12,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 
 @Composable
 fun BeMyPetBottomNavigation(
     modifier: Modifier = Modifier,
-    destinations: List<TopLevelDestination>,
-    navigateToTopLevelDestination: (TopLevelDestination) -> Unit,
-    currentTopLevelDestination: TopLevelDestination?,
+    destinations: List<BottomNavItem>,
+    navigateToTopLevelDestination: (BottomNavItem) -> Unit,
+    currentBottomNavItem: BottomNavItem?,
     currentDestination: NavDestination?
 ) {
-    if (currentTopLevelDestination == null) return
+    if (currentBottomNavItem == null) return
 
     BottomAppBar(modifier = modifier) {
         destinations.forEach { destination ->
             val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
-            BeMyPetNavigationBarItem(icon = {
-                Icon(
-                    painter = painterResource(id = destination.icon),
-                    contentDescription = destination.contentDes
-                )
-            }, onClick = {
-                navigateToTopLevelDestination(destination)
-            }, label = {
-                Text(text = stringResource(id = destination.title))
-            }, selected = selected)
+            BeMyPetNavigationBarItem(
+                icon = {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(id = destination.icon),
+                        contentDescription = destination.contentDes
+                    )
+                }, onClick = {
+                    navigateToTopLevelDestination(destination)
+                }, label = {
+                    Text(text = stringResource(id = destination.title))
+                }, selected = selected
+            )
         }
     }
 }
@@ -67,7 +72,7 @@ fun RowScope.BeMyPetNavigationBarItem(
     )
 }
 
-private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: TopLevelDestination) =
+private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: BottomNavItem) =
     this?.hierarchy?.any {
         it.route?.substringAfterLast(".")
             ?.contains(destination.contentDes, ignoreCase = true) == true

@@ -1,5 +1,10 @@
 package kr.sjh.core.model.adoption
 
+import androidx.compose.runtime.Stable
+import kotlinx.serialization.Serializable
+
+@Serializable
+@Stable
 data class Pet(
     val desertionNo: String,
     val filename: String,

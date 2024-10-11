@@ -8,24 +8,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
 import kr.sjh.core.model.FilterBottomSheetState
-import kr.sjh.core.model.FilterCategory
 import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.filter.DateRange
 import kr.sjh.core.model.adoption.filter.Location
-import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 import kr.sjh.feature.adoption.state.Category
-import kr.sjh.feature.adoption.state.FilterOption
 import kr.sjh.feature.adoption.state.NeuterOptions
 import kr.sjh.feature.adoption.state.StateOptions
 import kr.sjh.feature.adoption.state.UpKindOptions
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,9 +41,8 @@ class AdoptionViewModel @Inject constructor(
 
     private var pageNo = 1
 
-
     init {
-        getAbandonmentPublic()
+        getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest(pageNo))
         getSido()
     }
 
@@ -52,31 +51,14 @@ class AdoptionViewModel @Inject constructor(
             AdoptionEvent.Refresh -> {
                 pageNo = 1
                 getAbandonmentPublic(
-                    AbandonmentPublicRequest(
-                        upkind = adoptionFilterState.value.selectedUpKind.value,
-                        state = adoptionFilterState.value.selectedState.value,
-                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
-                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
-                        endde = adoptionFilterState.value.selectedDateRange.endDate,
-                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
-                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd
-                    )
+                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
                 )
             }
 
             is AdoptionEvent.LoadMore -> {
                 pageNo++
                 getLoadMore(
-                    AbandonmentPublicRequest(
-                        upkind = adoptionFilterState.value.selectedUpKind.value,
-                        state = adoptionFilterState.value.selectedState.value,
-                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
-                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
-                        endde = adoptionFilterState.value.selectedDateRange.endDate,
-                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
-                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd,
-                        pageNo = pageNo
-                    )
+                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
                 )
             }
 
@@ -102,7 +84,6 @@ class AdoptionViewModel @Inject constructor(
                         selectedDateRange = event.dateRange,
                     )
                 }
-
             }
 
             AdoptionEvent.Apply -> {
@@ -133,7 +114,7 @@ class AdoptionViewModel @Inject constructor(
                             remove(Category.LOCATION)
                         }
 
-                        if (it.selectedDateRange.isValidation() && it.selectedDateRange != DateRange()
+                        if (!it.selectedDateRange.isInitSameDate()
                         ) {
                             add(Category.DATE_RANGE)
                         } else {
@@ -142,15 +123,7 @@ class AdoptionViewModel @Inject constructor(
                     })
                 }
                 getAbandonmentPublic(
-                    request = AbandonmentPublicRequest(
-                        upkind = adoptionFilterState.value.selectedUpKind.value,
-                        state = adoptionFilterState.value.selectedState.value,
-                        neuter_yn = adoptionFilterState.value.selectedNeuter.value,
-                        bgnde = adoptionFilterState.value.selectedDateRange.startDate,
-                        endde = adoptionFilterState.value.selectedDateRange.endDate,
-                        upr_cd = adoptionFilterState.value.selectedLocation.sido.orgCd,
-                        org_cd = adoptionFilterState.value.selectedLocation.sigungu.orgCd
-                    )
+                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
                 )
             }
 
@@ -163,7 +136,6 @@ class AdoptionViewModel @Inject constructor(
                         selectedNeuter = NeuterOptions.ALL,
                         selectedLocation = Location(),
                         selectedDateRange = DateRange(),
-//                        selectedCategory = emptyList()
                     )
                 }
             }
@@ -213,7 +185,9 @@ class AdoptionViewModel @Inject constructor(
             adoptionRepository.getAbandonmentPublic(request).collect { result ->
                 when (result) {
                     is Response.Failure -> {
-                        result.e.printStackTrace()
+                        result.e.message?.let { msg ->
+                            SnackBarManager.showMessage(msg)
+                        }
                         _adoptionUiState.update {
                             //TODO 에러가 난 경우 팝업 or 바텀 시트 다이얼로그 생성
                             it.copy(
@@ -251,6 +225,9 @@ class AdoptionViewModel @Inject constructor(
             adoptionRepository.getAbandonmentPublic(request).collect { result ->
                 when (result) {
                     is Response.Failure -> {
+                        result.e.message?.let { msg ->
+                            SnackBarManager.showMessage(msg)
+                        }
                         _adoptionUiState.update {
                             //TODO 에러가 난 경우 팝업
                             it.copy(
@@ -287,7 +264,9 @@ class AdoptionViewModel @Inject constructor(
             adoptionRepository.getSido(SidoRequest()).collect { result ->
                 when (result) {
                     is Response.Failure -> {
-                        result.e.printStackTrace()
+                        result.e.message?.let { msg ->
+                            SnackBarManager.showMessage(msg)
+                        }
                     }
 
                     Response.Loading -> {
@@ -313,7 +292,9 @@ class AdoptionViewModel @Inject constructor(
             adoptionRepository.getSigungu(req).collect { result ->
                 when (result) {
                     is Response.Failure -> {
-                        result.e.printStackTrace()
+                        result.e.message?.let { msg ->
+                            SnackBarManager.showMessage(msg)
+                        }
                     }
 
                     Response.Loading -> {}

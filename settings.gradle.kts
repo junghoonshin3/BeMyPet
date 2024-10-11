@@ -1,4 +1,10 @@
 @file:Suppress("UnstableApiUsage")
+
+include(":feature:adoption-detail")
+
+
+include(":core:common")
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -32,7 +38,5 @@ include(":feature:login-register")
 include(":feature:login")
 include(":core:data")
 include(":core:ktor")
-include(":feature:chat")
-include(":feature:review")
 include(":feature:adoption")
 include(":feature:mypage")

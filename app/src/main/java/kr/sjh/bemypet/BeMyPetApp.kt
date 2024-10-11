@@ -1,13 +1,14 @@
 package kr.sjh.bemypet
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,23 +31,32 @@ fun BeMyPetApp(
     Surface {
         Scaffold(modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding(),
-            topBar = {
-                TopAppBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    currentTopLevelDestination = appState.currentTopLevelDestination,
-                )
-            }, bottomBar = {
-                BeMyPetBottomNavigation(
-                    modifier = Modifier.fillMaxWidth(),
-                    destinations = appState.topLevelDestination,
-                    currentTopLevelDestination = appState.currentTopLevelDestination,
-                    currentDestination = appState.currentDestination,
-                    navigateToTopLevelDestination = appState::navigateToTopLevelDestination
-                )
-            }) {
+            .statusBarsPadding(), snackbarHost = {
+            SnackbarHost(
+                hostState = appState.snackBarHostState,
+                modifier = Modifier.padding(4.dp),
+                snackbar = { snackBarData ->
+                    Snackbar(snackBarData)
+                }
+            )
+        }, topBar = {
+            TopAppBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                currentTopNavItem = appState.currentTopNavItem,
+                onLeft = appState.onLeft,
+                onRight = appState.onRight
+            )
+        }, bottomBar = {
+            BeMyPetBottomNavigation(
+                modifier = Modifier.fillMaxWidth(),
+                destinations = appState.bottomNavItems,
+                currentBottomNavItem = appState.currentBottomNavItem,
+                currentDestination = appState.currentDestination,
+                navigateToTopLevelDestination = appState::navigateToBottomNavItem
+            )
+        }) {
             BeMyPetNavHost(
                 startDestination = startDestination,
                 appState = appState,

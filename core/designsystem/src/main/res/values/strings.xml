@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="adoption">유기동물</string>
-    <string name="chat">채팅</string>
+    <string name="pet_detail">유기동물 상세</string>
     <string name="mypage">내정보</string>
-    <string name="review">입양후기</string>
     <string name="refreshing">불러오고 있어요~</string>
+    <string name="like_pet">관심동물</string>
 </resources>

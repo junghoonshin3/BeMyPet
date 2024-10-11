@@ -10,6 +10,7 @@ android {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:ktor"))
+    implementation(project(":core:common"))
     implementation(libs.coil.compose)
     implementation(libs.airbnb.lottie)
 }

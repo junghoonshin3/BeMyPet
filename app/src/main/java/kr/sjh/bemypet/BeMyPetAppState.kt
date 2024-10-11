@@ -1,6 +1,8 @@
 package kr.sjh.bemypet
 
 import android.content.res.Resources
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
@@ -8,41 +10,73 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
-import kr.sjh.bemypet.navigation.TopLevelDestination
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+import kr.sjh.bemypet.navigation.BottomNavItem
+import kr.sjh.bemypet.navigation.TopNavItem
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.feature.adoption.navigation.Adoption
-import kr.sjh.feature.chat.navigation.Chat
 import kr.sjh.feature.mypage.navigation.MyPage
-import kr.sjh.feature.review.navigation.Review
 
 class BeMyPetAppState(
     val navController: NavHostController,
     val resources: Resources,
+    val snackBarHostState: SnackbarHostState,
+    val snackBarManager: SnackBarManager,
+    coroutineScope: CoroutineScope,
 ) {
+    init {
+        coroutineScope.launch {
+            snackBarManager.snackBarMessages.filterNotNull().collect { msg ->
+                val (message, duration) = msg
+                snackBarHostState.showSnackbar(
+                    message,
+                    null,
+                    withDismissAction = true,
+                    duration = duration ?: SnackbarDuration.Short
+                )
+                snackBarManager.clean()
+            }
+        }
+    }
+
     val currentDestination: NavDestination?
         @Composable get() = navController.currentBackStackEntryAsState().value?.destination
 
-    val currentTopLevelDestination: TopLevelDestination?
+    val currentBottomNavItem: BottomNavItem?
         @Composable get() = when (currentDestination?.route?.substringAfterLast(".")) {
-            "Adoption" -> TopLevelDestination.Adoption
-            "Review" -> TopLevelDestination.Review
-            "Chat" -> TopLevelDestination.Chat
-            "MyPage" -> TopLevelDestination.MyPage
+            "Adoption" -> BottomNavItem.Adoption
+            "LikePet" -> BottomNavItem.LikePet
+            "MyPage" -> BottomNavItem.MyPage
             else -> null
         }
 
-    val topLevelDestination = listOf(
-        TopLevelDestination.Adoption,
-        TopLevelDestination.Review,
-        TopLevelDestination.Chat,
-        TopLevelDestination.MyPage
+    val currentTopNavItem: TopNavItem?
+        @Composable get() = when (currentDestination?.route?.substringAfterLast(".")) {
+            "Adoption" -> TopNavItem.Adoption
+            "PetDetail/{petInfo}" -> TopNavItem.PetDetail
+            "LikePet" -> TopNavItem.LikePet
+            "MyPage" -> TopNavItem.MyPage
+            else -> null
+        }
+
+    val bottomNavItems = listOf(
+        BottomNavItem.Adoption, BottomNavItem.LikePet, BottomNavItem.MyPage
     )
 
-    fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestination) {
+    val onLeft: () -> Unit
+        get() = { navController.navigateUp() }
+
+    var onRight: () -> Unit
+        get() = { }
+        set(value) = value.invoke()
+
+    fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
         val topLevelNavOptions = navOptions {
             popUpTo(Adoption) {
                 saveState = true
@@ -50,25 +84,20 @@ class BeMyPetAppState(
             launchSingleTop = true
             restoreState = true
         }
-        when (topLevelDestination) {
-            TopLevelDestination.Adoption -> {
+        when (bottomNavItem) {
+            BottomNavItem.Adoption -> {
                 navController.navigate(Adoption, topLevelNavOptions)
             }
 
-            TopLevelDestination.Chat -> {
-                navController.navigate(Chat, topLevelNavOptions)
-            }
-
-            TopLevelDestination.MyPage -> {
+            BottomNavItem.MyPage -> {
                 navController.navigate(MyPage, topLevelNavOptions)
             }
 
-            TopLevelDestination.Review -> {
-                navController.navigate(Review, topLevelNavOptions)
+            BottomNavItem.LikePet -> {
+
             }
         }
     }
-
 }
 
 
@@ -76,9 +105,12 @@ class BeMyPetAppState(
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
     resources: Resources = resources(),
+    snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackBarManager: SnackBarManager = SnackBarManager,
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
 ) = remember(navController) {
     BeMyPetAppState(
-        navController, resources
+        navController, resources, snackBarHostState, snackBarManager, coroutineScope
     )
 }
 

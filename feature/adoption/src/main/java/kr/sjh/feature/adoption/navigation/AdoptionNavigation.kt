@@ -4,9 +4,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.navOptions
 import kotlinx.serialization.Serializable
+import kr.sjh.core.model.Screen
 
 @Serializable
-data object Adoption
+data object Adoption : Screen
 
 fun NavController.navigateToAdoption(
     navOptions: NavOptions? = navOptions {

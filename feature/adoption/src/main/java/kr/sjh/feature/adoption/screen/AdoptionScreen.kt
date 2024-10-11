@@ -3,19 +3,14 @@ package kr.sjh.feature.adoption.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,12 +64,15 @@ import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 
 @Composable
-fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
+fun AdoptionRoute(
+    viewModel: AdoptionViewModel = hiltViewModel(), navigateToPetDetail: (Pet) -> Unit
+) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
     val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
         adoptionFilterState = adoptionFilterState,
+        navigateToAdoptionDetail = navigateToPetDetail,
         onEvent = viewModel::onEvent
     )
 }
@@ -84,6 +82,7 @@ fun AdoptionRoute(viewModel: AdoptionViewModel = hiltViewModel()) {
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
     adoptionFilterState: AdoptionFilterState,
+    navigateToAdoptionDetail: (Pet) -> Unit,
     onEvent: (AdoptionEvent) -> Unit
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -126,7 +125,7 @@ private fun AdoptionScreen(
                     )
                 }) {
                 Text(
-                    modifier = Modifier.padding(10.dp), text = category.displayName
+                    modifier = Modifier.padding(10.dp), text = category.categoryName
                 )
             }
 
@@ -164,9 +163,19 @@ private fun AdoptionScreen(
                 userScrollEnabled = !adoptionUiState.isRefreshing,
                 items = adoptionUiState.pets,
                 itemKey = { it.desertionNo },
-                loadMore = { onEvent(AdoptionEvent.LoadMore) },
+                loadMore = {
+                    if (adoptionUiState.pets.size < adoptionUiState.totalCount) {
+                        onEvent(AdoptionEvent.LoadMore)
+                    }
+                },
             ) { item ->
-                Pet(item)
+                Pet(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable {
+                            navigateToAdoptionDetail(item)
+                        }, pet = item
+                )
             }
             FilterModalBottomSheet(
                 containerColor = Color.White,
@@ -199,13 +208,11 @@ private fun AdoptionScreen(
 
 
 @Composable
-private fun Pet(pet: Pet) {
+private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val context = LocalContext.current
-    val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
+    val imageRequest = ImageRequest.Builder(context).data(pet.filename).build()
     Column(
-        Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .clickable { }
+        modifier = modifier
     ) {
         SubcomposeAsyncImage(contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -289,8 +296,7 @@ private fun RefreshIndicator(
 @Composable
 private fun LottieLoading() {
     val retrySignal = rememberLottieRetrySignal()
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.loading),
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
         onRetry = { failCount, exception ->
             retrySignal.awaitRetry()
             true

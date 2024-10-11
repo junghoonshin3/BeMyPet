@@ -1,5 +1,6 @@
 package kr.sjh.feature.adoption.state
 
+import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.FilterCategory
 import kr.sjh.core.model.adoption.Pet
@@ -8,19 +9,14 @@ import kr.sjh.core.model.adoption.filter.Location
 import kr.sjh.core.model.adoption.filter.Option
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
+import kr.sjh.core.model.adoption.filter.dateTimeFormatter
+import java.time.format.DateTimeFormatter
 
-
-data class AdoptionCategory(
-    val categoryName: String,
-    val displayName: String
-)
-
-enum class Category(override val categoryName: String, override val displayName: String) :
-    FilterCategory {
-    DATE_RANGE("기간", "기간"), LOCATION("지역", "지역"), UP_KIND("축종", "축종"), STATE(
-        "상태", "상태"
+enum class Category(override val categoryName: String) : FilterCategory {
+    DATE_RANGE("기간"), LOCATION("지역"), UP_KIND("축종"), STATE(
+        "상태"
     ),
-    NEUTER("중성화 여부", "중성화 여부")
+    NEUTER("중성화 여부")
 }
 
 sealed class FilterOption {
@@ -45,7 +41,8 @@ enum class NeuterOptions(override val title: String, override val value: String?
 data class AdoptionFilterState(
     val categories: Map<FilterCategory, FilterOption> = mapOf(
         Category.DATE_RANGE to FilterOption.TwoTextFieldOption(
-            DateRange().startDate, DateRange().endDate
+            DateRange().startDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+            DateRange().endDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
         ),
         Category.LOCATION to FilterOption.TwoListOption(listOf(), listOf()),
         Category.UP_KIND to FilterOption.OneListOption(UpKindOptions.entries),
@@ -61,7 +58,26 @@ data class AdoptionFilterState(
     val selectedCategory: List<FilterCategory> = emptyList(),
     val sidoList: List<Sido> = emptyList(),
     val sigunguList: List<Sigungu> = emptyList(),
-)
+) {
+    private val dateTimeFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
+
+    fun toAbandonmentPublicRequest(pageNo: Int): AbandonmentPublicRequest {
+        return AbandonmentPublicRequest(
+            upkind = selectedUpKind.value,
+            state = selectedState.value,
+            neuter_yn = selectedNeuter.value,
+            bgnde = selectedDateRange.startDate.format(
+                dateTimeFormat
+            ),
+            endde = selectedDateRange.endDate.format(
+                dateTimeFormat
+            ),
+            upr_cd = selectedLocation.sido.orgCd,
+            org_cd = selectedLocation.sigungu.orgCd,
+            pageNo = pageNo
+        )
+    }
+}
 
 data class AdoptionUiState(
     val isRefreshing: Boolean = false,

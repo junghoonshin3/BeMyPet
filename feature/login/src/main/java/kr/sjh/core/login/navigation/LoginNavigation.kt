@@ -7,9 +7,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import kotlinx.serialization.Serializable
 import kr.sjh.core.login.screen.LoginRoute
+import kr.sjh.core.model.Screen
 
 @Serializable
-data object Login
+data object Login : Screen
 
 fun NavController.navigateToLogin(
     navOptionsBuilder: NavOptionsBuilder.() -> Unit = {
