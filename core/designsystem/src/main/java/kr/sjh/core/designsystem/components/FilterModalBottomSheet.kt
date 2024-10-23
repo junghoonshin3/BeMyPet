@@ -24,7 +24,7 @@ fun FilterModalBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     bottomSheetType: FilterBottomSheetState = FilterBottomSheetState.HIDE,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     shape: Shape = BottomSheetDefaults.ExpandedShape,
     containerColor: Color = BottomSheetDefaults.ContainerColor,

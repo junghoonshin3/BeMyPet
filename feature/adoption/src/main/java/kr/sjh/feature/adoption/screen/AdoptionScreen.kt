@@ -2,6 +2,7 @@ package kr.sjh.feature.adoption.screen
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.view.MotionEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,12 +37,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -96,7 +99,7 @@ fun AdoptionRoute(
 }
 
 @SuppressLint("RememberReturnType")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
@@ -109,8 +112,6 @@ private fun AdoptionScreen(
         initialFirstVisibleItemIndex = adoptionUiState.lastScrollIndex
     )
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
     val density = LocalDensity.current
 
     val pullToRefreshState = rememberPullToRefreshState()
@@ -121,6 +122,8 @@ private fun AdoptionScreen(
         threshold.roundToPx()
     }
 
+
+    // PullToRefresh 상태 - 새로고침 UI 진행 여부
     val isRefreshingDistance by remember(pullToRefreshState.distanceFraction) {
         derivedStateOf {
             pullToRefreshState.distanceFraction <= 0f
@@ -131,6 +134,8 @@ private fun AdoptionScreen(
         isRefreshingDistance
     })
 
+
+    //TopBar 펼치진 상태
     val isExpandedTopBar by remember(topAppBarScrollBehavior.state) {
         derivedStateOf {
             topAppBarScrollBehavior.state.heightOffset >= 0f
@@ -197,6 +202,7 @@ private fun AdoptionScreen(
                 )
             }
         }
+        Text(text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}")
         CustomPullToRefreshBox(enabled = isExpandedTopBar,
             state = pullToRefreshState,
             indicator = {
@@ -253,7 +259,6 @@ private fun AdoptionScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(top = 30.dp),
-            sheetState = sheetState,
             bottomSheetType = filterState.filterBottomSheetState,
         ) {
             FilterScreen(
@@ -267,7 +272,7 @@ private fun AdoptionScreen(
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val context = LocalContext.current
-    val imageRequest = ImageRequest.Builder(context).data(pet.filename).build()
+    val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
     Column(
         modifier = modifier
     ) {
@@ -347,25 +352,6 @@ private fun RefreshIndicator(
         } else {
             Image(imageVector = imageVector, contentDescription = "animal")
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AdoptionContent(
-    gridState: LazyGridState,
-    pullToRefreshState: PullToRefreshState = rememberPullToRefreshState(),
-    isRefreshing: Boolean,
-    pets: List<Pet>,
-    totalCount: Int,
-    isMore: Boolean,
-    onEvent: (AdoptionEvent) -> Unit,
-    navigateToAdoptionDetail: (Pet) -> Unit
-) {
-    val threshold = PullToRefreshDefaults.PositionalThreshold
-
-    val thresholdPx = with(LocalDensity.current) {
-        threshold.roundToPx()
     }
 }
 

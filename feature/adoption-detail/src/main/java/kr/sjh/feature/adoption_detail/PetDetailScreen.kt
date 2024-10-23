@@ -81,7 +81,9 @@ private fun PetDetailScreen(pet: Pet, onBack: () -> Unit) {
             .background(Color.White)
             .verticalScroll(scrollState)
     ) {
-        TopAppBar(title = {}, modifier = Modifier
+        TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.White, scrolledContainerColor = Color.White
+        ), title = {}, modifier = Modifier
             .fillMaxWidth()
             .height(55.dp), navigationIcon = {
             IconButton(onClick = onBack) {

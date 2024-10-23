@@ -1,5 +1,6 @@
 package kr.sjh.feature.adoption.screen.filter
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
@@ -25,12 +28,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.designsystem.components.DropDownMenu
 import kr.sjh.core.model.FilterBottomSheetState
@@ -55,14 +65,20 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@SuppressLint("RememberReturnType")
 @Composable
 fun FilterScreen(
     modifier: Modifier = Modifier,
     adoptionFilterState: AdoptionFilterState,
     onEvent: (AdoptionEvent) -> Unit
 ) {
-    Column(modifier = modifier) {
-        LazyColumn(modifier = Modifier.weight(1f)) {
+
+    val lazyListState = rememberLazyListState()
+
+    val nestedScrollInteropConnection = rememberNestedScrollInteropConnection()
+
+    Column(modifier = modifier.nestedScroll(nestedScrollInteropConnection)) {
+        LazyColumn(modifier = Modifier.weight(1f), state = lazyListState) {
             items(adoptionFilterState.categories.keys.toList()) { category ->
                 FilterCategoryHeader(category.categoryName)
                 when (category) {
