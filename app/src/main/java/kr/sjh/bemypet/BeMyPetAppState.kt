@@ -18,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kr.sjh.bemypet.navigation.BottomNavItem
-import kr.sjh.bemypet.navigation.TopNavItem
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.mypage.navigation.MyPage
@@ -56,25 +55,9 @@ class BeMyPetAppState(
             else -> null
         }
 
-    val currentTopNavItem: TopNavItem?
-        @Composable get() = when (currentDestination?.route?.substringAfterLast(".")) {
-            "Adoption" -> TopNavItem.Adoption
-            "PetDetail/{petInfo}" -> TopNavItem.PetDetail
-            "LikePet" -> TopNavItem.LikePet
-            "MyPage" -> TopNavItem.MyPage
-            else -> null
-        }
-
     val bottomNavItems = listOf(
         BottomNavItem.Adoption, BottomNavItem.LikePet, BottomNavItem.MyPage
     )
-
-    val onLeft: () -> Unit
-        get() = { navController.navigateUp() }
-
-    var onRight: () -> Unit
-        get() = { }
-        set(value) = value.invoke()
 
     fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
         val topLevelNavOptions = navOptions {

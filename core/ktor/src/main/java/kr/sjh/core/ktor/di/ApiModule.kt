@@ -33,11 +33,11 @@ object ApiModule {
     fun provideHttpClient(): HttpClient {
         return HttpClient(Android) {
             install(HttpTimeout) {
-                requestTimeoutMillis = 5000
+                requestTimeoutMillis = 10000
             }
             install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.ALL
+//                logger = Logger.DEFAULT
+//                level = LogLevel.ALL
             }
             install(DefaultRequest) {
                 url(BuildConfig.BASE_URL)

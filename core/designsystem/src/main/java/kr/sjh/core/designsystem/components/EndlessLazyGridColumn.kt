@@ -2,13 +2,16 @@ package kr.sjh.core.designsystem.components
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -22,13 +25,13 @@ fun <T> EndlessLazyGridColumn(
     modifier: Modifier = Modifier,
     gridState: LazyGridState = rememberLazyGridState(),
     userScrollEnabled: Boolean,
+    contentPadding: PaddingValues = PaddingValues(5.dp),
     items: List<T>,
     columns: GridCells = GridCells.Fixed(3),
     itemKey: (T) -> Any,
     loadMore: () -> Unit,
     itemContent: @Composable (T) -> Unit,
 ) {
-    rememberLazyListState()
 
     val reachedBottom: Boolean by remember { derivedStateOf { gridState.reachedBottom() } }
 
@@ -41,7 +44,7 @@ fun <T> EndlessLazyGridColumn(
         modifier = modifier,
         state = gridState,
         columns = columns,
-        contentPadding = PaddingValues(5.dp),
+        contentPadding = contentPadding,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         userScrollEnabled = userScrollEnabled

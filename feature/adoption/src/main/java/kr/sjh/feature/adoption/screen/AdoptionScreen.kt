@@ -1,6 +1,9 @@
 package kr.sjh.feature.adoption.screen
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,29 +14,40 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -50,11 +64,13 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieRetrySignal
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.CustomPullToRefreshBox
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
-import kr.sjh.core.designsystem.components.FilterModalBottomSheet
 import kr.sjh.core.designsystem.components.FilterCategoryList
-import kr.sjh.core.designsystem.convertDpToPx
+import kr.sjh.core.designsystem.components.FilterModalBottomSheet
 import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
 import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.adoption.Pet
@@ -68,49 +84,100 @@ fun AdoptionRoute(
     viewModel: AdoptionViewModel = hiltViewModel(), navigateToPetDetail: (Pet) -> Unit
 ) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
+
     val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
+
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
-        adoptionFilterState = adoptionFilterState,
+        filterState = adoptionFilterState,
         navigateToAdoptionDetail = navigateToPetDetail,
         onEvent = viewModel::onEvent
     )
 }
 
+@SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
-    adoptionFilterState: AdoptionFilterState,
+    filterState: AdoptionFilterState,
     navigateToAdoptionDetail: (Pet) -> Unit,
     onEvent: (AdoptionEvent) -> Unit
 ) {
-    val pullToRefreshState = rememberPullToRefreshState()
 
-    val context = LocalContext.current
-
-    val threshold = PullToRefreshDefaults.PositionalThreshold
-
-    val gridState = rememberLazyGridState()
+    val gridState = rememberLazyGridState(
+        initialFirstVisibleItemIndex = adoptionUiState.lastScrollIndex
+    )
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(adoptionUiState.isRefreshing) {
-        if (!adoptionUiState.isRefreshing) {
-            gridState.animateScrollToItem(0)
+    val density = LocalDensity.current
+
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    val threshold = 80.dp
+
+    val thresholdPx = with(density) {
+        threshold.roundToPx()
+    }
+
+    val isRefreshingDistance by remember(pullToRefreshState.distanceFraction) {
+        derivedStateOf {
+            pullToRefreshState.distanceFraction <= 0f
         }
     }
 
+    val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(canScroll = {
+        isRefreshingDistance
+    })
+
+    val isExpandedTopBar by remember(topAppBarScrollBehavior.state) {
+        derivedStateOf {
+            topAppBarScrollBehavior.state.heightOffset >= 0f
+        }
+    }
+
+    //마지막 스크롤 인덱스
+    LaunchedEffect(gridState) {
+        snapshotFlow {
+            gridState.firstVisibleItemIndex
+        }.debounce(500L).collectLatest { index ->
+            onEvent(
+                AdoptionEvent.SetLastScrollIndex(
+                    index
+                )
+            )
+        }
+    }
+
+
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) {
-        FilterCategoryList(modifier = Modifier.fillMaxWidth(),
-            items = adoptionFilterState.categories.keys.toList(),
-            onShow = { onEvent(AdoptionEvent.FilterBottomSheetOpen(FilterBottomSheetState.SHOW)) }) { category ->
+        TopAppBar(
+            title = { Text(text = stringResource(id = R.string.adoption)) },
+            scrollBehavior = topAppBarScrollBehavior,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.White, scrolledContainerColor = Color.White
+            )
+        )
+        FilterCategoryList(modifier = Modifier
+            .fillMaxWidth()
+            .height(55.dp),
+            items = filterState.categories.keys.toList(),
+            onShow = {
+                onEvent(
+                    AdoptionEvent.FilterBottomSheetOpen(
+                        FilterBottomSheetState.SHOW
+                    )
+                )
+            }) { category ->
             Box(modifier = Modifier
-                .padding(5.dp)
                 .border(
-                    1.dp, if (adoptionFilterState.selectedCategory.contains(category)) {
+                    1.dp, if (filterState.selectedCategory.contains(category)) {
                         Color.Red
                     } else {
                         Color.LightGray
@@ -123,48 +190,40 @@ private fun AdoptionScreen(
                             category
                         )
                     )
-                }) {
+                }
+                .padding(5.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    modifier = Modifier.padding(10.dp), text = category.categoryName
+                    fontSize = 13.sp, text = category.categoryName
                 )
             }
-
         }
-        Text(
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(end = 5.dp),
-            text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}건"
-        )
-
-        PullToRefreshBox(modifier = Modifier.fillMaxSize(),
-            isRefreshing = adoptionUiState.isRefreshing,
+        CustomPullToRefreshBox(enabled = isExpandedTopBar,
             state = pullToRefreshState,
-            onRefresh = { onEvent(AdoptionEvent.Refresh) },
             indicator = {
                 RefreshIndicator(
                     modifier = Modifier.fillMaxWidth(),
                     state = pullToRefreshState,
                     isRefreshing = adoptionUiState.isRefreshing,
-                    threshold = threshold
+                    threshold = 80.dp
                 )
-            }) {
+            },
+            isRefreshing = adoptionUiState.isRefreshing,
+            onRefresh = { onEvent(AdoptionEvent.Refresh) }) {
             EndlessLazyGridColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .offset {
                         IntOffset(
-                            0, (pullToRefreshState.distanceFraction * threshold.convertDpToPx(
-                                context
-                            )).toInt()
+                            0, (pullToRefreshState.distanceFraction * thresholdPx).toInt()
                         )
                     },
                 gridState = gridState,
                 userScrollEnabled = !adoptionUiState.isRefreshing,
                 items = adoptionUiState.pets,
-                itemKey = { it.desertionNo },
+                itemKey = { item -> item.hashCode() },
                 loadMore = {
-                    if (adoptionUiState.pets.size < adoptionUiState.totalCount) {
+                    // 현재 아이템의 갯수 < 전체 아이템의 수 && api 호출 중이 아니면 로드
+                    if (adoptionUiState.pets.size < adoptionUiState.totalCount && !adoptionUiState.isMore) {
                         onEvent(AdoptionEvent.LoadMore)
                     }
                 },
@@ -177,31 +236,29 @@ private fun AdoptionScreen(
                         }, pet = item
                 )
             }
-            FilterModalBottomSheet(
-                containerColor = Color.White,
-                onDismissRequest = {
-                    onEvent(
-                        AdoptionEvent.FilterBottomSheetOpen(
-                            bottomSheetState = FilterBottomSheetState.HIDE
-                        )
+        }
+        FilterModalBottomSheet(
+            containerColor = Color.White,
+            onDismissRequest = {
+                onEvent(
+                    AdoptionEvent.FilterBottomSheetOpen(
+                        bottomSheetState = FilterBottomSheetState.HIDE
                     )
-                    onEvent(
-                        AdoptionEvent.SelectedInit
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .padding(top = 30.dp),
-                sheetState = sheetState,
-                bottomSheetType = adoptionFilterState.filterBottomSheetState,
-            ) {
-                FilterScreen(
-                    modifier = Modifier.weight(1f),
-                    adoptionFilterState = adoptionFilterState,
-                    onEvent = onEvent
                 )
-            }
+                onEvent(
+                    AdoptionEvent.SelectedInit
+                )
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(top = 30.dp),
+            sheetState = sheetState,
+            bottomSheetType = filterState.filterBottomSheetState,
+        ) {
+            FilterScreen(
+                modifier = Modifier.weight(1f), adoptionFilterState = filterState, onEvent = onEvent
+            )
         }
     }
 }
@@ -293,10 +350,30 @@ private fun RefreshIndicator(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdoptionContent(
+    gridState: LazyGridState,
+    pullToRefreshState: PullToRefreshState = rememberPullToRefreshState(),
+    isRefreshing: Boolean,
+    pets: List<Pet>,
+    totalCount: Int,
+    isMore: Boolean,
+    onEvent: (AdoptionEvent) -> Unit,
+    navigateToAdoptionDetail: (Pet) -> Unit
+) {
+    val threshold = PullToRefreshDefaults.PositionalThreshold
+
+    val thresholdPx = with(LocalDensity.current) {
+        threshold.roundToPx()
+    }
+}
+
 @Composable
 private fun LottieLoading() {
     val retrySignal = rememberLottieRetrySignal()
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loading),
         onRetry = { failCount, exception ->
             retrySignal.awaitRetry()
             true

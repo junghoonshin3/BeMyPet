@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navOptions
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
@@ -60,7 +61,9 @@ fun BeMyPetNavHost(
             )
         ) { backStackEntry ->
             val detail: PetDetail = backStackEntry.toRoute()
-            PetDetailRoute(detail = detail)
+            PetDetailRoute(detail = detail, onBack = {
+                navController.navigateUp()
+            })
         }
 
         composable<MyPage> {

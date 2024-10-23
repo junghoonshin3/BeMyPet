@@ -56,12 +56,26 @@ data class AdoptionFilterState(
     val selectedLocation: Location = Location(),
     val filterBottomSheetState: FilterBottomSheetState = FilterBottomSheetState.HIDE,
     val selectedCategory: List<FilterCategory> = emptyList(),
-    val sidoList: List<Sido> = emptyList(),
+    val sidoList: List<Sido> = listOf(
+        Sido(null, "전체"),
+        Sido("6110000", "서울특별시"),
+        Sido("6260000", "부산광역시"),
+        Sido("6270000", "대구광역시"),
+        Sido("6280000", "인천광역시"),
+        Sido("6290000", "광주광역시"),
+        Sido("5690000", "세종특별자치시"),
+        Sido("6300000", "대전광역시"),
+        Sido("6310000", "울산광역시"),
+        Sido("6410000", "경기도"),
+        Sido("6530000", "강원특별자치도")
+    ),
     val sigunguList: List<Sigungu> = emptyList(),
+    val pageNo: Int = 1,
+    val isSigunguLoading: Boolean = false
 ) {
     private val dateTimeFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
 
-    fun toAbandonmentPublicRequest(pageNo: Int): AbandonmentPublicRequest {
+    fun toAbandonmentPublicRequest(): AbandonmentPublicRequest {
         return AbandonmentPublicRequest(
             upkind = selectedUpKind.value,
             state = selectedState.value,
@@ -83,5 +97,6 @@ data class AdoptionUiState(
     val isRefreshing: Boolean = false,
     val isMore: Boolean = false,
     val pets: List<Pet> = emptyList(),
-    val totalCount: Int = 0
+    val totalCount: Int = 0,
+    val lastScrollIndex: Int = 0
 )

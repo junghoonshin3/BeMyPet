@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kr.sjh.core.designsystem.theme.BeMyPetTheme
 
 @AndroidEntryPoint
 class StartActivity : ComponentActivity() {
@@ -45,7 +46,10 @@ class StartActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             if (accountState != AccountState.Loading) {
-                BeMyPetApp(accountState)
+                BeMyPetTheme {
+                    BeMyPetApp(accountState)
+                }
+
             }
         }
     }

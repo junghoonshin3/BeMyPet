@@ -24,14 +24,19 @@ import kr.sjh.core.model.FilterCategory
 fun <T : FilterCategory> FilterCategoryList(
     modifier: Modifier = Modifier,
     items: List<T>,
+    contentPadding: PaddingValues = PaddingValues(5.dp),
     onShow: () -> Unit,
     itemContent: @Composable (T) -> Unit,
 ) {
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = modifier,
+
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         LazyRow(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(5.dp),
+            contentPadding = contentPadding,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

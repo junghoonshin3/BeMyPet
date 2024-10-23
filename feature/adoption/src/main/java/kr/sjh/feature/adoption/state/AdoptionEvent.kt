@@ -20,4 +20,5 @@ sealed interface AdoptionEvent {
     data class FilterBottomSheetOpen(val bottomSheetState: FilterBottomSheetState) : AdoptionEvent
     data object SelectedInit : AdoptionEvent
     data object Apply : AdoptionEvent
+    data class SetLastScrollIndex(val index: Int) : AdoptionEvent
 }

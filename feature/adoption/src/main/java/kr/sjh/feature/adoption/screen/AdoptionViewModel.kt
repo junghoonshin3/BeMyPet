@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.snackbar.SnackBarManager
@@ -39,26 +40,23 @@ class AdoptionViewModel @Inject constructor(
     private val _adoptionFilterState = MutableStateFlow(AdoptionFilterState())
     val adoptionFilterState = _adoptionFilterState.asStateFlow()
 
-    private var pageNo = 1
-
     init {
-        getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest(pageNo))
-        getSido()
+        getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest())
     }
 
     fun onEvent(event: AdoptionEvent) {
         when (event) {
             AdoptionEvent.Refresh -> {
-                pageNo = 1
+                _adoptionFilterState.update { it.copy(pageNo = 1) }
                 getAbandonmentPublic(
-                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
                 )
             }
 
             is AdoptionEvent.LoadMore -> {
-                pageNo++
+                _adoptionFilterState.update { it.copy(pageNo = it.pageNo.plus(1)) }
                 getLoadMore(
-                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
                 )
             }
 
@@ -87,7 +85,6 @@ class AdoptionViewModel @Inject constructor(
             }
 
             AdoptionEvent.Apply -> {
-                pageNo = 1
                 _adoptionFilterState.update {
                     it.copy(selectedCategory = it.selectedCategory.toMutableList().apply {
                         if (it.selectedUpKind != UpKindOptions.ALL) {
@@ -108,22 +105,21 @@ class AdoptionViewModel @Inject constructor(
                             remove(Category.NEUTER)
                         }
 
-                        if (it.selectedLocation.sido.orgCd != null) {
+                        if (it.selectedLocation.sido.orgCd != null || it.selectedLocation.sigungu.orgCd != null) {
                             add(Category.LOCATION)
                         } else {
                             remove(Category.LOCATION)
                         }
 
-                        if (!it.selectedDateRange.isInitSameDate()
-                        ) {
+                        if (!it.selectedDateRange.isInitSameDate()) {
                             add(Category.DATE_RANGE)
                         } else {
                             remove(Category.DATE_RANGE)
                         }
-                    })
+                    }, pageNo = 1)
                 }
                 getAbandonmentPublic(
-                    _adoptionFilterState.value.toAbandonmentPublicRequest(pageNo)
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
                 )
             }
 
@@ -173,6 +169,14 @@ class AdoptionViewModel @Inject constructor(
                 _adoptionFilterState.update {
                     it.copy(
                         selectedUpKind = event.upKind
+                    )
+                }
+            }
+
+            is AdoptionEvent.SetLastScrollIndex -> {
+                _adoptionUiState.update {
+                    it.copy(
+                        lastScrollIndex = event.index
                     )
                 }
             }
@@ -259,34 +263,6 @@ class AdoptionViewModel @Inject constructor(
         }
     }
 
-    private fun getSido() {
-        viewModelScope.launch {
-            adoptionRepository.getSido(SidoRequest()).collect { result ->
-                when (result) {
-                    is Response.Failure -> {
-                        result.e.message?.let { msg ->
-                            SnackBarManager.showMessage(msg)
-                        }
-                    }
-
-                    Response.Loading -> {
-
-                    }
-
-                    is Response.Success -> {
-                        _adoptionFilterState.update {
-                            Log.d("sjh", "result.data : ${result.data}")
-                            it.copy(
-                                sidoList = result.data,
-                            )
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-
     private fun getSigungu(req: SigunguRequest) {
         viewModelScope.launch {
             adoptionRepository.getSigungu(req).collect { result ->
@@ -295,14 +271,26 @@ class AdoptionViewModel @Inject constructor(
                         result.e.message?.let { msg ->
                             SnackBarManager.showMessage(msg)
                         }
-                    }
-
-                    Response.Loading -> {}
-                    is Response.Success -> {
                         _adoptionFilterState.update {
                             it.copy(
-                                sigunguList = result.data
+                                isSigunguLoading = false
+                            )
+                        }
+                    }
 
+                    Response.Loading -> {
+                        _adoptionFilterState.update {
+                            it.copy(
+                                isSigunguLoading = true
+                            )
+                        }
+                    }
+
+                    is Response.Success -> {
+                        Log.d("sjh", "list : ${result.data}")
+                        _adoptionFilterState.update {
+                            it.copy(
+                                sigunguList = result.data, isSigunguLoading = false
                             )
                         }
                     }

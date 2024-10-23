@@ -35,6 +35,7 @@ import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.designsystem.components.DropDownMenu
 import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.FilterCategory
+import kr.sjh.core.model.LoadingState
 import kr.sjh.core.model.adoption.filter.DateRange
 import kr.sjh.core.model.adoption.filter.Location
 import kr.sjh.core.model.adoption.filter.Option
@@ -74,6 +75,7 @@ fun FilterScreen(
                             location = adoptionFilterState.selectedLocation,
                             sido = adoptionFilterState.sidoList,
                             sigungu = adoptionFilterState.sigunguList,
+                            isSigunguLoading = adoptionFilterState.isSigunguLoading,
                             onEvent = onEvent
                         )
                     }
@@ -158,7 +160,11 @@ private fun DateRangeComponent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Location(
-    location: Location, sido: List<Sido>, sigungu: List<Sigungu>, onEvent: (AdoptionEvent) -> Unit
+    location: Location,
+    sido: List<Sido>,
+    sigungu: List<Sigungu>,
+    onEvent: (AdoptionEvent) -> Unit,
+    isSigunguLoading: Boolean = false,
 ) {
     var expanded1 by remember {
         mutableStateOf(false)
@@ -209,7 +215,7 @@ private fun Location(
                     onValueChange = {})
             }) { item ->
             Box(modifier = Modifier
-                .clickable {
+                .clickable(enabled = !isSigunguLoading) {
                     onEvent(
                         AdoptionEvent.SelectedLocation(
                             location.copy(
