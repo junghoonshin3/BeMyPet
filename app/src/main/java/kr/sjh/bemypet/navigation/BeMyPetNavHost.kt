@@ -1,5 +1,6 @@
 package kr.sjh.bemypet.navigation
 
+import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -20,8 +21,12 @@ import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.navigation.navigateToAdoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
 import kr.sjh.feature.adoption_detail.PetDetailRoute
+import kr.sjh.feature.adoption_detail.PetPinedZoomRoute
+import kr.sjh.feature.adoption_detail.PetPinedZoomScreen
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
+import kr.sjh.feature.adoption_detail.navigation.PinchZoom
 import kr.sjh.feature.adoption_detail.navigation.navigateToPetDetail
+import kr.sjh.feature.adoption_detail.navigation.navigateToPinchZoom
 import kr.sjh.feature.mypage.navigation.MyPage
 import kr.sjh.feature.mypage.screen.MyPageRoute
 import kotlin.reflect.typeOf
@@ -63,11 +68,20 @@ fun BeMyPetNavHost(
             val detail: PetDetail = backStackEntry.toRoute()
             PetDetailRoute(detail = detail, onBack = {
                 navController.navigateUp()
+            }, navigateToPinchZoom = { pinchZoom ->
+                navController.navigateToPinchZoom(pinchZoom)
             })
         }
 
         composable<MyPage> {
             MyPageRoute(navigateToLogin = navController::navigateToLogin)
+        }
+
+        composable<PinchZoom> { backStackEntry ->
+            val pinchZoom: PinchZoom = backStackEntry.toRoute()
+            PetPinedZoomRoute(pinchZoom, close = {
+                navController.navigateUp()
+            })
         }
     }
 }

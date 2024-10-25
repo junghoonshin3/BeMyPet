@@ -202,7 +202,12 @@ private fun AdoptionScreen(
                 )
             }
         }
-        Text(text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}")
+        Text(
+            modifier = Modifier
+                .padding(end = 5.dp)
+                .align(Alignment.End),
+            text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}"
+        )
         CustomPullToRefreshBox(enabled = isExpandedTopBar,
             state = pullToRefreshState,
             indicator = {
@@ -226,7 +231,7 @@ private fun AdoptionScreen(
                 gridState = gridState,
                 userScrollEnabled = !adoptionUiState.isRefreshing,
                 items = adoptionUiState.pets,
-                itemKey = { item -> item.hashCode() },
+                itemKey = { item -> item.desertionNo },
                 loadMore = {
                     // 현재 아이템의 갯수 < 전체 아이템의 수 && api 호출 중이 아니면 로드
                     if (adoptionUiState.pets.size < adoptionUiState.totalCount && !adoptionUiState.isMore) {

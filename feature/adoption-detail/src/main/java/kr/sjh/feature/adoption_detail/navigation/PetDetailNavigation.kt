@@ -13,6 +13,16 @@ data class PetDetail(
     val petInfo: Pet
 ) : Screen
 
+@Serializable
+@Stable
+data class PinchZoom(
+    val imageUrl: String
+) : Screen
+
+fun NavController.navigateToPinchZoom(pinchZoom: PinchZoom, navOptions: NavOptions? = null) {
+    navigate(pinchZoom, navOptions)
+}
+
 fun NavController.navigateToPetDetail(petDetail: PetDetail, navOptions: NavOptions? = null) {
     navigate(petDetail, navOptions)
 }

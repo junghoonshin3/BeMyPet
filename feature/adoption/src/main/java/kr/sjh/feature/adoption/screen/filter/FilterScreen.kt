@@ -73,12 +73,15 @@ fun FilterScreen(
     onEvent: (AdoptionEvent) -> Unit
 ) {
 
-    val lazyListState = rememberLazyListState()
 
     val nestedScrollInteropConnection = rememberNestedScrollInteropConnection()
 
-    Column(modifier = modifier.nestedScroll(nestedScrollInteropConnection)) {
-        LazyColumn(modifier = Modifier.weight(1f), state = lazyListState) {
+    Column(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .nestedScroll(nestedScrollInteropConnection)
+        ) {
             items(adoptionFilterState.categories.keys.toList()) { category ->
                 FilterCategoryHeader(category.categoryName)
                 when (category) {

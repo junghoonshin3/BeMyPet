@@ -1,3 +1,5 @@
+import kr.sjh.convention.ext.implementation
+
 plugins {
     alias(libs.plugins.bemypet.android.library)
     alias(libs.plugins.bemypet.android.library.compose)
@@ -9,4 +11,5 @@ android {
 
 dependencies {
     implementation(project(":core:model"))
+    implementation(libs.coil.compose)
 }
