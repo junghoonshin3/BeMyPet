@@ -19,7 +19,7 @@ sealed class BottomNavItem(
     data object LikePet : BottomNavItem(
         R.string.like_pet,
         "LikePet",
-        R.drawable.heart_svgrepo_com,
+        R.drawable.like,
     )
 
     // 마이 페이지

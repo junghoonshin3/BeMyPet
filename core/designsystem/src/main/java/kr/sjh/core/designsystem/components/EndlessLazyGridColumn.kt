@@ -22,7 +22,7 @@ fun <T> EndlessLazyGridColumn(
     userScrollEnabled: Boolean,
     contentPadding: PaddingValues = PaddingValues(5.dp),
     items: List<T>,
-    columns: GridCells = GridCells.Fixed(3),
+    columns: GridCells = GridCells.Fixed(2),
     itemKey: (T) -> Any,
     loadMore: () -> Unit,
     itemContent: @Composable (T) -> Unit,

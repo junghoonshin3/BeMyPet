@@ -66,7 +66,7 @@ fun PinchZoomImage(imageRequest: ImageRequest, onTap: () -> Unit) {
                 translationY = offset.y
             }
             .pointerInput(Unit) {
-                // 더블탭시 원본이미지 or 2배 확대
+                // 더블 탭 시 원본 이미지 or 2배 확대
                 detectTapGestures(onDoubleTap = {
                     scale = if (scale == 1f) {
                         //확대 2배

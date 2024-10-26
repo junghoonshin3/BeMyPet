@@ -1,5 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":feature:likepet")
+
+
 include(":feature:adoption-detail")
 
 

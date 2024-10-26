@@ -5,9 +5,11 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.navOptions
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
@@ -77,7 +79,12 @@ fun BeMyPetNavHost(
             MyPageRoute(navigateToLogin = navController::navigateToLogin)
         }
 
-        composable<PinchZoom> { backStackEntry ->
+        dialog<PinchZoom>(
+            dialogProperties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
+        ) { backStackEntry ->
             val pinchZoom: PinchZoom = backStackEntry.toRoute()
             PetPinedZoomRoute(pinchZoom, close = {
                 navController.navigateUp()

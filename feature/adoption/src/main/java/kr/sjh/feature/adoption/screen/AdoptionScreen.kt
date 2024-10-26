@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -74,6 +75,7 @@ import kr.sjh.core.designsystem.components.CustomPullToRefreshBox
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.FilterCategoryList
 import kr.sjh.core.designsystem.components.FilterModalBottomSheet
+import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
 import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.adoption.Pet
@@ -278,6 +280,7 @@ private fun AdoptionScreen(
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val context = LocalContext.current
     val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
+    val fontSize = 9.sp
     Column(
         modifier = modifier
     ) {
@@ -291,17 +294,35 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
             loading = {
                 LottieLoading()
             })
-        Text(
-            fontWeight = FontWeight.Bold,
-            text = "품종 : ${pet.kindCd}",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        TextLine(
+            title = "공고번호",
+            content = pet.noticeNo,
+            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
+            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
-        Text(
-            fontWeight = FontWeight.Bold,
-            text = "나이 : ${pet.age}",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        TextLine(
+            title = "발견장소",
+            content = pet.happenPlace,
+            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
+            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+        )
+        TextLine(
+            title = "품종",
+            content = pet.kindCd,
+            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
+            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+        )
+        TextLine(
+            title = "성별",
+            content = pet.sexCdToText,
+            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
+            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+        )
+        TextLine(
+            title = "상태",
+            content = pet.processState,
+            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
+            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
     }
 }
@@ -363,8 +384,7 @@ private fun RefreshIndicator(
 @Composable
 private fun LottieLoading() {
     val retrySignal = rememberLottieRetrySignal()
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.loading),
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
         onRetry = { failCount, exception ->
             retrySignal.awaitRetry()
             true
@@ -373,8 +393,11 @@ private fun LottieLoading() {
         composition,
         iterations = LottieConstants.IterateForever,
     )
-    LottieAnimation(
-        composition = composition,
-        progress = { progress },
-    )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        LottieAnimation(
+            composition = composition,
+            progress = { progress },
+        )
+    }
+
 }

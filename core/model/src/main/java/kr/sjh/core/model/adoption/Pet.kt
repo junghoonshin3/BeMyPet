@@ -29,4 +29,13 @@ data class Pet(
     val chargeNm: String? = null,
     val officetel: String,
     val noticeComment: String? = null
-)
+) {
+    val sexCdToText: String
+        get() {
+            return if (sexCd == "M") "수컷" else "암컷"
+        }
+    val neuterYnToText: String
+        get() {
+            return if (neuterYn == "Y") "" else "아니요"
+        }
+}
