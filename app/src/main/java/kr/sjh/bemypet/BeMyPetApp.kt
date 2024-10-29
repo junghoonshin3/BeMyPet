@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -29,7 +30,10 @@ fun BeMyPetApp(
         else -> LoginGraph
     }
 
-    Surface {
+    Surface(
+        contentColor = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surface
+    ) {
         Scaffold(modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(), snackbarHost = {
@@ -55,7 +59,6 @@ fun BeMyPetApp(
                 appState = appState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
                     .padding(it)
             )
         }

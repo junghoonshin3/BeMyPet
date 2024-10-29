@@ -81,12 +81,9 @@ private fun PetDetailScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
     ) {
         stickyHeader {
-            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White, scrolledContainerColor = Color.White
-            ), title = {}, modifier = Modifier
+            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(), title = {}, modifier = Modifier
                 .fillMaxWidth()
                 .alpha(0.8f), navigationIcon = {
                 IconButton(onClick = onBack) {
@@ -153,7 +150,6 @@ private fun PetDetailContent(
         pet.noticeComment?.let {
             TextLine(title = "특이사항", content = it)
         }
-
     }
 }
 

@@ -96,9 +96,9 @@ fun PetPinedZoomScreen(
                     )
                 }
             }, title = { Text("사진") }, colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White,
-                navigationIconContentColor = Color.White
+//                containerColor = Color.Transparent,
+//                titleContentColor = Color.White,
+//                navigationIconContentColor = Color.White
             )
             )
         }

@@ -34,7 +34,7 @@ fun MyPageRoute(navigateToLogin: () -> Unit, viewModel: MyPageViewModel = hiltVi
 
 @Composable
 fun MyPageScreen(signOut: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Button(onClick = signOut) {
             Text("로그아웃")
         }

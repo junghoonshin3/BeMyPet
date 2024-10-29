@@ -79,12 +79,7 @@ fun BeMyPetNavHost(
             MyPageRoute(navigateToLogin = navController::navigateToLogin)
         }
 
-        dialog<PinchZoom>(
-            dialogProperties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = false
-            )
-        ) { backStackEntry ->
+        composable<PinchZoom> { backStackEntry ->
             val pinchZoom: PinchZoom = backStackEntry.toRoute()
             PetPinedZoomRoute(pinchZoom, close = {
                 navController.navigateUp()

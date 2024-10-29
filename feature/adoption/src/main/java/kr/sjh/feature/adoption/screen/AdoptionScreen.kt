@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
@@ -161,14 +162,19 @@ private fun AdoptionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) {
         TopAppBar(
-            title = { Text(text = stringResource(id = R.string.adoption)) },
+            title = {
+                Text(
+                    text = stringResource(id = R.string.adoption),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            },
             scrollBehavior = topAppBarScrollBehavior,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White, scrolledContainerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background
             )
         )
         FilterCategoryList(modifier = Modifier
@@ -251,7 +257,7 @@ private fun AdoptionScreen(
             }
         }
         FilterModalBottomSheet(
-            containerColor = Color.White,
+//            containerColor = Color.White,
             onDismissRequest = {
                 onEvent(
                     AdoptionEvent.FilterBottomSheetOpen(
