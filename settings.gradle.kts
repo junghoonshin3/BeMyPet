@@ -1,10 +1,10 @@
 @file:Suppress("UnstableApiUsage")
 
-include(":feature:likepet")
+include(":core:database")
 
+include(":feature:favourite")
 
 include(":feature:adoption-detail")
-
 
 include(":core:common")
 
@@ -37,8 +37,6 @@ include(":core:firebase")
 include(":core:google")
 include(":core:designsystem")
 include(":core:model")
-include(":feature:login-register")
-include(":feature:login")
 include(":core:data")
 include(":core:ktor")
 include(":feature:adoption")

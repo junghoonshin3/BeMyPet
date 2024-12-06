@@ -6,32 +6,24 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
-import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.Response
-import kr.sjh.core.model.adoption.filter.DateRange
-import kr.sjh.core.model.adoption.filter.Location
 import kr.sjh.data.repository.AdoptionRepository
+import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
-import kr.sjh.feature.adoption.state.Category
-import kr.sjh.feature.adoption.state.NeuterOptions
-import kr.sjh.feature.adoption.state.StateOptions
-import kr.sjh.feature.adoption.state.UpKindOptions
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
 
 @HiltViewModel
 class AdoptionViewModel @Inject constructor(
-    private val adoptionRepository: AdoptionRepository
+    private val adoptionRepository: AdoptionRepository,
 ) : ViewModel() {
 
     private val _adoptionUiState = MutableStateFlow(AdoptionUiState())
@@ -41,7 +33,7 @@ class AdoptionViewModel @Inject constructor(
     val adoptionFilterState = _adoptionFilterState.asStateFlow()
 
     init {
-        getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest())
+        init()
     }
 
     fun onEvent(event: AdoptionEvent) {
@@ -61,116 +53,21 @@ class AdoptionViewModel @Inject constructor(
             }
 
             is AdoptionEvent.SelectedCategory -> {
+                val selectedCategory = event.category
                 _adoptionFilterState.update {
                     it.copy(
-                        filterBottomSheetState = FilterBottomSheetState.SHOW
+                        selectedCategory = selectedCategory
                     )
                 }
             }
 
-            is AdoptionEvent.FilterBottomSheetOpen -> {
-                _adoptionFilterState.update {
-                    it.copy(
-                        filterBottomSheetState = event.bottomSheetState,
-                    )
-                }
-            }
-
-            is AdoptionEvent.SelectedDateRange -> {
-                _adoptionFilterState.update {
-                    it.copy(
-                        selectedDateRange = event.dateRange,
-                    )
-                }
-            }
-
-            AdoptionEvent.Apply -> {
-                _adoptionFilterState.update {
-                    it.copy(selectedCategory = it.selectedCategory.toMutableList().apply {
-                        if (it.selectedUpKind != UpKindOptions.ALL) {
-                            add(Category.UP_KIND)
-                        } else {
-                            remove(Category.UP_KIND)
-                        }
-
-                        if (it.selectedState != StateOptions.ALL) {
-                            add(Category.STATE)
-                        } else {
-                            remove(Category.STATE)
-                        }
-
-                        if (it.selectedNeuter != NeuterOptions.ALL) {
-                            add(Category.NEUTER)
-                        } else {
-                            remove(Category.NEUTER)
-                        }
-
-                        if (it.selectedLocation.sido.orgCd != null || it.selectedLocation.sigungu.orgCd != null) {
-                            add(Category.LOCATION)
-                        } else {
-                            remove(Category.LOCATION)
-                        }
-
-                        if (!it.selectedDateRange.isInitSameDate()) {
-                            add(Category.DATE_RANGE)
-                        } else {
-                            remove(Category.DATE_RANGE)
-                        }
-                    }, pageNo = 1)
-                }
-                getAbandonmentPublic(
-                    _adoptionFilterState.value.toAbandonmentPublicRequest()
-                )
-            }
-
-            AdoptionEvent.SelectedInit -> {
+            AdoptionEvent.InitCategory -> {
                 //초기화
                 _adoptionFilterState.update {
-                    it.copy(
-                        selectedUpKind = UpKindOptions.ALL,
-                        selectedState = StateOptions.ALL,
-                        selectedNeuter = NeuterOptions.ALL,
-                        selectedLocation = Location(),
-                        selectedDateRange = DateRange(),
-                    )
+                    AdoptionFilterState()
                 }
-            }
+                init()
 
-            is AdoptionEvent.SelectedLocation -> {
-                _adoptionFilterState.update {
-                    if (event.fetchDate) {
-                        getSigungu(SigunguRequest(upr_cd = event.location.sido.orgCd))
-                    }
-
-                    it.copy(
-                        selectedLocation = event.location
-                    )
-                }
-
-            }
-
-            is AdoptionEvent.SelectedNeuter -> {
-                _adoptionFilterState.update {
-                    it.copy(
-                        selectedNeuter = event.neuter
-                    )
-                }
-            }
-
-            is AdoptionEvent.SelectedState -> {
-                _adoptionFilterState.update {
-                    it.copy(
-                        selectedState = event.state
-                    )
-                }
-            }
-
-            is AdoptionEvent.SelectedUpKind -> {
-                _adoptionFilterState.update {
-                    it.copy(
-                        selectedUpKind = event.upKind
-                    )
-                }
             }
 
             is AdoptionEvent.SetLastScrollIndex -> {
@@ -179,6 +76,63 @@ class AdoptionViewModel @Inject constructor(
                         lastScrollIndex = event.index
                     )
                 }
+            }
+
+            AdoptionEvent.LoadSido -> {
+                getSido()
+            }
+
+            is AdoptionEvent.LoadSigungu -> {
+                //전체 선택시
+                getSigungu(
+                    SigunguRequest(
+                        upr_cd = event.sido.orgCd
+                    )
+                )
+            }
+
+            is AdoptionEvent.SelectedNeuter -> {
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedNeuter = event.neuter
+                    )
+                }
+                getAbandonmentPublic(
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
+                )
+            }
+
+            is AdoptionEvent.SelectedUpKind -> {
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedUpKind = event.upKind
+                    )
+                }
+                getAbandonmentPublic(
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
+                )
+            }
+
+            is AdoptionEvent.SelectedLocation -> {
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedSido = event.sido, selectedSigungu = event.sigungu
+                    )
+                }
+                getAbandonmentPublic(
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
+                )
+            }
+
+            is AdoptionEvent.SelectedDateRange -> {
+                _adoptionFilterState.update {
+                    it.copy(
+                        selectedDateRange = event.dateRange
+                    )
+                }
+                getAbandonmentPublic(
+                    _adoptionFilterState.value.toAbandonmentPublicRequest()
+                )
             }
         }
     }
@@ -219,9 +173,15 @@ class AdoptionViewModel @Inject constructor(
                         }
                     }
                 }
-
             }
+
+
         }
+    }
+
+    private fun init() {
+        getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest())
+        getSido()
     }
 
     private fun getLoadMore(request: AbandonmentPublicRequest = AbandonmentPublicRequest()) {
@@ -263,8 +223,54 @@ class AdoptionViewModel @Inject constructor(
         }
     }
 
+    private fun getSido() {
+        viewModelScope.launch {
+            adoptionRepository.getSido(SidoRequest()).collect { result ->
+                when (result) {
+                    is Response.Failure -> {
+                        result.e.message?.let { msg ->
+                            SnackBarManager.showMessage(msg)
+                        }
+                        _adoptionFilterState.update {
+                            it.copy(
+                                isLocationError = true, isLocationLoading = false
+                            )
+                        }
+                    }
+
+                    Response.Loading -> {
+                        _adoptionFilterState.update {
+                            it.copy(
+                                isLocationError = false, isLocationLoading = true
+                            )
+                        }
+                    }
+
+                    is Response.Success -> {
+                        _adoptionFilterState.update {
+                            it.copy(
+                                isLocationLoading = false,
+                                isLocationError = false,
+                                sidoList = result.data
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun getSigungu(req: SigunguRequest) {
         viewModelScope.launch {
+            if (req.upr_cd == null) {
+                //전체인 경우
+                _adoptionFilterState.update {
+                    it.copy(
+                        sigunguList = emptyList()
+                    )
+                }
+                return@launch
+            }
             adoptionRepository.getSigungu(req).collect { result ->
                 when (result) {
                     is Response.Failure -> {
@@ -273,7 +279,7 @@ class AdoptionViewModel @Inject constructor(
                         }
                         _adoptionFilterState.update {
                             it.copy(
-                                isSigunguLoading = false
+                                isLocationError = true, isLocationLoading = false
                             )
                         }
                     }
@@ -281,16 +287,17 @@ class AdoptionViewModel @Inject constructor(
                     Response.Loading -> {
                         _adoptionFilterState.update {
                             it.copy(
-                                isSigunguLoading = true
+                                isLocationError = false, isLocationLoading = true
                             )
                         }
                     }
 
                     is Response.Success -> {
-                        Log.d("sjh", "list : ${result.data}")
                         _adoptionFilterState.update {
                             it.copy(
-                                sigunguList = result.data, isSigunguLoading = false
+                                sigunguList = result.data,
+                                isLocationError = false,
+                                isLocationLoading = false
                             )
                         }
                     }

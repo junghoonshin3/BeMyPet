@@ -19,11 +19,11 @@ class MyPageViewModel @Inject constructor(
     private val _navigateState = MutableSharedFlow<NavigationState>()
     val navigationState = _navigateState.asSharedFlow()
 
-    fun signOut() {
-        viewModelScope.launch(Dispatchers.IO) {
-            accountService.signOut()
-            _navigateState.emit(NavigationState.NavigationToLogin)
-        }
-
-    }
+//    fun signOut() {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            accountService.signOut()
+//            _navigateState.emit(NavigationState.NavigationToLogin)
+//        }
+//
+//    }
 }

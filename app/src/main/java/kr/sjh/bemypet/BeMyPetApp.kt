@@ -23,13 +23,8 @@ import kr.sjh.feature.adoption.navigation.Adoption
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun BeMyPetApp(
-    accountState: AccountState, appState: BeMyPetAppState = rememberAppState()
+    appState: BeMyPetAppState = rememberAppState()
 ) {
-    val startDestination: Any = when (accountState) {
-        AccountState.UserAlreadySignIn -> Adoption
-        else -> LoginGraph
-    }
-
     Surface(
         contentColor = MaterialTheme.colorScheme.surfaceContainer,
         color = MaterialTheme.colorScheme.surface
@@ -55,7 +50,6 @@ fun BeMyPetApp(
                 )
             }) {
             BeMyPetNavHost(
-                startDestination = startDestination,
                 appState = appState,
                 modifier = Modifier
                     .fillMaxSize()

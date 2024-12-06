@@ -12,4 +12,5 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(libs.coil.compose)
+    implementation(libs.airbnb.lottie)
 }

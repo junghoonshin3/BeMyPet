@@ -1,52 +1,44 @@
 package kr.sjh.feature.adoption.screen
 
 import android.annotation.SuppressLint
-import android.util.Log
-import android.view.MotionEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,33 +46,34 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
-import com.airbnb.lottie.compose.rememberLottieRetrySignal
+import coil.size.Scale
+import coil.size.Size
+import com.composables.core.ModalBottomSheet
+import com.composables.core.Scrim
+import com.composables.core.Sheet
+import com.composables.core.SheetDetent
+import com.composables.core.SheetDetent.Companion.Hidden
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.CustomPullToRefreshBox
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
-import kr.sjh.core.designsystem.components.FilterCategoryList
-import kr.sjh.core.designsystem.components.FilterModalBottomSheet
+import kr.sjh.core.designsystem.components.LoadingComponent
+import kr.sjh.core.designsystem.components.RefreshIndicator
+import kr.sjh.core.designsystem.components.RoundedCornerButton
 import kr.sjh.core.designsystem.components.TextLine
-import kr.sjh.core.designsystem.modifier.centerPullToRefreshIndicator
-import kr.sjh.core.model.FilterBottomSheetState
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.feature.adoption.screen.filter.FilterScreen
+import kr.sjh.feature.adoption.screen.filter.CategoryType
+import kr.sjh.feature.adoption.screen.filter.DateRangePickerModal
+import kr.sjh.feature.adoption.screen.filter.FilterContent
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
@@ -91,28 +84,28 @@ fun AdoptionRoute(
 ) {
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
 
-    val adoptionFilterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
+    val filterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
 
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
-        filterState = adoptionFilterState,
+        adoptionFilterState = filterState,
         navigateToAdoptionDetail = navigateToPetDetail,
         onEvent = viewModel::onEvent
     )
 }
 
 @SuppressLint("RememberReturnType")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
-    filterState: AdoptionFilterState,
+    adoptionFilterState: AdoptionFilterState,
     navigateToAdoptionDetail: (Pet) -> Unit,
     onEvent: (AdoptionEvent) -> Unit
 ) {
 
     val gridState = rememberLazyGridState(
-        initialFirstVisibleItemIndex = adoptionUiState.lastScrollIndex
+        initialFirstVisibleItemIndex = 0
     )
 
     val density = LocalDensity.current
@@ -124,7 +117,6 @@ private fun AdoptionScreen(
     val thresholdPx = with(density) {
         threshold.roundToPx()
     }
-
 
     // PullToRefresh 상태 - 새로고침 UI 진행 여부
     val isRefreshingDistance by remember(pullToRefreshState.distanceFraction) {
@@ -145,6 +137,16 @@ private fun AdoptionScreen(
         }
     }
 
+    var isDatePickerShow by remember { mutableStateOf(false) }
+
+    val Peek = SheetDetent(identifier = "peek") { containerHeight, sheetHeight ->
+        containerHeight * 0.6f
+    }
+
+    val sheetState = com.composables.core.rememberModalBottomSheetState(
+        initialDetent = Hidden, detents = listOf(Hidden, Peek)
+    )
+
     //마지막 스크롤 인덱스
     LaunchedEffect(gridState) {
         snapshotFlow {
@@ -158,64 +160,83 @@ private fun AdoptionScreen(
         }
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
     ) {
+        if (isDatePickerShow) {
+            DateRangePickerModal(adoptionFilterState.selectedDateRange,
+                onDateRangeSelected = { selectedDateRange ->
+                    adoptionFilterState.selectedCategory?.apply {
+                        isSelected.value = !selectedDateRange.isInitSameDate()
+                        displayNm.value =
+                            if (!selectedDateRange.isInitSameDate()) selectedDateRange.toString() else type.title
+                    }
+                    onEvent(
+                        AdoptionEvent.SelectedDateRange(selectedDateRange)
+                    )
+                },
+                onDismiss = {
+                    isDatePickerShow = false
+                })
+        }
+
         TopAppBar(
             title = {
                 Text(
                     text = stringResource(id = R.string.adoption),
-                    style = MaterialTheme.typography.headlineMedium
                 )
-            },
-            scrollBehavior = topAppBarScrollBehavior,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.background
-            )
+            }, scrollBehavior = topAppBarScrollBehavior
         )
-        FilterCategoryList(modifier = Modifier
-            .fillMaxWidth()
-            .height(55.dp),
-            items = filterState.categories.keys.toList(),
-            onShow = {
-                onEvent(
-                    AdoptionEvent.FilterBottomSheetOpen(
-                        FilterBottomSheetState.SHOW
-                    )
-                )
-            }) { category ->
-            Box(modifier = Modifier
-                .border(
-                    1.dp, if (filterState.selectedCategory.contains(category)) {
-                        Color.Red
-                    } else {
-                        Color.LightGray
-                    }, RoundedCornerShape(10.dp)
-                )
-                .clip(RoundedCornerShape(10.dp))
-                .clickable {
-                    onEvent(
-                        AdoptionEvent.SelectedCategory(
-                            category
-                        )
-                    )
-                }
-                .padding(5.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    fontSize = 13.sp, text = category.categoryName
-                )
-            }
-        }
+
         Text(
             modifier = Modifier
                 .padding(end = 5.dp)
                 .align(Alignment.End),
             text = "${adoptionUiState.pets.size}/${adoptionUiState.totalCount}"
         )
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                IconButton(onClick = {
+                    onEvent(
+                        AdoptionEvent.InitCategory
+                    )
+                }) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
+                        contentDescription = "reset"
+                    )
+                }
+            }
+            items(adoptionFilterState.filterList) { category ->
+                RoundedCornerButton(modifier = Modifier.padding(5.dp),
+                    selected = category.isSelected.value,
+                    title = if (category.isSelected.value) category.displayNm.value else category.type.title,
+                    onClick = {
+                        when (category.type) {
+                            CategoryType.DATE_RANGE -> {
+                                isDatePickerShow = true
+                            }
+
+                            else -> {
+                                sheetState.currentDetent = Peek
+                            }
+                        }
+                        onEvent(
+                            AdoptionEvent.SelectedCategory(
+                                category
+                            )
+                        )
+                    })
+            }
+        }
+
         CustomPullToRefreshBox(enabled = isExpandedTopBar,
             state = pullToRefreshState,
             indicator = {
@@ -249,34 +270,29 @@ private fun AdoptionScreen(
             ) { item ->
                 Pet(
                     modifier = Modifier
+                        .fillMaxSize()
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable {
+                        .clickable(enabled = !adoptionUiState.isRefreshing) {
                             navigateToAdoptionDetail(item)
                         }, pet = item
                 )
             }
-        }
-        FilterModalBottomSheet(
-//            containerColor = Color.White,
-            onDismissRequest = {
-                onEvent(
-                    AdoptionEvent.FilterBottomSheetOpen(
-                        bottomSheetState = FilterBottomSheetState.HIDE
+            ModalBottomSheet(state = sheetState) {
+                Scrim()
+                Sheet(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                        .background(Color.White)
+                        .navigationBarsPadding(), enabled = false
+                ) {
+                    FilterContent(
+                        adoptionFilterState = adoptionFilterState,
+                        sheetState = sheetState,
+                        onEvent = onEvent
                     )
-                )
-                onEvent(
-                    AdoptionEvent.SelectedInit
-                )
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(top = 30.dp),
-            bottomSheetType = filterState.filterBottomSheetState,
-        ) {
-            FilterScreen(
-                modifier = Modifier.weight(1f), adoptionFilterState = filterState, onEvent = onEvent
-            )
+                }
+            }
         }
     }
 }
@@ -284,22 +300,38 @@ private fun AdoptionScreen(
 
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
-    val context = LocalContext.current
-    val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
     val fontSize = 9.sp
+    val painter = rememberAsyncImagePainter(model = pet.popfile)
     Column(
         modifier = modifier
     ) {
-        SubcomposeAsyncImage(contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(10.dp)),
-            model = imageRequest,
+        SubcomposeAsyncImage(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(10.dp)),
+            model = painter.request,
             contentDescription = "Pet",
             loading = {
-                LottieLoading()
+                LoadingComponent()
+            },
+            success = {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                        painter = painter,
+                        contentDescription = ""
+                    )
+                    if (pet.isNotice) {
+                        Notice(
+                            modifier = Modifier
+                                .alpha(0.6f)
+                                .background(Color.Red, RoundedCornerShape(3.dp))
+                        )
+                    }
+                }
             })
+
         TextLine(
             title = "공고번호",
             content = pet.noticeNo,
@@ -333,77 +365,12 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RefreshIndicator(
-    modifier: Modifier = Modifier, state: PullToRefreshState, isRefreshing: Boolean, threshold: Dp
-) {
-    val context = LocalContext.current
-
-    val imageVector by remember {
-        derivedStateOf {
-            when {
-                state.distanceFraction > 0f && state.distanceFraction <= 0.5f && !isRefreshing -> {
-                    ImageVector.vectorResource(
-                        res = context.resources, resId = R.drawable.dog_face_svgrepo_com
-                    )
-                }
-
-                state.distanceFraction <= 1f && state.distanceFraction > 0.5f && !isRefreshing -> {
-                    ImageVector.vectorResource(
-                        res = context.resources, resId = R.drawable.cat_svgrepo_com
-                    )
-                }
-
-                state.distanceFraction > 1f && !isRefreshing -> {
-                    ImageVector.vectorResource(
-                        res = context.resources, resId = R.drawable.panda_face_1_svgrepo_com
-                    )
-                }
-
-                else -> {
-                    ImageVector.vectorResource(
-                        res = context.resources, resId = R.drawable.sheep_2_svgrepo_com
-                    )
-                }
-            }
-        }
-    }
+private fun Notice(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.centerPullToRefreshIndicator(
-            state = state, shape = RectangleShape, threshold = threshold
-        ), contentAlignment = Alignment.TopCenter
+        modifier = modifier
     ) {
-        if (state.distanceFraction == 0f) {
-            return@Box
-        }
-
-        if (isRefreshing) {
-            Text(text = context.resources.getString(R.string.refreshing), fontSize = 25.sp)
-        } else {
-            Image(imageVector = imageVector, contentDescription = "animal")
-        }
+        Text(modifier = Modifier.padding(3.dp), text = "공고중", fontSize = 13.sp, color = Color.White)
     }
 }
 
-@Composable
-private fun LottieLoading() {
-    val retrySignal = rememberLottieRetrySignal()
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading),
-        onRetry = { failCount, exception ->
-            retrySignal.awaitRetry()
-            true
-        })
-    val progress by animateLottieCompositionAsState(
-        composition,
-        iterations = LottieConstants.IterateForever,
-    )
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        LottieAnimation(
-            composition = composition,
-            progress = { progress },
-        )
-    }
-
-}

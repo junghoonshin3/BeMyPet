@@ -17,9 +17,13 @@ import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.toPets
 import kr.sjh.data.toSidoList
 import kr.sjh.data.toSigunguList
+import kr.sjh.database.dao.FavouriteDao
 import javax.inject.Inject
 
-class AdoptionRepositoryImpl @Inject constructor(private val service: AdoptionService) :
+class AdoptionRepositoryImpl @Inject constructor(
+    private val service: AdoptionService,
+
+) :
     AdoptionRepository {
     override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =
         flow {

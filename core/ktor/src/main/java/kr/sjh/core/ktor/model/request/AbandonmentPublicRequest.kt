@@ -2,12 +2,11 @@ package kr.sjh.core.ktor.model.request
 
 import kotlinx.serialization.Serializable
 import kr.sjh.core.ktor.BuildConfig
-import kr.sjh.core.ktor.model.JSON
 import kr.sjh.core.ktor.model.XML
 
 @Serializable
 data class AbandonmentPublicRequest(
-    val serviceKey: String = BuildConfig.SERVER_KEY,
+    val serviceKey: String = BuildConfig.SERVICE_KEY,
     val bgnde: String? = null, // 유기 시작일 (YYYYMMDD)
     val endde: String? = null, // 유기 종료일 (YYYYMMDD)
     val upkind: String? = null, // 축종 코드 (optional)

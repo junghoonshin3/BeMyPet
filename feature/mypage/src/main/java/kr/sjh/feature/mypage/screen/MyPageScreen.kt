@@ -15,28 +15,28 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.feature.mypage.state.NavigationState
 
 @Composable
-fun MyPageRoute(navigateToLogin: () -> Unit, viewModel: MyPageViewModel = hiltViewModel()) {
+fun MyPageRoute(viewModel: MyPageViewModel = hiltViewModel()) {
 
     val navigationState by viewModel.navigationState.collectAsStateWithLifecycle(NavigationState.None)
 
     LaunchedEffect(navigationState) {
-        when (navigationState) {
-            NavigationState.NavigationToLogin -> {
-                navigateToLogin()
-            }
-
-            NavigationState.None -> {}
-        }
+//        when (navigationState) {
+//            NavigationState.NavigationToLogin -> {
+//                navigateToLogin()
+//            }
+//
+//            NavigationState.None -> {}
+//        }
     }
 
-    MyPageScreen(viewModel::signOut)
+    MyPageScreen()
 }
 
 @Composable
-fun MyPageScreen(signOut: () -> Unit) {
+fun MyPageScreen() {
     Column(modifier = Modifier.fillMaxSize()) {
-        Button(onClick = signOut) {
-            Text("로그아웃")
-        }
+//        Button(onClick = signOut) {
+//            Text("로그아웃")
+//        }
     }
 }

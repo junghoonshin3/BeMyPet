@@ -34,7 +34,7 @@ data class AbandonmentPublicResponse(
                 @XmlElement val happenDt: String,
                 @XmlElement val happenPlace: String,
                 @XmlElement val kindCd: String,
-                @XmlElement val colorCd: String,
+                @XmlElement val colorCd: String? = null,
                 @XmlElement val age: String,
                 @XmlElement val weight: String,
                 @XmlElement val noticeNo: String,

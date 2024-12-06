@@ -16,14 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kr.sjh.core.model.FilterBottomSheetState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterModalBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    bottomSheetType: FilterBottomSheetState = FilterBottomSheetState.HIDE,
+    isShow: Boolean = false,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     shape: Shape = BottomSheetDefaults.ExpandedShape,
@@ -38,7 +37,7 @@ fun FilterModalBottomSheet(
     properties: ModalBottomSheetProperties = ModalBottomSheetDefaults.properties,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (bottomSheetType == FilterBottomSheetState.SHOW) {
+    if (isShow) {
         ModalBottomSheet(
             onDismissRequest,
             modifier,
