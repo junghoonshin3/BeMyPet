@@ -18,4 +18,5 @@ dependencies {
     implementation(project(":core:google"))
     implementation(libs.firebase.auth)
     implementation(project(":core:ktor"))
+    implementation(project(":core:database"))
 }

@@ -10,15 +10,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RoundedCornerButton(modifier: Modifier = Modifier, title: String, onClick: (String) -> Unit) {
+fun RoundedCornerButton(
+    modifier: Modifier = Modifier,
+    title: String,
+    textStyle: TextStyle = TextStyle.Default,
+    onClick: (String) -> Unit,
+    selected: Boolean = false,
+) {
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
-        .border(1.dp, color = Color.LightGray, shape = RoundedCornerShape(10.dp))
+        .border(
+            1.dp,
+            color = if (selected) Color.Red else Color.LightGray,
+            shape = RoundedCornerShape(10.dp)
+        )
         .clickable { onClick(title) }
         .then(modifier), contentAlignment = Alignment.Center) {
-        Text(text = title)
+        Text(text = title, style = textStyle)
     }
 }

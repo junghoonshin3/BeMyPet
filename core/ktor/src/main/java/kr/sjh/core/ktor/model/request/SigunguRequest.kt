@@ -7,7 +7,7 @@ import kr.sjh.core.ktor.model.XML
 
 @Serializable
 data class SigunguRequest(
-    val serviceKey: String = BuildConfig.SERVER_KEY,
+    val serviceKey: String = BuildConfig.SERVICE_KEY,
     val upr_cd: String? = null,
     val _type: String = XML
 )

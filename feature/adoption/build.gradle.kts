@@ -12,5 +12,5 @@ dependencies {
     implementation(project(":core:ktor"))
     implementation(project(":core:common"))
     implementation(libs.coil.compose)
-    implementation(libs.airbnb.lottie)
+    implementation(libs.composables.core)
 }

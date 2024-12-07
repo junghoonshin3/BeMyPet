@@ -45,7 +45,7 @@ fun CheckBoxButton(
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.check_circle_svgrepo_com),
                 contentDescription = "check",
-                tint = if (selected) Color.Red else LocalContentColor.current
+                tint = if (selected) Color.Red else Color.LightGray
             )
         }
     }

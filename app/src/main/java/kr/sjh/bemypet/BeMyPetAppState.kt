@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kr.sjh.bemypet.navigation.BottomNavItem
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.feature.adoption.navigation.Adoption
+import kr.sjh.feature.favourite.navigation.Favourite
 import kr.sjh.feature.mypage.navigation.MyPage
 
 class BeMyPetAppState(
@@ -50,13 +51,13 @@ class BeMyPetAppState(
     val currentBottomNavItem: BottomNavItem?
         @Composable get() = when (currentDestination?.route?.substringAfterLast(".")) {
             "Adoption" -> BottomNavItem.Adoption
-            "LikePet" -> BottomNavItem.LikePet
+            "Favourite" -> BottomNavItem.Favourite
             "MyPage" -> BottomNavItem.MyPage
             else -> null
         }
 
     val bottomNavItems = listOf(
-        BottomNavItem.Adoption, BottomNavItem.LikePet, BottomNavItem.MyPage
+        BottomNavItem.Adoption, BottomNavItem.Favourite, BottomNavItem.MyPage
     )
 
     fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
@@ -76,8 +77,8 @@ class BeMyPetAppState(
                 navController.navigate(MyPage, topLevelNavOptions)
             }
 
-            BottomNavItem.LikePet -> {
-
+            BottomNavItem.Favourite -> {
+                navController.navigate(Favourite, topLevelNavOptions)
             }
         }
     }

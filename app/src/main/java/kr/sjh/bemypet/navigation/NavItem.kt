@@ -3,7 +3,6 @@ package kr.sjh.bemypet.navigation
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.model.Screen
 
 sealed class BottomNavItem(
     @StringRes val title: Int, val contentDes: String, @DrawableRes val icon: Int
@@ -16,9 +15,9 @@ sealed class BottomNavItem(
     )
 
     // 관심목록
-    data object LikePet : BottomNavItem(
-        R.string.like_pet,
-        "LikePet",
+    data object Favourite : BottomNavItem(
+        R.string.favourite,
+        "Favourite",
         R.drawable.like,
     )
 

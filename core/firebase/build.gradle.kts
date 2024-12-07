@@ -11,6 +11,7 @@ android {
 
 }
 
+
 dependencies {
     implementation(project(":core:model"))
     androidTestImplementation(libs.androidx.espresso.core)

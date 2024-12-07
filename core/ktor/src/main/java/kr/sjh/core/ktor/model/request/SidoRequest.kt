@@ -7,6 +7,7 @@ import kr.sjh.core.ktor.model.XML
 
 @Serializable
 data class SidoRequest(
-    val serviceKey: String = BuildConfig.SERVER_KEY,
+    val serviceKey: String = BuildConfig.SERVICE_KEY,
     val _type: String = XML,
+    val numOfRows: String = "30"
 )

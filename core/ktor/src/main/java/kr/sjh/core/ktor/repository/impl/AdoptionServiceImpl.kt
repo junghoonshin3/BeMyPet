@@ -1,16 +1,12 @@
 package kr.sjh.core.ktor.repository.impl
 
-import android.util.Log
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.util.reflect.TypeInfo
 import kr.sjh.core.ktor.model.ApiResult
 import kr.sjh.core.ktor.model.CmmErrorResponse
-import kr.sjh.core.ktor.model.ErrorResponse
 import kr.sjh.core.ktor.model.Response
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.ktor.model.request.KindRequest
@@ -33,6 +29,7 @@ class AdoptionServiceImpl @Inject constructor(private val client: HttpClient) : 
             val res = client.get("sido?") {
                 parameter("serviceKey", sidoRequest.serviceKey)
                 parameter("_type", sidoRequest._type)
+                parameter("numOfRows", sidoRequest.numOfRows)
             }
             res.successOrServiceError<SidoResponse>()
         } catch (e: Exception) {

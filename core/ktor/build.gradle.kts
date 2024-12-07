@@ -1,5 +1,9 @@
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
+import org.jetbrains.kotlin.gradle.utils.loadPropertyFromResources
+import org.jetbrains.kotlin.utils.addToStdlib.cast
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.bemypet.android.library)
@@ -8,6 +12,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val properties = Properties()
+properties.load(project.rootProject.file("local.properties").inputStream())
+
 android {
     namespace = "kr.sjh.core.ktor"
 
@@ -15,13 +22,9 @@ android {
     android.buildFeatures.buildConfig = true
 
     defaultConfig {
+        buildConfigField("String", "SERVICE_KEY", properties["SERVICE_KEY"].toString())
         buildConfigField(
-            "String",
-            "SERVER_KEY",
-            "\"8BPxw0uKmTc99bwBtMPtEGdsS/IMpbyt3/xzxPnvkukjDGHZ/0b52vOorYq1PNNldA7Ebzz9iUTKwIZZ0H02iQ==\""
-        )
-        buildConfigField(
-            "String", "BASE_URL", "\"http://apis.data.go.kr/1543061/abandonmentPublicSrvc/\""
+            "String", "BASE_URL", properties["BASE_URL"].toString()
         )
     }
 }
