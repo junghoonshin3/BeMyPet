@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.bemypet.android.hilt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.bemypet.android.library.compose)
-
+    id("kotlin-parcelize")
 }
 
 android {

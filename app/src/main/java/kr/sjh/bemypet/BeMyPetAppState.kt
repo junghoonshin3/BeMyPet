@@ -21,11 +21,9 @@ import kr.sjh.bemypet.navigation.BottomNavItem
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.favourite.navigation.Favourite
-import kr.sjh.feature.mypage.navigation.MyPage
 
 class BeMyPetAppState(
     val navController: NavHostController,
-    val resources: Resources,
     val snackBarHostState: SnackbarHostState,
     val snackBarManager: SnackBarManager,
     coroutineScope: CoroutineScope,
@@ -52,12 +50,12 @@ class BeMyPetAppState(
         @Composable get() = when (currentDestination?.route?.substringAfterLast(".")) {
             "Adoption" -> BottomNavItem.Adoption
             "Favourite" -> BottomNavItem.Favourite
-            "MyPage" -> BottomNavItem.MyPage
+//            "MyPage" -> BottomNavItem.MyPage
             else -> null
         }
 
     val bottomNavItems = listOf(
-        BottomNavItem.Adoption, BottomNavItem.Favourite, BottomNavItem.MyPage
+        BottomNavItem.Adoption, BottomNavItem.Favourite
     )
 
     fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
@@ -73,10 +71,6 @@ class BeMyPetAppState(
                 navController.navigate(Adoption, topLevelNavOptions)
             }
 
-            BottomNavItem.MyPage -> {
-                navController.navigate(MyPage, topLevelNavOptions)
-            }
-
             BottomNavItem.Favourite -> {
                 navController.navigate(Favourite, topLevelNavOptions)
             }
@@ -88,13 +82,12 @@ class BeMyPetAppState(
 @Composable
 fun rememberAppState(
     navController: NavHostController = rememberNavController(),
-    resources: Resources = resources(),
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     snackBarManager: SnackBarManager = SnackBarManager,
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
 ) = remember(navController) {
     BeMyPetAppState(
-        navController, resources, snackBarHostState, snackBarManager, coroutineScope
+        navController, snackBarHostState, snackBarManager, coroutineScope
     )
 }
 

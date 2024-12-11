@@ -89,7 +89,7 @@ fun AdoptionRoute(
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
         adoptionFilterState = filterState,
-        navigateToAdoptionDetail = navigateToPetDetail,
+        navigateToPetDetail = navigateToPetDetail,
         onEvent = viewModel::onEvent
     )
 }
@@ -100,7 +100,7 @@ fun AdoptionRoute(
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
     adoptionFilterState: AdoptionFilterState,
-    navigateToAdoptionDetail: (Pet) -> Unit,
+    navigateToPetDetail: (Pet) -> Unit,
     onEvent: (AdoptionEvent) -> Unit
 ) {
 
@@ -273,7 +273,7 @@ private fun AdoptionScreen(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(10.dp))
                         .clickable(enabled = !adoptionUiState.isRefreshing) {
-                            navigateToAdoptionDetail(item)
+                            navigateToPetDetail(item)
                         }, pet = item
                 )
             }

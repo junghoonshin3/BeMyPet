@@ -2,30 +2,26 @@ package kr.sjh.feature.favourite.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.TextLine
@@ -48,7 +43,7 @@ fun FavouriteRoute(
     FavouriteScreen(
         Modifier
             .fillMaxSize()
-            .background(Color.White), pets, navigateToPetDetail
+            .background(MaterialTheme.colorScheme.surface), pets, navigateToPetDetail
     )
 }
 
@@ -59,9 +54,15 @@ private fun FavouriteScreen(
 ) {
     Column(modifier = modifier) {
         TopAppBar(title = { Text(text = stringResource(id = R.string.favourite)) })
+        if (pets.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("펫이 없어요!", fontSize = 30.sp)
+            }
+            return@Column
+        }
         EndlessLazyGridColumn(userScrollEnabled = true,
             items = pets,
-            itemKey = { item -> item.hashCode() },
+            itemKey = { item -> item.desertionNo },
             loadMore = { }) { pet ->
             Pet(
                 modifier = Modifier
@@ -123,41 +124,4 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
     }
-}
-
-@Composable
-@Preview
-private fun FavouriteScreenPreview() {
-    var list = (0..100).map { index ->
-        Pet(
-            desertionNo = index.toString(),
-            filename = "",
-            happenDt = "",
-            happenPlace = "",
-            kindCd = "",
-            colorCd = "",
-            age = "",
-            weight = "",
-            noticeNo = "",
-            noticeSdt = "",
-            noticeEdt = "",
-            popfile = "",
-            processState = "",
-            sexCd = "",
-            neuterYn = "",
-            specialMark = "",
-            careNm = "",
-            careTel = "",
-            careAddr = "",
-            orgNm = "",
-            officetel = ""
-
-
-        )
-    }
-    FavouriteScreen(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White), pets = list, navigateToPetDetail = {}
-    )
 }

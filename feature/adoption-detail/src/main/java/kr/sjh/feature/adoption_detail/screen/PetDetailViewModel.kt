@@ -5,9 +5,11 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -17,9 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import kr.sjh.core.model.Response
-import kr.sjh.core.model.adoption.Pet
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
 import kr.sjh.feature.adoption_detail.state.AdoptionDetailEvent
@@ -29,12 +29,13 @@ import javax.inject.Inject
 @HiltViewModel
 class PetDetailViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val favouriteRepository: FavouriteRepository, savedStateHandle: SavedStateHandle
+    private val favouriteRepository: FavouriteRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val pet = Json.decodeFromString<Pet>(savedStateHandle.get<PetDetail>("petInfo").toString())
+    val pet = savedStateHandle.toRoute<PetDetail>().pet
 
-    val isExist = favouriteRepository.isExist(pet.desertionNo)
+    val isLike = favouriteRepository.isExist(pet.desertionNo)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
     private val _location = MutableStateFlow<Response<Location>>(Response.Loading)
@@ -48,13 +49,13 @@ class PetDetailViewModel @Inject constructor(
         }
     }
 
-    private fun addPet(pet: Pet) {
+    private fun addPet() {
         viewModelScope.launch {
             favouriteRepository.addPet(pet)
         }
     }
 
-    private fun removePet(pet: Pet) {
+    private fun removePet() {
         viewModelScope.launch {
             favouriteRepository.removePet(pet.desertionNo)
         }
@@ -63,16 +64,16 @@ class PetDetailViewModel @Inject constructor(
     fun onEvent(event: AdoptionDetailEvent) {
         when (event) {
             is AdoptionDetailEvent.AddLike -> {
-                addPet(pet)
+                addPet()
             }
 
             is AdoptionDetailEvent.RemoveLike -> {
-                removePet(pet)
+                removePet()
             }
         }
     }
 
-   private suspend fun getLocation(shelterAddress: String) {
+    private suspend fun getLocation(shelterAddress: String) {
         withContext(Dispatchers.IO) {
             _location.value = Response.Loading
             try {
@@ -81,8 +82,7 @@ class PetDetailViewModel @Inject constructor(
                 }
                 if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocationName(
-                        shelterAddress,
-                        1
+                        shelterAddress, 1
                     ) { address ->
                         val lat = address[0].latitude
                         val lon = address[0].longitude

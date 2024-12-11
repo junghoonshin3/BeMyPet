@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.gms) apply false
+
 }
 
 buildscript {

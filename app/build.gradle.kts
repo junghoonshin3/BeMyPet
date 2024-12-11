@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.bemypet.android.application.firebase)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -76,7 +77,7 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
     implementation(project(":feature:adoption"))
-    implementation(project(":feature:mypage"))
+//    implementation(project(":feature:mypage"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
     implementation(project(":core:common"))

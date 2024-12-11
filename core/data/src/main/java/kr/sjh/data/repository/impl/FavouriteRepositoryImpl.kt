@@ -16,6 +16,7 @@ class FavouriteRepositoryImpl @Inject constructor(private val dao: FavouriteDao)
     FavouriteRepository {
 
     override fun isExist(desertionNo: String): Flow<Boolean> = dao.isExist(desertionNo)
+        .flowOn(Dispatchers.IO)
 
     override suspend fun addPet(pet: Pet) {
         dao.insert(pet.toFavouriteEntity())
