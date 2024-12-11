@@ -1,9 +1,11 @@
 package kr.sjh.data.repository.impl
 
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kr.sjh.core.ktor.model.ApiResult
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
 import kr.sjh.core.ktor.model.request.SidoRequest
@@ -18,11 +20,14 @@ import kr.sjh.data.toPets
 import kr.sjh.data.toSidoList
 import kr.sjh.data.toSigunguList
 import kr.sjh.database.dao.FavouriteDao
+import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(
     private val service: AdoptionService,
-
+    private val dao: FavouriteDao
 ) :
     AdoptionRepository {
     override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =

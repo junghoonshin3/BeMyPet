@@ -1,14 +1,14 @@
 package kr.sjh.core.model.adoption
 
+import android.os.Parcelable
 import androidx.compose.runtime.Stable
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
-import kr.sjh.core.model.adoption.filter.dateTimeFormatter
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Serializable
-@Stable
+@Parcelize
 data class Pet(
     val desertionNo: String = "",
     val filename: String = "",
@@ -33,8 +33,7 @@ data class Pet(
     val chargeNm: String? = null,
     val officetel: String = "",
     val noticeComment: String? = null,
-) {
-
+) : Parcelable {
     val sexCdToText: String
         get() {
             return if (sexCd == "M") "수컷" else "암컷"
@@ -47,7 +46,7 @@ data class Pet(
         get() {
             val noticeDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
             val today = LocalDate.now().format(noticeDateFormat)
-            return today >= noticeSdt && today <= noticeEdt
+            return today in noticeSdt..noticeEdt
         }
 }
 

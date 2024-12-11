@@ -22,9 +22,9 @@ sealed class BottomNavItem(
     )
 
     // 마이 페이지
-    data object MyPage : BottomNavItem(
-        R.string.mypage,
-        "MyPage",
-        R.drawable.baseline_account_circle_24,
-    )
+//    data object MyPage : BottomNavItem(
+//        R.string.mypage,
+//        "MyPage",
+//        R.drawable.baseline_account_circle_24,
+//    )
 }

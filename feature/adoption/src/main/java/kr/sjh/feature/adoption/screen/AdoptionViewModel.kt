@@ -14,7 +14,6 @@ import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
 import kr.sjh.core.model.Response
 import kr.sjh.data.repository.AdoptionRepository
-import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
@@ -174,10 +173,9 @@ class AdoptionViewModel @Inject constructor(
                     }
                 }
             }
-
-
         }
     }
+
 
     private fun init() {
         getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest())

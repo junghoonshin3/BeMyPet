@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,18 +51,18 @@ import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.feature.adoption_detail.navigation.PinchZoom
 import kr.sjh.feature.adoption_detail.state.AdoptionDetailEvent
 
 @Composable
 fun PetDetailRoute(
     onBack: () -> Unit,
-    navigateToPinchZoom: (PinchZoom) -> Unit,
+    navigateToPinchZoom: (String) -> Unit,
     viewModel: PetDetailViewModel = hiltViewModel(),
 ) {
-    val isLike by viewModel.isExist.collectAsStateWithLifecycle()
 
     val location by viewModel.location.collectAsStateWithLifecycle()
+
+    val isLike by viewModel.isLike.collectAsStateWithLifecycle()
 
     PetDetailScreen(
         pet = viewModel.pet,
@@ -86,11 +88,13 @@ private fun PetDetailScreen(
     location: Response<Location>,
     onBack: () -> Unit,
     onLike: (Boolean) -> Unit,
-    navigateToPinchZoom: (PinchZoom) -> Unit
+    navigateToPinchZoom: (String) -> Unit
 ) {
     val imageRequest = ImageRequest.Builder(LocalContext.current).data(pet.popfile).build()
 
-    var selectedLike by remember(isLike) { mutableStateOf(isLike) }
+    var selectedLike by remember(isLike) {
+        mutableStateOf(isLike)
+    }
 
     val selectedColor by remember(selectedLike) {
         derivedStateOf {
@@ -98,11 +102,10 @@ private fun PetDetailScreen(
         }
     }
 
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         stickyHeader {
             TopAppBar(colors = TopAppBarDefaults.topAppBarColors(),
@@ -143,11 +146,11 @@ private fun PetDetailContent(
     imageReq: ImageRequest,
     pet: Pet,
     location: Response<Location>,
-    navigateToPinchZoom: (PinchZoom) -> Unit
+    navigateToPinchZoom: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         PetImage(imageReq) {
-            navigateToPinchZoom(PinchZoom(pet.popfile))
+            navigateToPinchZoom(pet.popfile)
         }
         Title(title = pet.kindCd)
         HorizontalDivider(
