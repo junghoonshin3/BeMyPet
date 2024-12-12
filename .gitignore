@@ -174,4 +174,7 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
+# Relase 폴더 무시
+release
+
 # End of https://www.toptal.com/developers/gitignore/api/android,androidstudio,firebase
