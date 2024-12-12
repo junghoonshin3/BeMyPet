@@ -8,7 +8,8 @@ build/
 
 # Local configuration file (sdk path, etc)
 local.properties
-
+local.defaults.properties
+secrets.properties
 # Log/OS Files
 *.log
 
@@ -85,8 +86,6 @@ proguard/
 # Android Studio
 /*/build/
 /*/local.properties
-/*/local.defaults.properties
-/*/secrets.properties
 /*/out
 /*/*/build
 /*/*/production
