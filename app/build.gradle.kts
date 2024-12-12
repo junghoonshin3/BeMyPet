@@ -27,6 +27,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -77,7 +80,6 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
     implementation(project(":feature:adoption"))
-//    implementation(project(":feature:mypage"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
     implementation(project(":core:common"))

@@ -28,26 +28,22 @@ fun BeMyPetApp(
         Scaffold(modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(), snackbarHost = {
-            SnackbarHost(
-                hostState = appState.snackBarHostState,
+            SnackbarHost(hostState = appState.snackBarHostState,
                 modifier = Modifier.padding(4.dp),
                 snackbar = { snackBarData ->
                     Snackbar(snackBarData)
-                }
+                })
+        }, bottomBar = {
+            BeMyPetBottomNavigation(
+                modifier = Modifier.fillMaxWidth(),
+                destinations = appState.bottomNavItems,
+                currentBottomNavItem = appState.currentBottomNavItem,
+                currentDestination = appState.currentDestination,
+                navigateToTopLevelDestination = appState::navigateToBottomNavItem
             )
-        },
-            bottomBar = {
-                BeMyPetBottomNavigation(
-                    modifier = Modifier.fillMaxWidth(),
-                    destinations = appState.bottomNavItems,
-                    currentBottomNavItem = appState.currentBottomNavItem,
-                    currentDestination = appState.currentDestination,
-                    navigateToTopLevelDestination = appState::navigateToBottomNavItem
-                )
-            }) {
+        }) {
             BeMyPetNavHost(
-                appState = appState,
-                modifier = Modifier
+                appState = appState, modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
             )

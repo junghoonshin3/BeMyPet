@@ -4,6 +4,7 @@ build/
 
 # Local configuration file (sdk path, etc)
 local.properties
+secrets.properties
 
 # Log/OS Files
 *.log
@@ -13,6 +14,7 @@ captures/
 .externalNativeBuild/
 .cxx/
 *.apk
+*.aab
 output.json
 
 # IntelliJ
@@ -31,3 +33,4 @@ google-services.json
 
 # Android Profiling
 *.hprof
+

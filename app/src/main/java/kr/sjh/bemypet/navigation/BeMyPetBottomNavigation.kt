@@ -25,7 +25,6 @@ fun BeMyPetBottomNavigation(
     currentDestination: NavDestination?
 ) {
     if (currentBottomNavItem == null) return
-
     BottomAppBar(modifier = modifier) {
         destinations.forEach { destination ->
             val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
