@@ -1,6 +1,5 @@
 package kr.sjh.bemypet.navigation
 
-import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
@@ -9,10 +8,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
-import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import kr.sjh.bemypet.BeMyPetAppState
-import kr.sjh.core.model.adoption.Pet
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
 import kr.sjh.feature.adoption_detail.PetPinedZoomRoute
