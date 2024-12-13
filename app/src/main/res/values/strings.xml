@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BeMyPet</string>
+    <string name="app_name_dev">BeMyPetDev</string>
 </resources>

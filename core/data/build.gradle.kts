@@ -14,8 +14,6 @@ android {
 dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(project(":core:model"))
-    implementation(project(":core:firebase"))
-    implementation(project(":core:google"))
     implementation(libs.firebase.auth)
     implementation(project(":core:ktor"))
     implementation(project(":core:database"))
