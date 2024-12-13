@@ -13,7 +13,7 @@ plugins {
 }
 
 val properties = Properties()
-properties.load(project.rootProject.file("local.properties").inputStream())
+properties.load(project.rootProject.file("apikey.properties").inputStream())
 
 android {
     namespace = "kr.sjh.core.ktor"

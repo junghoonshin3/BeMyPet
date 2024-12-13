@@ -1,13 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-include(":core:database")
-
-include(":feature:favourite")
-
-include(":feature:adoption-detail")
-
-include(":core:common")
-
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -33,10 +25,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "BeMyPet"
 include(":app")
-include(":core:firebase")
-include(":core:google")
 include(":core:designsystem")
 include(":core:model")
 include(":core:data")
 include(":core:ktor")
 include(":feature:adoption")
+include(":core:database")
+include(":feature:favourite")
+include(":feature:adoption-detail")
+include(":core:common")

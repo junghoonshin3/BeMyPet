@@ -1,5 +1,7 @@
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.bemypet.android.application)
@@ -8,8 +10,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.bemypet.android.application.firebase)
     alias(libs.plugins.kotlin.serialization)
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
+}
+
+// properties 파일 로드
+val properties = Properties().apply {
+    load(FileInputStream(rootProject.file("apikey.properties")))
 }
 
 android {
@@ -29,23 +35,16 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
         }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+            manifestPlaceholders["APP_NAME"] = "@string/app_name"
         }
 
-    }
-
-    secrets {
-        propertiesFileName = "secrets.properties"
-
-        defaultPropertiesFileName = "local.defaults.properties"
-
-        ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
-        ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
     }
 
     composeCompiler {
