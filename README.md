@@ -26,7 +26,9 @@
 - MVVM
 - Jetpack Compose
 - Dependency Injection with Hilt
-- 
+
+## API
+- [ 농림축산식품부 농림축산검역본부_국가동물보호정보시스템 구조동물 조회 서비스](https://www.data.go.kr/data/15098931/openapi.do)
 
 ## Getting Started
 
@@ -40,4 +42,15 @@ Release 빌드를 위해 다음 파일들이 필요합니다.
 
 또한 apikey.properties로 API 키를 관리하고있습니다.
 
+### ScreenShot
+
+<img alt="Screenshot_20241211_192307" height="200" src="https://github.com/user-attachments/assets/bbb0c033-0c2e-4973-8d44-05543b1e7adf" width="100"/>
+<img alt="Screenshot_20241211_192252" height="200" src="https://github.com/user-attachments/assets/b9af7069-fb4f-4589-a114-a3dc6de7756c" width="100"/>
+<img alt="Screenshot_20241211_192232" height="200" src="https://github.com/user-attachments/assets/1a5d4fe7-210a-4f8f-8a4f-20412d479f83" width="100"/>
+<img alt="Screenshot_20241211_192152" height="200" src="https://github.com/user-attachments/assets/3c4a4840-c9ca-4326-a988-499da15dd311" width="100"/>
+<img alt="Screenshot_20241211_192129" height="200" src="https://github.com/user-attachments/assets/4bf1f014-84a1-4e67-b754-d790aadea9da" width="100"/>
+<img alt="Screenshot_20241211_192106" height="200" src="https://github.com/user-attachments/assets/39b496c7-83fd-4fd9-839f-cc76e2521705" width="100"/>
+<img alt="Screenshot_20241211_192339" height="200" src="https://github.com/user-attachments/assets/9db55e9d-7bf0-43b8-8cac-19c8dd391286" width="100"/>
+
+### Demo 
 
