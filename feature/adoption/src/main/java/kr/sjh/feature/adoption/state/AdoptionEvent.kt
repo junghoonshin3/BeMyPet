@@ -10,7 +10,6 @@ sealed interface AdoptionEvent {
     data object LoadMore : AdoptionEvent
     data class SelectedCategory(val category: Category) : AdoptionEvent
     data object InitCategory : AdoptionEvent
-    data class SetLastScrollIndex(val index: Int) : AdoptionEvent
     data class SelectedLocation(val sido: Sido, val sigungu: Sigungu) : AdoptionEvent
     data class SelectedNeuter(val neuter: Neuter) : AdoptionEvent
     data class SelectedUpKind(val upKind: UpKind) : AdoptionEvent

@@ -1,6 +1,7 @@
 package kr.sjh.feature.adoption.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +52,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -63,6 +67,8 @@ import com.composables.core.SheetDetent
 import com.composables.core.SheetDetent.Companion.Hidden
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.CustomPullToRefreshBox
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
@@ -86,9 +92,28 @@ fun AdoptionRoute(
 
     val filterState by viewModel.adoptionFilterState.collectAsStateWithLifecycle()
 
+    val gridState = rememberLazyGridState(
+        initialFirstVisibleItemIndex = 0
+    )
+
+    val sideEffect = viewModel.sideEffect
+
+    val lifecycleScope = LocalLifecycleOwner.current.lifecycleScope
+
+    LaunchedEffect(Unit) {
+        sideEffect.onEach {
+            when (it) {
+                AdoptionSideEffect.ScrollToFirst -> {
+                    gridState.scrollToItem(0)
+                }
+            }
+        }.launchIn(lifecycleScope)
+    }
+
     AdoptionScreen(
         adoptionUiState = adoptionUiState,
         adoptionFilterState = filterState,
+        gridState = gridState,
         navigateToPetDetail = navigateToPetDetail,
         onEvent = viewModel::onEvent
     )
@@ -100,13 +125,11 @@ fun AdoptionRoute(
 private fun AdoptionScreen(
     adoptionUiState: AdoptionUiState,
     adoptionFilterState: AdoptionFilterState,
+    gridState: LazyGridState,
     navigateToPetDetail: (Pet) -> Unit,
     onEvent: (AdoptionEvent) -> Unit
 ) {
 
-    val gridState = rememberLazyGridState(
-        initialFirstVisibleItemIndex = 0
-    )
 
     val density = LocalDensity.current
 
@@ -147,18 +170,18 @@ private fun AdoptionScreen(
         initialDetent = Hidden, detents = listOf(Hidden, Peek)
     )
 
-    //마지막 스크롤 인덱스
-    LaunchedEffect(gridState) {
-        snapshotFlow {
-            gridState.firstVisibleItemIndex
-        }.debounce(500L).collectLatest { index ->
-            onEvent(
-                AdoptionEvent.SetLastScrollIndex(
-                    index
-                )
-            )
-        }
-    }
+//    LaunchedEffect(Unit) {
+//
+//        snapshotFlow {
+//            gridState.firstVisibleItemIndex
+//        }.debounce(500L).collectLatest { index ->
+//            onEvent(
+//                AdoptionEvent.SetLastScrollIndex(
+//                    index
+//                )
+//            )
+//        }
+//    }
 
     Column(
         modifier = Modifier

@@ -63,7 +63,6 @@ data class AdoptionUiState(
     val isMore: Boolean = false,
     val pets: List<Pet> = emptyList(),
     val totalCount: Int = 0,
-    val lastScrollIndex: Int = 0,
     val openBottomSheet: Boolean = false,
     val openDatePicker: Boolean = false,
 )

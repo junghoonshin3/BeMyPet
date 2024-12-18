@@ -1,6 +1,7 @@
 package kr.sjh.data.repository.impl
 
 import android.net.Uri
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -27,7 +28,6 @@ import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(
     private val service: AdoptionService,
-    private val dao: FavouriteDao
 ) :
     AdoptionRepository {
     override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =

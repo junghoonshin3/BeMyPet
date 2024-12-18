@@ -4,8 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.snackbar.SnackBarManager
@@ -14,11 +19,15 @@ import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
 import kr.sjh.core.model.Response
 import kr.sjh.data.repository.AdoptionRepository
+import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 import javax.inject.Inject
 
+sealed class AdoptionSideEffect {
+    data object ScrollToFirst : AdoptionSideEffect()
+}
 
 @HiltViewModel
 class AdoptionViewModel @Inject constructor(
@@ -30,6 +39,9 @@ class AdoptionViewModel @Inject constructor(
 
     private val _adoptionFilterState = MutableStateFlow(AdoptionFilterState())
     val adoptionFilterState = _adoptionFilterState.asStateFlow()
+
+    private val _sideEffect = Channel<AdoptionSideEffect>()
+    val sideEffect = _sideEffect.receiveAsFlow()
 
     init {
         init()
@@ -67,14 +79,6 @@ class AdoptionViewModel @Inject constructor(
                 }
                 init()
 
-            }
-
-            is AdoptionEvent.SetLastScrollIndex -> {
-                _adoptionUiState.update {
-                    it.copy(
-                        lastScrollIndex = event.index
-                    )
-                }
             }
 
             AdoptionEvent.LoadSido -> {
@@ -170,12 +174,12 @@ class AdoptionViewModel @Inject constructor(
                                 totalCount = result.data.second
                             )
                         }
+                        _sideEffect.send(AdoptionSideEffect.ScrollToFirst)
                     }
                 }
             }
         }
     }
-
 
     private fun init() {
         getAbandonmentPublic(_adoptionFilterState.value.toAbandonmentPublicRequest())
