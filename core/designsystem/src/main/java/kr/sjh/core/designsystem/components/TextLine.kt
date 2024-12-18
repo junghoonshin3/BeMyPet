@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -25,9 +24,7 @@ fun TextLine(
     ) {
         Text(style = titleTextStyle, text = title, modifier = Modifier.fillMaxWidth(0.3f))
         Text(
-            style = contentTextStyle,
-            modifier = Modifier.fillMaxWidth(0.7f),
-            text = content
+            style = contentTextStyle, modifier = Modifier.fillMaxWidth(0.7f), text = content
         )
     }
 }

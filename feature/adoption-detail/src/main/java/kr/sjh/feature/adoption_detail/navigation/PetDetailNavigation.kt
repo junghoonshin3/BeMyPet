@@ -36,7 +36,7 @@ val PetType = object : NavType<Pet>(isNullableAllowed = false) {
     }
 
     override fun parseValue(value: String): Pet {
-        return Json.decodeFromString<Pet>(value)
+        return Json.decodeFromString<Pet>(value.replace("+", " "))
     }
 
     override fun put(bundle: Bundle, key: String, value: Pet) {
