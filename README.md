@@ -25,7 +25,10 @@
 
 - MVVM
 - Jetpack Compose
-- Dependency Injection with Hilt
+- Navigation Compose
+- Dependency Injection Hilt
+- HTTP 클라이언트 라이브러리 Ktro
+- 이미지 로딩 라이브러리 Coil
 
 ## API
 - [ 농림축산식품부 농림축산검역본부_국가동물보호정보시스템 구조동물 조회 서비스](https://www.data.go.kr/data/15098931/openapi.do)
