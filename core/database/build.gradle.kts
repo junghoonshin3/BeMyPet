@@ -1,4 +1,5 @@
 import kr.sjh.convention.ext.androidTestImplementation
+import kr.sjh.convention.ext.implementation
 
 plugins {
     alias(libs.plugins.bemypet.android.library)
@@ -10,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)

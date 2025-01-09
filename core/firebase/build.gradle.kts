@@ -1,18 +1,12 @@
-import kr.sjh.convention.ext.androidTestImplementation
-
 plugins {
     alias(libs.plugins.bemypet.android.library)
-    alias(libs.plugins.bemypet.android.hilt)
-    alias(libs.plugins.bemypet.android.application.firebase)
 }
 
 android {
-    namespace = "kr.sjh.core.firebase"
-
+    namespace = "kr.sjh.firebase"
 }
 
-
 dependencies {
-    implementation(project(":core:model"))
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 }

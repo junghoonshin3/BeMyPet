@@ -197,9 +197,7 @@ private fun LocationContent(
 @Composable
 private fun LocationError(onEvent: (AdoptionEvent) -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        RoundedCornerButton(modifier = Modifier.padding(10.dp), textStyle = TextStyle(
-            fontSize = 26.sp
-        ), title = "재시도", onClick = {
+        RoundedCornerButton(modifier = Modifier.padding(10.dp), title = "재시도", onClick = {
             onEvent(
                 AdoptionEvent.LoadSido
             )

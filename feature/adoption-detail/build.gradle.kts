@@ -8,7 +8,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
     implementation(project(":core:data"))
     implementation(project(":core:ktor"))
     implementation(project(":core:common"))

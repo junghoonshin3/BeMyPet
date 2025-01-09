@@ -4,6 +4,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,7 +18,6 @@ import androidx.compose.ui.unit.dp
 fun RoundedCornerButton(
     modifier: Modifier = Modifier,
     title: String,
-    textStyle: TextStyle = TextStyle.Default,
     onClick: (String) -> Unit,
     selected: Boolean = false,
 ) {
@@ -30,6 +30,6 @@ fun RoundedCornerButton(
         )
         .clickable { onClick(title) }
         .then(modifier), contentAlignment = Alignment.Center) {
-        Text(text = title, style = textStyle)
+        Text(text = title, style = MaterialTheme.typography.bodySmall)
     }
 }

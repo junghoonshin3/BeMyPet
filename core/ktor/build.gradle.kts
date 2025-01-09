@@ -1,8 +1,5 @@
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
-import org.jetbrains.kotlin.gradle.utils.loadPropertyFromResources
-import org.jetbrains.kotlin.utils.addToStdlib.cast
-import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.Properties
 
 plugins {
@@ -13,7 +10,7 @@ plugins {
 }
 
 val properties = Properties()
-properties.load(project.rootProject.file("apikey.properties").inputStream())
+properties.load(project.rootProject.file("secrets.properties").inputStream())
 
 android {
     namespace = "kr.sjh.core.ktor"

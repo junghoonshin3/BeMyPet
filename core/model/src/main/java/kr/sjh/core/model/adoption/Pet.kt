@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@Stable
 @Serializable
 @Parcelize
 data class Pet(

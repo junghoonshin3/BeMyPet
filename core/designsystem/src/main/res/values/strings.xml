@@ -2,7 +2,7 @@
 <resources>
     <string name="adoption">유기동물</string>
     <string name="pet_detail">유기동물 상세</string>
-    <string name="mypage">내정보</string>
+    <string name="setting">설정</string>
     <string name="refreshing">불러오고 있어요~</string>
     <string name="favourite">관심동물</string>
 </resources>

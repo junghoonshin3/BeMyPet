@@ -108,7 +108,7 @@ private fun PetDetailScreen(
             .background(MaterialTheme.colorScheme.surface)
     ) {
         stickyHeader {
-            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(),
+            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
                 title = {},
                 modifier = Modifier
                     .fillMaxWidth()
