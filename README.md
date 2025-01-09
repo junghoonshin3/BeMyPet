@@ -40,7 +40,7 @@ Debug 빌드를 위해 다음 파일들이 필요합니다.
 Release 빌드를 위해 다음 파일들이 필요합니다.
 - `app/src/google-services.json`
 
-또한 apikey.properties로 API 키를 관리하고있습니다.
+또한 secrets.properties로 API 키를 관리하고있습니다.
 
 ### ScreenShot
 

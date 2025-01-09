@@ -18,20 +18,22 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
+import kr.sjh.setting.screen.SettingViewModel
 
 @AndroidEntryPoint
 class StartActivity : ComponentActivity() {
 
+    private val settingViewModel: SettingViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
 
         setContent {
-            BeMyPetTheme {
-                BeMyPetApp()
+            val setting by settingViewModel.setting.collectAsStateWithLifecycle(lifecycleOwner = this)
+            BeMyPetTheme(setting.theme) {
+                BeMyPetApp(settingViewModel = settingViewModel)
             }
         }
     }

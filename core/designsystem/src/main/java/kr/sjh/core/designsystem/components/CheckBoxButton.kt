@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +40,7 @@ fun CheckBoxButton(
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = title, fontSize = 15.sp)
+        Text(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(1f))
         Box(modifier = Modifier.size(30.dp)) {
             Icon(

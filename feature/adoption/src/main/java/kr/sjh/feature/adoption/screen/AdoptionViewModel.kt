@@ -40,9 +40,6 @@ class AdoptionViewModel @Inject constructor(
     private val _adoptionFilterState = MutableStateFlow(AdoptionFilterState())
     val adoptionFilterState = _adoptionFilterState.asStateFlow()
 
-    private val _sideEffect = Channel<AdoptionSideEffect>()
-    val sideEffect = _sideEffect.receiveAsFlow()
-
     init {
         init()
     }
@@ -78,7 +75,6 @@ class AdoptionViewModel @Inject constructor(
                     AdoptionFilterState()
                 }
                 init()
-
             }
 
             AdoptionEvent.LoadSido -> {
@@ -158,7 +154,6 @@ class AdoptionViewModel @Inject constructor(
                     }
 
                     Response.Loading -> {
-                        Log.d("sjh", "Loading")
                         _adoptionUiState.update {
                             it.copy(
                                 isRefreshing = true
@@ -174,7 +169,6 @@ class AdoptionViewModel @Inject constructor(
                                 totalCount = result.data.second
                             )
                         }
-                        _sideEffect.send(AdoptionSideEffect.ScrollToFirst)
                     }
                 }
             }

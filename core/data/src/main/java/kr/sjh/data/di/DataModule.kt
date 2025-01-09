@@ -6,8 +6,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.repository.FavouriteRepository
+import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.repository.impl.AdoptionRepositoryImpl
 import kr.sjh.data.repository.impl.FavouriteRepositoryImpl
+import kr.sjh.data.repository.impl.SettingRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -21,5 +23,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideFavouriteRepository(impl: FavouriteRepositoryImpl): FavouriteRepository =
+        impl
+
+    @Provides
+    @Singleton
+    fun provideSettingRepository(impl: SettingRepositoryImpl): SettingRepository =
         impl
 }

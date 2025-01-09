@@ -5,6 +5,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
@@ -20,10 +21,13 @@ import kr.sjh.feature.adoption_detail.navigation.navigateToPinchZoom
 import kr.sjh.feature.adoption_detail.screen.PetDetailRoute
 import kr.sjh.feature.favourite.navigation.Favourite
 import kr.sjh.feature.favourite.screen.FavouriteRoute
+import kr.sjh.setting.navigation.Setting
+import kr.sjh.setting.screen.SettingRoute
+import kr.sjh.setting.screen.SettingViewModel
 
 @Composable
 fun BeMyPetNavHost(
-    modifier: Modifier = Modifier, appState: BeMyPetAppState
+    modifier: Modifier = Modifier, appState: BeMyPetAppState, settingViewModel: SettingViewModel
 ) {
 
     val navController = appState.navController
@@ -35,7 +39,6 @@ fun BeMyPetNavHost(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
-
         composable<Adoption> {
             AdoptionRoute(navigateToPetDetail = { pet ->
                 navController.navigateToPetDetail(pet)
@@ -45,12 +48,11 @@ fun BeMyPetNavHost(
         composable<PetDetail>(
             typeMap = PetDetail.typeMap
         ) { backStackEntry ->
-            PetDetailRoute(
-                onBack = {
-                    navController.navigateUp()
-                }, navigateToPinchZoom = { imageUrl ->
-                    navController.navigateToPinchZoom(imageUrl)
-                })
+            PetDetailRoute(onBack = {
+                navController.navigateUp()
+            }, navigateToPinchZoom = { imageUrl ->
+                navController.navigateToPinchZoom(imageUrl)
+            })
         }
 
         dialog<PinchZoom>(
@@ -69,6 +71,9 @@ fun BeMyPetNavHost(
             FavouriteRoute(navigateToPetDetail = { pet ->
                 navController.navigateToPetDetail(pet)
             })
+        }
+        composable<Setting> {
+            SettingRoute(navigateTo = {}, viewModel = settingViewModel)
         }
     }
 }

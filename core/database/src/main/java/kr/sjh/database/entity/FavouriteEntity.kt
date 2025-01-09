@@ -2,7 +2,6 @@ package kr.sjh.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
 @Entity("favourite_pet")
 data class FavouriteEntity(
     @PrimaryKey(autoGenerate = true)

@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 @Composable
 @ExperimentalMaterial3Api
 fun CustomPullToRefreshBox(
+    modifier: Modifier = Modifier,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     state: PullToRefreshState = rememberPullToRefreshState(),
     contentAlignment: Alignment = Alignment.TopStart,
@@ -34,7 +34,8 @@ fun CustomPullToRefreshBox(
             enabled = enabled, state = state, isRefreshing = isRefreshing, onRefresh = onRefresh
         ), contentAlignment = contentAlignment
     ) {
-        content()
         indicator()
+        content()
+
     }
 }

@@ -21,10 +21,10 @@ sealed class BottomNavItem(
         R.drawable.like,
     )
 
-    // 마이 페이지
-//    data object MyPage : BottomNavItem(
-//        R.string.mypage,
-//        "MyPage",
-//        R.drawable.baseline_account_circle_24,
-//    )
+    // 설정
+    data object Setting : BottomNavItem(
+        R.string.setting,
+        "Setting",
+        R.drawable.setting_5_svgrepo_com,
+    )
 }

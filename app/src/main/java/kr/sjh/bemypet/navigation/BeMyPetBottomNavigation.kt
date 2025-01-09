@@ -3,7 +3,9 @@ package kr.sjh.bemypet.navigation
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
@@ -25,21 +27,20 @@ fun BeMyPetBottomNavigation(
     currentDestination: NavDestination?
 ) {
     if (currentBottomNavItem == null) return
-    BottomAppBar(modifier = modifier) {
+    BottomAppBar(modifier = modifier, containerColor = MaterialTheme.colorScheme.secondaryContainer) {
         destinations.forEach { destination ->
             val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
-            BeMyPetNavigationBarItem(
-                icon = {
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = destination.icon),
-                        contentDescription = destination.contentDes
-                    )
-                }, onClick = {
-                    navigateToTopLevelDestination(destination)
-                }, label = {
-                    Text(text = stringResource(id = destination.title))
-                }, selected = selected
+            BeMyPetNavigationBarItem(icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = destination.icon),
+                    contentDescription = destination.contentDes
+                )
+            }, onClick = {
+                navigateToTopLevelDestination(destination)
+            }, label = {
+                Text(text = stringResource(id = destination.title))
+            }, selected = selected
             )
         }
     }
@@ -66,7 +67,9 @@ fun RowScope.BeMyPetNavigationBarItem(
         colors = NavigationBarItemDefaults.colors(
             indicatorColor = Color.Transparent,
             selectedIconColor = selectedContentColor,
-            unselectedIconColor = unselectedContentColor
+            selectedTextColor = selectedContentColor,
+            unselectedIconColor = unselectedContentColor,
+            unselectedTextColor = unselectedContentColor
         )
     )
 }

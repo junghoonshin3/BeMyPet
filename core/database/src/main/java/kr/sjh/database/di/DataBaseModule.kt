@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.database.dao.FavouriteDao
+import kr.sjh.database.dao.SettingDao
 import javax.inject.Singleton
 
 @Module
@@ -17,6 +18,10 @@ object DataBaseModule {
     @Singleton
     @Provides
     fun provideFavouriteDao(db: AppDataBase): FavouriteDao = db.favouriteDao()
+
+    @Singleton
+    @Provides
+    fun provideSettingDao(db: AppDataBase): SettingDao = db.settingDao()
 
     @Singleton
     @Provides
