@@ -17,4 +17,5 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(project(":core:ktor"))
     implementation(project(":core:database"))
+    implementation(project(":core:datastore"))
 }

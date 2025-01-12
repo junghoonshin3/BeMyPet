@@ -10,7 +10,6 @@ import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.core.model.setting.Setting
 import kr.sjh.database.entity.FavouriteEntity
-import kr.sjh.database.entity.SettingEntity
 
 fun AbandonmentPublicResponse.Body.Items.toPets(): List<Pet> {
     return this.item.map {
@@ -119,16 +118,3 @@ fun FavouriteEntity.toPet(): Pet {
         noticeComment = this.noticeComment
     )
 }
-
-fun SettingEntity.toSetting(): Setting {
-    return Setting(
-        theme = this.theme
-    )
-}
-
-fun Setting.toSettingEntity(): SettingEntity {
-    return SettingEntity(
-        id = 1, theme = this.theme
-    )
-}
-

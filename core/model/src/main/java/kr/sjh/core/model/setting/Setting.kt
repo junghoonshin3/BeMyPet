@@ -9,5 +9,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Parcelize
 data class Setting(
-    val theme: String = SettingType.SYSTEM_THEME.title,
+    val darkTheme: Boolean = false,
 ) : Parcelable

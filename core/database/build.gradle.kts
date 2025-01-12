@@ -4,10 +4,15 @@ import kr.sjh.convention.ext.implementation
 plugins {
     alias(libs.plugins.bemypet.android.library)
     alias(libs.plugins.bemypet.android.hilt)
+    alias(libs.plugins.room)
 }
 
 android {
     namespace = "kr.sjh.database"
+    room {
+        schemaDirectory("debug","${projectDir.path}/schemas/debug")
+        schemaDirectory("release","${projectDir.path}/schemas/release")
+    }
 }
 
 dependencies {

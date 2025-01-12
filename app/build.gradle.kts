@@ -33,7 +33,6 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = properties["MAPS_API_KEY"].toString()
     }
 
-
     signingConfigs {
         create("release") {
             storeFile = file(properties["STORE_FILE"].toString())
@@ -83,7 +82,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
 }
 
 dependencies {
@@ -94,13 +92,15 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-//    implementation(project(":core:firebase"))
+
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
+    implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:datastore"))
 
 }

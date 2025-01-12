@@ -1,0 +1,198 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "ac67d2a6840432861da462399945dff1",
+    "entities": [
+      {
+        "tableName": "favourite_pet",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `desertionNo` TEXT NOT NULL, `filename` TEXT NOT NULL, `happenDt` TEXT NOT NULL, `happenPlace` TEXT NOT NULL, `kindCd` TEXT NOT NULL, `colorCd` TEXT, `age` TEXT NOT NULL, `weight` TEXT NOT NULL, `noticeNo` TEXT NOT NULL, `noticeSdt` TEXT NOT NULL, `noticeEdt` TEXT NOT NULL, `popfile` TEXT NOT NULL, `processState` TEXT NOT NULL, `sexCd` TEXT NOT NULL, `neuterYn` TEXT NOT NULL, `specialMark` TEXT NOT NULL, `careNm` TEXT NOT NULL, `careTel` TEXT NOT NULL, `careAddr` TEXT NOT NULL, `orgNm` TEXT NOT NULL, `chargeNm` TEXT, `officetel` TEXT NOT NULL, `noticeComment` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "desertionNo",
+            "columnName": "desertionNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filename",
+            "columnName": "filename",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "happenDt",
+            "columnName": "happenDt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "happenPlace",
+            "columnName": "happenPlace",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kindCd",
+            "columnName": "kindCd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorCd",
+            "columnName": "colorCd",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "age",
+            "columnName": "age",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weight",
+            "columnName": "weight",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noticeNo",
+            "columnName": "noticeNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noticeSdt",
+            "columnName": "noticeSdt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noticeEdt",
+            "columnName": "noticeEdt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "popfile",
+            "columnName": "popfile",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "processState",
+            "columnName": "processState",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sexCd",
+            "columnName": "sexCd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "neuterYn",
+            "columnName": "neuterYn",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "specialMark",
+            "columnName": "specialMark",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "careNm",
+            "columnName": "careNm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "careTel",
+            "columnName": "careTel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "careAddr",
+            "columnName": "careAddr",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orgNm",
+            "columnName": "orgNm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chargeNm",
+            "columnName": "chargeNm",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "officetel",
+            "columnName": "officetel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noticeComment",
+            "columnName": "noticeComment",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "setting",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `darkTheme` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "darkTheme",
+            "columnName": "darkTheme",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ac67d2a6840432861da462399945dff1')"
+    ]
+  }
+}

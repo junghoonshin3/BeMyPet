@@ -27,6 +27,5 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideSettingRepository(impl: SettingRepositoryImpl): SettingRepository =
-        impl
+    fun provideSettingRepository(impl: SettingRepositoryImpl): SettingRepository = impl
 }

@@ -4,32 +4,23 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
-import androidx.navigation.toRoute
 import kr.sjh.bemypet.BeMyPetAppState
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
-import kr.sjh.feature.adoption_detail.PetPinedZoomRoute
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
-import kr.sjh.feature.adoption_detail.navigation.PinchZoom
 import kr.sjh.feature.adoption_detail.navigation.navigateToPetDetail
-import kr.sjh.feature.adoption_detail.navigation.navigateToPinchZoom
 import kr.sjh.feature.adoption_detail.screen.PetDetailRoute
 import kr.sjh.feature.favourite.navigation.Favourite
 import kr.sjh.feature.favourite.screen.FavouriteRoute
 import kr.sjh.setting.navigation.Setting
 import kr.sjh.setting.screen.SettingRoute
-import kr.sjh.setting.screen.SettingViewModel
 
 @Composable
 fun BeMyPetNavHost(
-    modifier: Modifier = Modifier, appState: BeMyPetAppState, settingViewModel: SettingViewModel
+    modifier: Modifier = Modifier, appState: BeMyPetAppState, onChangeDarkTheme: (Boolean) -> Unit
 ) {
-
     val navController = appState.navController
 
     NavHost(
@@ -47,22 +38,8 @@ fun BeMyPetNavHost(
 
         composable<PetDetail>(
             typeMap = PetDetail.typeMap
-        ) { backStackEntry ->
+        ) {
             PetDetailRoute(onBack = {
-                navController.navigateUp()
-            }, navigateToPinchZoom = { imageUrl ->
-                navController.navigateToPinchZoom(imageUrl)
-            })
-        }
-
-        dialog<PinchZoom>(
-            dialogProperties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = false,
-            )
-        ) { backStackEntry ->
-            val pinchZoom: PinchZoom = backStackEntry.toRoute()
-            PetPinedZoomRoute(pinchZoom, close = {
                 navController.navigateUp()
             })
         }
@@ -73,7 +50,7 @@ fun BeMyPetNavHost(
             })
         }
         composable<Setting> {
-            SettingRoute(navigateTo = {}, viewModel = settingViewModel)
+            SettingRoute(onChangeDarkTheme = onChangeDarkTheme)
         }
     }
 }
