@@ -6,8 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import kr.sjh.core.model.setting.SettingType
@@ -59,31 +62,18 @@ private val darkScheme = darkColorScheme(
 
     )
 
+val LocalDarkTheme = compositionLocalOf { true }
 
 @Composable
 fun BeMyPetTheme(
-    theme: String,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val isSystemDarkTheme: Boolean = isSystemInDarkTheme()
 
-    val colorScheme = when (theme) {
-        SettingType.SYSTEM_THEME.title -> {
-            if (isSystemDarkTheme) darkScheme else lightScheme
-        }
+    val colorScheme = if (darkTheme) darkScheme else lightScheme
 
-        SettingType.DARK_THEME.title -> {
-            darkScheme
-        }
-
-        else -> {
-            lightScheme
-        }
-    }
-
-    val view = LocalView.current
-
-    if (!view.isInEditMode) {
+    if (!LocalInspectionMode.current) {
+        val view = LocalView.current
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
@@ -94,7 +84,13 @@ fun BeMyPetTheme(
                 colorScheme == lightScheme
         }
     }
-    MaterialTheme(
-        colorScheme = colorScheme, typography = Typography, content = content
-    )
+
+    CompositionLocalProvider(
+        LocalDarkTheme provides darkTheme
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme, typography = Typography, content = content
+        )
+    }
+
 }

@@ -34,6 +34,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -47,6 +50,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
+import kr.sjh.core.designsystem.components.PinchZoomComponent
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.model.Response
@@ -56,7 +61,6 @@ import kr.sjh.feature.adoption_detail.state.AdoptionDetailEvent
 @Composable
 fun PetDetailRoute(
     onBack: () -> Unit,
-    navigateToPinchZoom: (String) -> Unit,
     viewModel: PetDetailViewModel = hiltViewModel(),
 ) {
 
@@ -68,7 +72,7 @@ fun PetDetailRoute(
         pet = viewModel.pet,
         isLike = isLike,
         onBack = onBack,
-        location = location,
+        state = location,
         onLike = { like ->
             if (like) {
                 viewModel.onEvent(AdoptionDetailEvent.AddLike)
@@ -76,29 +80,27 @@ fun PetDetailRoute(
                 viewModel.onEvent(AdoptionDetailEvent.RemoveLike)
             }
         },
-        navigateToPinchZoom = navigateToPinchZoom
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PetDetailScreen(
     pet: Pet,
     isLike: Boolean,
-    location: Response<Location>,
+    state: LocationState,
     onBack: () -> Unit,
     onLike: (Boolean) -> Unit,
-    navigateToPinchZoom: (String) -> Unit
 ) {
     val imageRequest = ImageRequest.Builder(LocalContext.current).data(pet.popfile).build()
 
     var selectedLike by remember(isLike) {
         mutableStateOf(isLike)
     }
-
+    val color = MaterialTheme.colorScheme.onPrimary
     val selectedColor by remember(selectedLike) {
         derivedStateOf {
-            if (selectedLike) Color.Red else Color.Unspecified
+            if (selectedLike) Color.Red else color
         }
     }
 
@@ -108,35 +110,32 @@ private fun PetDetailScreen(
             .background(MaterialTheme.colorScheme.surface)
     ) {
         stickyHeader {
-            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
-                title = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(0.8f),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                            contentDescription = "back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        selectedLike = !selectedLike
-                        onLike(selectedLike)
-                    }) {
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = ImageVector.vectorResource(id = R.drawable.like),
-                            contentDescription = "like",
-                            tint = selectedColor
-                        )
-                    }
-                })
+            BeMyPetTopAppBar(modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary.copy(0.8f))
+                .zIndex(1f), title = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
+                        contentDescription = "back",
+                    )
+                }
+            }, iconButton = {
+                IconButton(onClick = {
+                    selectedLike = !selectedLike
+                    onLike(selectedLike)
+                }) {
+                    Icon(
+                        modifier = Modifier.size(30.dp),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.like),
+                        contentDescription = "like",
+                        tint = selectedColor
+                    )
+                }
+            })
         }
         item {
-            PetDetailContent(imageRequest, pet, location, navigateToPinchZoom)
+            PetDetailContent(imageRequest, pet, state)
         }
     }
 }
@@ -145,12 +144,20 @@ private fun PetDetailScreen(
 private fun PetDetailContent(
     imageReq: ImageRequest,
     pet: Pet,
-    location: Response<Location>,
-    navigateToPinchZoom: (String) -> Unit
+    state: LocationState,
 ) {
+    var isDialogShow by remember { mutableStateOf(false) }
+
+    if (isDialogShow) {
+        Dialog(properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { isDialogShow = false }) {
+            PetPinedZoomRoute(imageRequest = imageReq, close = { isDialogShow = false })
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         PetImage(imageReq) {
-            navigateToPinchZoom(pet.popfile)
+            isDialogShow = true
         }
         Title(title = pet.kindCd)
         HorizontalDivider(
@@ -174,14 +181,18 @@ private fun PetDetailContent(
         TextLine(title = "보호소 이름", content = pet.careNm)
         TextLine(title = "보호소 연락처", content = pet.careTel)
         TextLine(title = "보호장소", content = pet.careAddr)
-        when (location) {
-            is Response.Failure -> {
-                location.e.printStackTrace()
+        when (state) {
+            is LocationState.Failure -> {
+
             }
 
-            Response.Loading -> {}
-            is Response.Success -> {
-                ShelterMap(mapId = pet.careAddr, careNm = pet.careNm, location = location.data)
+            LocationState.Loading -> {
+
+            }
+
+            is LocationState.Success -> {
+                val location = state.location
+                ShelterMap(mapId = pet.careAddr, careNm = pet.careNm, location = location)
             }
         }
         TextLine(title = "관할기관", content = pet.orgNm)

@@ -8,7 +8,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.database.dao.FavouriteDao
-import kr.sjh.database.dao.SettingDao
 import javax.inject.Singleton
 
 @Module
@@ -21,16 +20,8 @@ object DataBaseModule {
 
     @Singleton
     @Provides
-    fun provideSettingDao(db: AppDataBase): SettingDao = db.settingDao()
-
-    @Singleton
-    @Provides
     fun provideAppDatabase(@ApplicationContext context: Context): AppDataBase =
         Room.databaseBuilder(
-            context,
-            AppDataBase::class.java,
-            "bemypet_db"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
+            context, AppDataBase::class.java, "bemypet_db"
+        ).fallbackToDestructiveMigration().build()
 }

@@ -20,7 +20,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
 @Composable
-fun PinchZoomComponent(imageRequest: ImageRequest, onTap: () -> Unit) {
+fun PinchZoomComponent(
+    modifier: Modifier = Modifier,
+    imageRequest: ImageRequest,
+    onTap: () -> Unit
+) {
     // 확대 축소 비율
     var scale by remember {
         mutableStateOf(1f)
@@ -32,7 +36,7 @@ fun PinchZoomComponent(imageRequest: ImageRequest, onTap: () -> Unit) {
     }
 
     BoxWithConstraints(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         val state = rememberTransformableState { zoomChange, panChange, _ ->

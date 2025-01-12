@@ -53,16 +53,6 @@ val PetType = object : NavType<Pet>(isNullableAllowed = false) {
     }
 }
 
-@Serializable
-@Stable
-data class PinchZoom(
-    val imageUrl: String
-) : Screen
-
-fun NavController.navigateToPinchZoom(imageUrl: String, navOptions: NavOptions? = null) {
-    navigate(PinchZoom(imageUrl), navOptions)
-}
-
 fun NavController.navigateToPetDetail(pet: Pet, navOptions: NavOptions? = null) {
     navigate(PetDetail(pet), navOptions)
 }

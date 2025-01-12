@@ -1,7 +1,6 @@
 package kr.sjh.feature.adoption.screen
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,20 +24,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,23 +46,18 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.composables.core.ModalBottomSheet
@@ -75,12 +65,9 @@ import com.composables.core.Scrim
 import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.SheetDetent.Companion.Hidden
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
-import kr.sjh.core.designsystem.components.CustomPullToRefreshBox
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.RoundedCornerButton
@@ -142,8 +129,8 @@ private fun AdoptionScreen(
     )
     val scrollableHeight = 64.dp
     val appBarHeight = 114.dp
-    val scrollableHeightPx = with(LocalDensity.current) { scrollableHeight.roundToPx().toFloat() }
-    var appbarOffsetHeightPx by remember { mutableFloatStateOf(0f) }
+    val scrollableHeightPx = with(density) { scrollableHeight.roundToPx().toFloat() }
+    var appbarOffsetHeightPx by rememberSaveable { mutableFloatStateOf(0f) }
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -159,6 +146,7 @@ private fun AdoptionScreen(
             }
         }
     }
+    val state = rememberPullToRefreshState()
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -180,7 +168,7 @@ private fun AdoptionScreen(
                     isDatePickerShow = false
                 })
         }
-        val state = rememberPullToRefreshState()
+
         PullToRefreshBox(
             state = state,
             modifier = Modifier.fillMaxSize(),
@@ -202,12 +190,13 @@ private fun AdoptionScreen(
         ) {
             EndlessLazyGridColumn(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 gridState = gridState,
                 userScrollEnabled = !adoptionUiState.isRefreshing,
                 items = adoptionUiState.pets,
                 contentPadding = PaddingValues(
-                    top = appBarHeight + 10.dp, start = 5.dp, end = 5.dp, bottom = 10.dp
+                    top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
                 ),
                 itemKey = { item -> item.desertionNo },
                 loadMore = {
@@ -227,15 +216,13 @@ private fun AdoptionScreen(
                 )
             }
         }
-
-
         ModalBottomSheet(state = sheetState) {
             Scrim()
             Sheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.background)
                     .navigationBarsPadding(), enabled = false
             ) {
                 FilterContent(
@@ -394,36 +381,12 @@ private fun Notice(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FilterTopAppBar(
-    modifier: Modifier = Modifier,
-    adoptionFilterState: AdoptionFilterState,
-    onEvent: (AdoptionEvent) -> Unit
-) {
-    Column(
-        modifier = modifier
-    ) {
-        TopAppBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp),
-            title = {
-                Text(
-                    text = stringResource(id = R.string.adoption),
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
-        )
-    }
-}
-
 @Preview(
     showBackground = true, uiMode = UI_MODE_NIGHT_YES, name = "DefaultPreviewDark"
 )
 @Composable
 fun AdoptionScreenPreview() {
-    BeMyPetTheme(Setting().theme) {
+    BeMyPetTheme() {
         AdoptionScreen(modifier = Modifier
             .fillMaxSize()
             .padding(5.dp),

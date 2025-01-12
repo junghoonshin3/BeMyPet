@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.gms) apply false
     alias(libs.plugins.crashlytics) apply false
+    alias(libs.plugins.room) apply false
 }
 
 buildscript {
