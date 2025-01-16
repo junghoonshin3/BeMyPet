@@ -7,10 +7,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePickerColors
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -18,6 +23,7 @@ import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +51,10 @@ fun DateRangePickerModal(
     )
 
     DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
+        TextButton(colors = ButtonDefaults.textButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ), onClick = {
             val selectedStartDate = dateRangePickerState.selectedStartDateMillis?.let {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
             } ?: dateRange.startDate
@@ -62,11 +71,16 @@ fun DateRangePickerModal(
             Text("확인")
         }
     }, dismissButton = {
-        TextButton(onClick = onDismiss) {
+        TextButton(
+            onClick = onDismiss, colors = ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("취소")
         }
-    }) {
-
+    }
+    ) {
         DateRangePicker(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,6 +122,10 @@ fun DateRangePickerModal(
                 }
             },
             showModeToggle = false,
+            colors = DatePickerDefaults.colors(
+                todayDateBorderColor = Color.Red,
+                todayContentColor = Color.Red
+            )
         )
     }
 }

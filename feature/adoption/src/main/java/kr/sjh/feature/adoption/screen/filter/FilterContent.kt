@@ -162,7 +162,7 @@ private fun LocationContent(
                 items(sidoList) { sido ->
                     RoundedCornerButton(modifier = Modifier
                         .fillMaxSize()
-                        .padding(5.dp),
+                        .padding(10.dp),
                         title = sido.orgdownNm,
                         selected = updateSido.orgCd == sido.orgCd,
                         onClick = {
@@ -181,7 +181,7 @@ private fun LocationContent(
                 items(sigunguList) { sigungu ->
                     RoundedCornerButton(modifier = Modifier
                         .fillMaxSize()
-                        .padding(5.dp),
+                        .padding(10.dp),
                         title = sigungu.orgdownNm,
                         selected = updateSigungu.orgCd == sigungu.orgCd,
                         onClick = {

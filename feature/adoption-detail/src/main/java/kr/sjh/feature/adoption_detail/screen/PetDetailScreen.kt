@@ -69,6 +69,9 @@ fun PetDetailRoute(
     val isLike by viewModel.isLike.collectAsStateWithLifecycle()
 
     PetDetailScreen(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         pet = viewModel.pet,
         isLike = isLike,
         onBack = onBack,
@@ -86,6 +89,7 @@ fun PetDetailRoute(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PetDetailScreen(
+    modifier: Modifier = Modifier,
     pet: Pet,
     isLike: Boolean,
     state: LocationState,
@@ -105,9 +109,7 @@ private fun PetDetailScreen(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+        modifier = modifier
     ) {
         stickyHeader {
             BeMyPetTopAppBar(modifier = Modifier

@@ -30,7 +30,6 @@ fun <T> EndlessLazyGridColumn(
 
     val reachedBottom: Boolean by remember { derivedStateOf { gridState.reachedBottom() } }
 
-    // load more if scrolled to bottom
     LaunchedEffect(reachedBottom) {
         if (reachedBottom) loadMore()
     }

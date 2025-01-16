@@ -34,7 +34,7 @@ sealed class LocationState {
 
 @HiltViewModel
 class PetDetailViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val geocoder: Geocoder,
     private val favouriteRepository: FavouriteRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -46,8 +46,6 @@ class PetDetailViewModel @Inject constructor(
 
     private val _location = MutableStateFlow<LocationState>(LocationState.Loading)
     val location = _location.asStateFlow()
-
-    lateinit var geocoder: Geocoder
 
     init {
         viewModelScope.launch {
@@ -83,9 +81,6 @@ class PetDetailViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             _location.value = LocationState.Loading
             try {
-                if (!::geocoder.isInitialized) {
-                    geocoder = Geocoder(context, Locale.getDefault())
-                }
                 val location = Location("")
                 if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocationName(
@@ -93,12 +88,10 @@ class PetDetailViewModel @Inject constructor(
                     ) { address ->
                         val lat = address[0].latitude
                         val lon = address[0].longitude
-                        _location.value = LocationState.Success(
-                            location.apply {
-                                latitude = lat
-                                longitude = lon
-                            }
-                        )
+                        _location.value = LocationState.Success(location.apply {
+                            latitude = lat
+                            longitude = lon
+                        })
                     }
                 } else {
                     val address = geocoder.getFromLocationName(
@@ -108,12 +101,10 @@ class PetDetailViewModel @Inject constructor(
                     if (!address.isNullOrEmpty()) {
                         val lat = address[0].latitude
                         val lon = address[0].longitude
-                        _location.value = LocationState.Success(
-                            location.apply {
-                                latitude = lat
-                                longitude = lon
-                            }
-                        )
+                        _location.value = LocationState.Success(location.apply {
+                            latitude = lat
+                            longitude = lon
+                        })
                     } else {
                         _location.value = LocationState.Failure(Exception("주소를 찾을수 없어요."))
                     }
