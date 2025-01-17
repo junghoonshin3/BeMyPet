@@ -73,6 +73,7 @@ import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.LoadingComponent
+import kr.sjh.core.designsystem.components.RefreshIndicator
 import kr.sjh.core.designsystem.components.RoundedCornerButton
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
@@ -258,11 +259,12 @@ private fun AdoptionScreen(
                 appbarOffsetHeightPx = 0f
             },
             indicator = {
-                Indicator(
+                RefreshIndicator(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = appBarHeight)
-                        .zIndex(1f), isRefreshing = adoptionUiState.isRefreshing, state = state
+                        .padding(top = appBarHeight),
+                    state = state,
+                    isRefreshing = adoptionUiState.isRefreshing
                 )
             }) {
             if (adoptionUiState.totalCount == 0) {
