@@ -3,6 +3,8 @@ package kr.sjh.core.designsystem.components
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +25,7 @@ fun RoundedCornerButton(
 ) {
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
+        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
         .border(
             1.dp,
             color = if (selected) Color.Red else Color.LightGray,

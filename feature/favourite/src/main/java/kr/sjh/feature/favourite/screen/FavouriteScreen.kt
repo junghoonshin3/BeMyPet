@@ -44,8 +44,7 @@ fun FavouriteRoute(
     FavouriteScreen(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-        , pets, navigateToPetDetail
+            .background(MaterialTheme.colorScheme.background), pets, navigateToPetDetail
     )
 }
 
@@ -75,19 +74,19 @@ private fun FavouriteScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("펫이 없어요!", fontSize = 30.sp)
             }
-            return@Column
-        }
-        EndlessLazyGridColumn(userScrollEnabled = true,
-            items = pets,
-            itemKey = { item -> item.desertionNo },
-            loadMore = { }) { pet ->
-            Pet(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        navigateToPetDetail(pet)
-                    }, pet = pet
-            )
+        } else {
+            EndlessLazyGridColumn(userScrollEnabled = true,
+                items = pets,
+                itemKey = { item -> item.desertionNo },
+                loadMore = { }) { pet ->
+                Pet(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable {
+                            navigateToPetDetail(pet)
+                        }, pet = pet
+                )
+            }
         }
     }
 }

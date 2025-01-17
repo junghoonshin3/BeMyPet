@@ -48,11 +48,6 @@ android {
         throw FileNotFoundException("Could not read version.properties")
     }
 
-    gradle.taskGraph.allTasks.forEach { task ->
-
-        System.out.println(task.name)
-    }
-
     defaultConfig {
         applicationId = "kr.sjh.bemypet"
         versionCode = versionBuildCode

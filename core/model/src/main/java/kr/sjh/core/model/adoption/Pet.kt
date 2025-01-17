@@ -41,7 +41,7 @@ data class Pet(
         }
     val neuterYnToText: String
         get() {
-            return if (neuterYn == "Y") "" else "아니요"
+            return if (neuterYn == "Y") "예" else "아니요"
         }
     val isNotice: Boolean
         get() {
