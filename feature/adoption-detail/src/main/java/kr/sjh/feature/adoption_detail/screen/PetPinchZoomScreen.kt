@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +73,7 @@ private fun PetPinedZoomScreen(
                     )
                 }
                 Text("사진")
-            })
+            }, modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(0.8f)))
         }
 
         PinchZoomComponent(modifier = Modifier.fillMaxSize(), imageRequest = imageRequest, onTap = {

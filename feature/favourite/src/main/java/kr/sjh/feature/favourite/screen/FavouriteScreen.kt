@@ -52,7 +52,7 @@ fun FavouriteRoute(
 private fun FavouriteScreen(
     modifier: Modifier = Modifier, pets: List<Pet>, navigateToPetDetail: (Pet) -> Unit
 ) {
-    Column(modifier = modifier) {
+    Box(modifier = modifier) {
         BeMyPetTopAppBar(
             modifier = Modifier
                 .fillMaxWidth()
@@ -71,9 +71,11 @@ private fun FavouriteScreen(
                 }
             })
         if (pets.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("펫이 없어요!", fontSize = 30.sp)
-            }
+            Text(
+                "펫이 없어요!",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.align(Alignment.Center)
+            )
         } else {
             EndlessLazyGridColumn(userScrollEnabled = true,
                 items = pets,

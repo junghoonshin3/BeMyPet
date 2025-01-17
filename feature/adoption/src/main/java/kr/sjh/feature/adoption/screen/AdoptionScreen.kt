@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -264,8 +266,17 @@ private fun AdoptionScreen(
                 )
             }) {
             if (adoptionUiState.totalCount == 0) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "펫이 없어요!")
+                val scrollState = rememberScrollState()
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "펫이 없어요!",
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 }
             } else {
                 EndlessLazyGridColumn(
@@ -297,7 +308,6 @@ private fun AdoptionScreen(
                     )
                 }
             }
-
         }
         ModalBottomSheet(state = sheetState) {
             Scrim()
