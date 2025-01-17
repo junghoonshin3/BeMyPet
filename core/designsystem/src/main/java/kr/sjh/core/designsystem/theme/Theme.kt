@@ -58,9 +58,8 @@ private val darkScheme = darkColorScheme(
     error = DarkError,
     onError = DarkOnError,
     errorContainer = DarkErrorContainer,
-    onErrorContainer = DarkOnErrorContainer,
-
-    )
+    onErrorContainer = DarkOnErrorContainer
+)
 
 val LocalDarkTheme = compositionLocalOf { true }
 

@@ -1,6 +1,7 @@
 package kr.sjh.feature.adoption.screen
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -96,7 +97,9 @@ fun AdoptionRoute(
     )
 
     AdoptionScreen(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         adoptionUiState = adoptionUiState,
         adoptionFilterState = filterState,
         gridState = gridState,
@@ -169,71 +172,9 @@ private fun AdoptionScreen(
                 })
         }
 
-        PullToRefreshBox(
-            state = state,
-            modifier = Modifier.fillMaxSize(),
-            isRefreshing = adoptionUiState.isRefreshing,
-            onRefresh = {
-                onEvent(AdoptionEvent.Refresh)
-                appbarOffsetHeightPx = 0f
-            },
-            indicator = {
-                Indicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = appBarHeight)
-                        .zIndex(1f),
-                    isRefreshing = adoptionUiState.isRefreshing,
-                    state = state
-                )
-            }
-        ) {
-            EndlessLazyGridColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                gridState = gridState,
-                userScrollEnabled = !adoptionUiState.isRefreshing,
-                items = adoptionUiState.pets,
-                contentPadding = PaddingValues(
-                    top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
-                ),
-                itemKey = { item -> item.desertionNo },
-                loadMore = {
-                    // 현재 아이템의 갯수 < 전체 아이템의 수 && api 호출 중이 아니면 로드
-                    if (adoptionUiState.pets.size < adoptionUiState.totalCount && !adoptionUiState.isMore) {
-                        onEvent(AdoptionEvent.LoadMore)
-                    }
-                },
-            ) { item ->
-                Pet(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable(enabled = !adoptionUiState.isRefreshing) {
-                            navigateToPetDetail(item)
-                        }, pet = item
-                )
-            }
-        }
-        ModalBottomSheet(state = sheetState) {
-            Scrim()
-            Sheet(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(MaterialTheme.colorScheme.background)
-                    .navigationBarsPadding(), enabled = false
-            ) {
-                FilterContent(
-                    adoptionFilterState = adoptionFilterState,
-                    sheetState = sheetState,
-                    onEvent = onEvent
-                )
-            }
-        }
         BeMyPetTopAppBar(modifier = Modifier
             .fillMaxWidth()
+            .zIndex(1f)
             .offset {
                 IntOffset(
                     x = 0,
@@ -242,7 +183,11 @@ private fun AdoptionScreen(
                         .roundToInt()
                 )
             }
-            .background(MaterialTheme.colorScheme.primary), title = {
+            .background(
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+            )
+            .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)), title = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -258,7 +203,8 @@ private fun AdoptionScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(appBarHeight - scrollableHeight)
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -301,6 +247,76 @@ private fun AdoptionScreen(
                 }
             }
         })
+
+        PullToRefreshBox(state = state,
+            modifier = Modifier.fillMaxSize(),
+            isRefreshing = adoptionUiState.isRefreshing,
+            onRefresh = {
+                onEvent(AdoptionEvent.Refresh)
+                appbarOffsetHeightPx = 0f
+            },
+            indicator = {
+                Indicator(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = appBarHeight)
+                        .zIndex(1f), isRefreshing = adoptionUiState.isRefreshing, state = state
+                )
+            }) {
+            if (adoptionUiState.totalCount == 0) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "펫이 없어요!")
+                }
+            } else {
+                EndlessLazyGridColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    gridState = gridState,
+                    userScrollEnabled = !adoptionUiState.isRefreshing,
+                    items = adoptionUiState.pets,
+                    contentPadding = PaddingValues(
+                        top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
+                    ),
+                    itemKey = { item -> item.desertionNo },
+                    loadMore = {
+                        Log.d("sjh", "loadmore")
+                        // 현재 아이템의 갯수 < 전체 아이템의 수 && api 호출 중이 아니면 로드
+                        if (adoptionUiState.pets.size < adoptionUiState.totalCount && !adoptionUiState.isMore) {
+                            onEvent(AdoptionEvent.LoadMore)
+                        }
+                    },
+                ) { item ->
+                    Pet(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable(enabled = !adoptionUiState.isRefreshing) {
+                                navigateToPetDetail(item)
+                            }, pet = item
+                    )
+                }
+            }
+
+        }
+        ModalBottomSheet(state = sheetState) {
+            Scrim()
+            Sheet(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .navigationBarsPadding(),
+                enabled = false
+            ) {
+                FilterContent(
+                    adoptionFilterState = adoptionFilterState,
+                    sheetState = sheetState,
+                    onEvent = onEvent
+                )
+            }
+        }
+
     }
 }
 

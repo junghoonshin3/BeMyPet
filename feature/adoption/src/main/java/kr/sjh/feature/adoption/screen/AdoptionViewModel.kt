@@ -209,7 +209,7 @@ class AdoptionViewModel @Inject constructor(
                         _adoptionUiState.update {
                             it.copy(
                                 isMore = false,
-                                pets = it.pets.plus(result.data.first),
+                                pets = it.pets.plus(result.data.first).distinctBy { it.desertionNo },
                                 totalCount = result.data.second
                             )
                         }

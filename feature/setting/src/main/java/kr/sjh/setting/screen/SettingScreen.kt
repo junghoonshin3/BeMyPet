@@ -33,7 +33,9 @@ fun SettingRoute(
     onChangeDarkTheme: (Boolean) -> Unit
 ) {
     SettingScreen(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         isDarkTheme = isDarkTheme,
         onChangeDarkTheme = onChangeDarkTheme
     )

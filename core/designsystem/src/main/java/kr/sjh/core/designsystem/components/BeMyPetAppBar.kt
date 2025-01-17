@@ -20,7 +20,7 @@ fun BeMyPetTopAppBar(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.then(Modifier.heightIn(min = 64.dp)),
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start
     ) {

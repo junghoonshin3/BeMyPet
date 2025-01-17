@@ -1,6 +1,7 @@
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.util.Properties
 
 plugins {
@@ -19,18 +20,44 @@ val properties = Properties().apply {
     load(FileInputStream(rootProject.file("secrets.properties")))
 }
 
+val versionPropsFile = Properties().apply {
+    load(FileInputStream(rootProject.file("version.properties")))
+}
+
+val appName = "BeMyPet"
+
 android {
     namespace = "kr.sjh.bemypet"
+    val versionPropsFile = rootProject.file("version.properties")
+    var versionBuildCode: Int
+    var versionBuildMajor: String
+    var versionBuildMinor: String
+    var versionBuildPatch: String
+    var newVersionName: String
+    if (versionPropsFile.canRead()) {
+        val versionProps = Properties()
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionBuildCode = versionProps["VERSION_CODE"].toString().toInt()
+        versionBuildMajor = versionProps["VERSION_MAJOR"].toString()
+        versionBuildMinor = versionProps["VERSION_MINOR"].toString()
+        versionBuildPatch = versionProps["VERSION_PATCH"].toString()
+        newVersionName = "$versionBuildMajor.$versionBuildMinor.$versionBuildPatch"
+        System.out.println("versionName : $newVersionName")
+        System.out.println("versionCode : $versionBuildCode")
+    } else {
+        throw FileNotFoundException("Could not read version.properties")
+    }
 
     defaultConfig {
         applicationId = "kr.sjh.bemypet"
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionBuildCode
+        versionName = newVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = properties["MAPS_API_KEY"].toString()
+
     }
 
     signingConfigs {

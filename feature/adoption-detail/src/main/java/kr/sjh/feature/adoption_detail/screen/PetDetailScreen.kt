@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -51,6 +53,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
+import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.PinchZoomComponent
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
@@ -69,6 +72,9 @@ fun PetDetailRoute(
     val isLike by viewModel.isLike.collectAsStateWithLifecycle()
 
     PetDetailScreen(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         pet = viewModel.pet,
         isLike = isLike,
         onBack = onBack,
@@ -86,6 +92,7 @@ fun PetDetailRoute(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PetDetailScreen(
+    modifier: Modifier = Modifier,
     pet: Pet,
     isLike: Boolean,
     state: LocationState,
@@ -105,9 +112,7 @@ private fun PetDetailScreen(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+        modifier = modifier
     ) {
         stickyHeader {
             BeMyPetTopAppBar(modifier = Modifier
@@ -181,20 +186,32 @@ private fun PetDetailContent(
         TextLine(title = "보호소 이름", content = pet.careNm)
         TextLine(title = "보호소 연락처", content = pet.careTel)
         TextLine(title = "보호장소", content = pet.careAddr)
-        when (state) {
-            is LocationState.Failure -> {
+        Box(
+            modifier = Modifier
+                .aspectRatio(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            when (state) {
+                is LocationState.Failure -> {
+                    Text(text = "지도를 읽어오는데 실패했습니다")
+                }
 
-            }
+                LocationState.Loading -> {
+                    LoadingComponent()
+                }
 
-            LocationState.Loading -> {
-
-            }
-
-            is LocationState.Success -> {
-                val location = state.location
-                ShelterMap(mapId = pet.careAddr, careNm = pet.careNm, location = location)
+                is LocationState.Success -> {
+                    val location = state.location
+                    ShelterMap(
+                        modifier = Modifier.fillMaxSize(),
+                        mapId = pet.careAddr,
+                        careNm = pet.careNm,
+                        location = location
+                    )
+                }
             }
         }
+
         TextLine(title = "관할기관", content = pet.orgNm)
         pet.chargeNm?.let {
             TextLine(title = "담당자", content = it)
@@ -222,7 +239,12 @@ private fun PetImage(imageReq: ImageRequest, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ShelterMap(mapId: String, careNm: String, location: Location) {
+private fun ShelterMap(
+    modifier: Modifier = Modifier,
+    mapId: String,
+    careNm: String,
+    location: Location
+) {
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 17f)
@@ -233,7 +255,7 @@ private fun ShelterMap(mapId: String, careNm: String, location: Location) {
     )
     val mapProperties by remember {
         mutableStateOf(
-            MapProperties(maxZoomPreference = 14f, minZoomPreference = 5f)
+            MapProperties(maxZoomPreference = 19f, minZoomPreference = 5f)
         )
     }
     val mapUiSettings by remember {
@@ -247,26 +269,19 @@ private fun ShelterMap(mapId: String, careNm: String, location: Location) {
                 scrollGesturesEnabled = false,
                 scrollGesturesEnabledDuringRotateOrZoom = false,
                 tiltGesturesEnabled = false,
-                zoomControlsEnabled = false,
-                zoomGesturesEnabled = false,
+                zoomControlsEnabled = true,
+                zoomGesturesEnabled = true,
             )
         )
     }
-
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(200.dp)
+    GoogleMap(
+        modifier = modifier,
+        properties = mapProperties,
+        uiSettings = mapUiSettings,
+        cameraPositionState = cameraPositionState,
     ) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            properties = mapProperties,
-            uiSettings = mapUiSettings,
-            cameraPositionState = cameraPositionState,
-        ) {
-            Marker(
-                state = markerState, title = careNm
-            )
-        }
+        Marker(
+            state = markerState, title = careNm
+        )
     }
 }

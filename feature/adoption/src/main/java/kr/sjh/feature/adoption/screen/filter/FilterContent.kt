@@ -3,10 +3,12 @@ package kr.sjh.feature.adoption.screen.filter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +48,10 @@ fun FilterContent(
                 NeuterContent(title = category.type.title,
                     selectedNeuter = adoptionFilterState.selectedNeuter,
                     confirm = { neuter ->
+                        if (adoptionFilterState.selectedNeuter == neuter) {
+                            sheetState.currentDetent = SheetDetent.Hidden
+                            return@NeuterContent
+                        }
                         onEvent(
                             AdoptionEvent.SelectedNeuter(neuter)
                         )
@@ -70,6 +76,10 @@ fun FilterContent(
                     selectedSido = adoptionFilterState.selectedSido,
                     selectedSigungu = adoptionFilterState.selectedSigungu,
                     confirm = { sido, sigungu ->
+                        if (adoptionFilterState.selectedSido == sido && adoptionFilterState.selectedSigungu == sigungu) {
+                            sheetState.currentDetent = SheetDetent.Hidden
+                            return@LocationContent
+                        }
                         onEvent(
                             AdoptionEvent.SelectedLocation(sido, sigungu)
                         )
@@ -90,6 +100,10 @@ fun FilterContent(
                 UpKindContent(title = category.type.title, close = {
                     sheetState.currentDetent = SheetDetent.Hidden
                 }, selectedUpKind = adoptionFilterState.selectedUpKind, confirm = { upKind ->
+                    if (adoptionFilterState.selectedUpKind == upKind) {
+                        sheetState.currentDetent = SheetDetent.Hidden
+                        return@UpKindContent
+                    }
                     onEvent(
                         AdoptionEvent.SelectedUpKind(
                             upKind
@@ -157,12 +171,18 @@ private fun LocationContent(
         }, close = close)
         Row(modifier = Modifier.fillMaxWidth()) {
             LazyColumn(
-                modifier = Modifier.weight(0.4f), verticalArrangement = Arrangement.spacedBy(5.dp)
+                modifier = Modifier.weight(0.4f),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                contentPadding = PaddingValues(
+                    top = 10.dp,
+                    bottom = 10.dp,
+                    start = 5.dp,
+                    end = 5.dp
+                )
             ) {
                 items(sidoList) { sido ->
                     RoundedCornerButton(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(5.dp),
+                        .fillMaxSize(),
                         title = sido.orgdownNm,
                         selected = updateSido.orgCd == sido.orgCd,
                         onClick = {
@@ -176,12 +196,18 @@ private fun LocationContent(
             }
             Spacer(Modifier.width(5.dp))
             LazyColumn(
-                modifier = Modifier.weight(0.6f), verticalArrangement = Arrangement.spacedBy(5.dp)
+                modifier = Modifier.weight(0.6f),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                contentPadding = PaddingValues(
+                    top = 10.dp,
+                    bottom = 10.dp,
+                    start = 5.dp,
+                    end = 5.dp
+                )
             ) {
                 items(sigunguList) { sigungu ->
                     RoundedCornerButton(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(5.dp),
+                        .fillMaxSize(),
                         title = sigungu.orgdownNm,
                         selected = updateSigungu.orgCd == sigungu.orgCd,
                         onClick = {
