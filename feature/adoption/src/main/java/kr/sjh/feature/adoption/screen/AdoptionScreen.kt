@@ -28,7 +28,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,9 +75,9 @@ import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.RefreshIndicator
 import kr.sjh.core.designsystem.components.RoundedCornerButton
 import kr.sjh.core.designsystem.components.TextLine
+import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.core.model.setting.Setting
 import kr.sjh.feature.adoption.screen.filter.CategoryType
 import kr.sjh.feature.adoption.screen.filter.DateRangePickerModal
 import kr.sjh.feature.adoption.screen.filter.FilterContent
@@ -133,7 +132,7 @@ private fun AdoptionScreen(
     val sheetState = com.composables.core.rememberModalBottomSheetState(
         initialDetent = Hidden, detents = listOf(Hidden, peek)
     )
-    val scrollableHeight = 64.dp
+    val scrollableHeight = DefaultAppBarHeight
     val appBarHeight = 114.dp
     val scrollableHeightPx = with(density) { scrollableHeight.roundToPx().toFloat() }
     var appbarOffsetHeightPx by rememberSaveable { mutableFloatStateOf(0f) }
