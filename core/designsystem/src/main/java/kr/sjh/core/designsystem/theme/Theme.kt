@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import kr.sjh.core.model.setting.SettingType
 
 private val lightScheme = lightColorScheme(
     primary = LightPrimary,
