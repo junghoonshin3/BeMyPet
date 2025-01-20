@@ -71,12 +71,16 @@ android {
 
     buildTypes {
         debug {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            )
             applicationIdSuffix = ".debug"
             manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
