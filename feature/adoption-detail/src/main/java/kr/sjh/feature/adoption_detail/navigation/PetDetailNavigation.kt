@@ -2,7 +2,6 @@ package kr.sjh.feature.adoption_detail.navigation
 
 import android.os.Build
 import android.os.Bundle
-import androidx.compose.runtime.Stable
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.NavType

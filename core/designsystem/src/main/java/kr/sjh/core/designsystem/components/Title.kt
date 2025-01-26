@@ -7,19 +7,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun Title(modifier: Modifier = Modifier, title: String, fontSize: TextUnit = 25.sp) {
+fun Title(modifier: Modifier = Modifier, title: String, style: TextStyle = TextStyle.Default) {
     Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = title,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold
+            modifier = Modifier.fillMaxWidth(), text = title, style = style
         )
     }
 }

@@ -21,10 +21,8 @@ import kr.sjh.setting.screen.SettingRoute
 fun BeMyPetNavHost(
     modifier: Modifier = Modifier, appState: BeMyPetAppState, onChangeDarkTheme: (Boolean) -> Unit
 ) {
-    val navController = appState.navController
-
     NavHost(
-        modifier = modifier, navController = navController, startDestination = Adoption,
+        modifier = modifier, navController = appState.navController, startDestination = Adoption,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -32,7 +30,7 @@ fun BeMyPetNavHost(
     ) {
         composable<Adoption> {
             AdoptionRoute(navigateToPetDetail = { pet ->
-                navController.navigateToPetDetail(pet)
+                appState.navController.navigateToPetDetail(pet)
             })
         }
 
@@ -40,13 +38,13 @@ fun BeMyPetNavHost(
             typeMap = PetDetail.typeMap
         ) {
             PetDetailRoute(onBack = {
-                navController.navigateUp()
+                appState.navController.popBackStack()
             })
         }
 
         composable<Favourite> {
             FavouriteRoute(navigateToPetDetail = { pet ->
-                navController.navigateToPetDetail(pet)
+                appState.navController.navigateToPetDetail(pet)
             })
         }
         composable<Setting> {

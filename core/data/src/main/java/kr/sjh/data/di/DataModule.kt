@@ -1,31 +1,39 @@
 package kr.sjh.data.di
 
+import android.content.Context
+import android.location.Geocoder
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.repository.FavouriteRepository
+import kr.sjh.data.repository.GeoLocationRepository
 import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.repository.impl.AdoptionRepositoryImpl
 import kr.sjh.data.repository.impl.FavouriteRepositoryImpl
+import kr.sjh.data.repository.impl.GeoLocationRepositoryImpl
 import kr.sjh.data.repository.impl.SettingRepositoryImpl
 import javax.inject.Singleton
 
-@Module
 @InstallIn(SingletonComponent::class)
-object DataModule {
-    @Provides
+@Module
+abstract class DataModule {
+    @Binds
     @Singleton
-    fun provideAdoptionRepository(impl: AdoptionRepositoryImpl): AdoptionRepository =
-        impl
+    abstract fun provideAdoptionRepository(impl: AdoptionRepositoryImpl): AdoptionRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideFavouriteRepository(impl: FavouriteRepositoryImpl): FavouriteRepository =
-        impl
+    abstract fun provideFavouriteRepository(impl: FavouriteRepositoryImpl): FavouriteRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideSettingRepository(impl: SettingRepositoryImpl): SettingRepository = impl
+    abstract fun provideSettingRepository(impl: SettingRepositoryImpl): SettingRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideGeoLocationRepository(impl: GeoLocationRepositoryImpl): GeoLocationRepository
 }

@@ -1,19 +1,7 @@
 package kr.sjh.feature.adoption.screen.filter
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePickerColors
-import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
@@ -21,14 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kr.sjh.core.model.adoption.filter.DateRange
-import kr.sjh.core.model.adoption.filter.dateTimeFormatter
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,13 +22,14 @@ fun DateRangePickerModal(
 ) {
 
     val dateRangePickerState = rememberDateRangePickerState(
-        initialSelectedStartDateMillis = dateRange.startDate.atZone(ZoneId.systemDefault())
-            .toInstant().toEpochMilli(),
-        initialSelectedEndDateMillis = dateRange.endDate.atZone(ZoneId.systemDefault()).toInstant()
-            .toEpochMilli(),
-        selectableDates = PastOrPresentSelectableDates,
-        yearRange = IntRange(2000, LocalDate.now().year),
-        initialDisplayMode = DisplayMode.Picker
+//        initialSelectedStartDateMillis = dateRange.startDate
+//            .toInstant().toEpochMilli()
+//        ,
+//        initialSelectedEndDateMillis = dateRange.endDate.atZone(ZoneId.systemDefault()).toInstant()
+//            .toEpochMilli(),
+//        selectableDates = PastOrPresentSelectableDates,
+//        yearRange = IntRange(2000, LocalDate.now().year),
+//        initialDisplayMode = DisplayMode.Picker
     )
 
     DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
@@ -63,7 +45,7 @@ fun DateRangePickerModal(
             } ?: dateRange.endDate
             onDateRangeSelected(
                 DateRange(
-                    selectedStartDate, selectedEndDate
+//                    selectedStartDate, selectedEndDate
                 )
             )
             onDismiss()
@@ -81,52 +63,53 @@ fun DateRangePickerModal(
         }
     }
     ) {
-        DateRangePicker(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(500.dp),
-            state = dateRangePickerState,
-            title = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .padding(5.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "날짜를 선택해주세요", fontSize = 18.sp, fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            headline = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 50.dp)
-                        .padding(5.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    dateRangePickerState.selectedStartDateMillis?.let {
-                        val startDate =
-                            LocalDate.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
-                        Text(text = startDate.format(dateTimeFormatter), fontSize = 15.sp)
-                        Text(text = " ~ ", fontSize = 13.sp)
-                    }
-                    dateRangePickerState.selectedEndDateMillis?.let {
-                        val endDate =
-                            LocalDate.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
-                        Text(text = endDate.format(dateTimeFormatter), fontSize = 15.sp)
-                    }
-                }
-            },
-            showModeToggle = false,
-            colors = DatePickerDefaults.colors(
-                todayDateBorderColor = Color.Red,
-                todayContentColor = Color.Red
-            )
-        )
+
+//        DateRangePicker(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(500.dp),
+//            state = dateRangePickerState,
+//            title = {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(50.dp)
+//                        .padding(5.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = "날짜를 선택해주세요", fontSize = 18.sp, fontWeight = FontWeight.Bold
+//                    )
+//                }
+//            },
+//            headline = {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .heightIn(max = 50.dp)
+//                        .padding(5.dp),
+//                    horizontalArrangement = Arrangement.Center,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    dateRangePickerState.selectedStartDateMillis?.let {
+//                        val startDate =
+//                            LocalDate.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
+//                        Text(text = startDate.format(dateTimeFormatter), fontSize = 15.sp)
+//                        Text(text = " ~ ", fontSize = 13.sp)
+//                    }
+//                    dateRangePickerState.selectedEndDateMillis?.let {
+//                        val endDate =
+//                            LocalDate.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
+//                        Text(text = endDate.format(dateTimeFormatter), fontSize = 15.sp)
+//                    }
+//                }
+//            },
+//            showModeToggle = false,
+//            colors = DatePickerDefaults.colors(
+//                todayDateBorderColor = Color.Red,
+//                todayContentColor = Color.Red
+//            )
+//        )
     }
 }
 

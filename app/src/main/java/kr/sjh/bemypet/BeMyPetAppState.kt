@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -19,9 +20,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kr.sjh.bemypet.navigation.BottomNavItem
 import kr.sjh.core.common.snackbar.SnackBarManager
-import kr.sjh.feature.adoption.navigation.Adoption
-import kr.sjh.feature.favourite.navigation.Favourite
-import kr.sjh.setting.navigation.Setting
+import kr.sjh.feature.adoption.navigation.navigateToAdoption
+import kr.sjh.feature.favourite.navigation.navigateToFavourite
+import kr.sjh.setting.navigation.navigateToSetting
+import okhttp3.internal.immutableListOf
 
 class BeMyPetAppState(
     val navController: NavHostController,
@@ -55,13 +57,13 @@ class BeMyPetAppState(
             else -> null
         }
 
-    val bottomNavItems = listOf(
+    val bottomNavItems = immutableListOf(
         BottomNavItem.Adoption, BottomNavItem.Favourite, BottomNavItem.Setting
     )
 
     fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
         val topLevelNavOptions = navOptions {
-            popUpTo(Adoption) {
+            popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
             launchSingleTop = true
@@ -69,15 +71,15 @@ class BeMyPetAppState(
         }
         when (bottomNavItem) {
             BottomNavItem.Adoption -> {
-                navController.navigate(Adoption, topLevelNavOptions)
+                navController.navigateToAdoption(topLevelNavOptions)
             }
 
             BottomNavItem.Favourite -> {
-                navController.navigate(Favourite, topLevelNavOptions)
+                navController.navigateToFavourite(topLevelNavOptions)
             }
 
             BottomNavItem.Setting -> {
-                navController.navigate(Setting, topLevelNavOptions)
+                navController.navigateToSetting(topLevelNavOptions)
             }
         }
     }

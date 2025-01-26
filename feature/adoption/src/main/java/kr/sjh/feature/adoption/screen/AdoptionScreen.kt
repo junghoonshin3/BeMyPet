@@ -57,6 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,6 +69,7 @@ import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.SheetDetent.Companion.Hidden
 import kotlinx.coroutines.launch
+import kr.sjh.core.common.calendar.HorizontalCalendar
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
@@ -75,11 +77,11 @@ import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.RefreshIndicator
 import kr.sjh.core.designsystem.components.RoundedCornerButton
 import kr.sjh.core.designsystem.components.TextLine
-import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
+import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
+import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.feature.adoption.screen.filter.CategoryType
-import kr.sjh.feature.adoption.screen.filter.DateRangePickerModal
 import kr.sjh.feature.adoption.screen.filter.FilterContent
 import kr.sjh.feature.adoption.state.AdoptionEvent
 import kr.sjh.feature.adoption.state.AdoptionFilterState
@@ -158,20 +160,14 @@ private fun AdoptionScreen(
         modifier = modifier.then(Modifier.nestedScroll(nestedScrollConnection))
     ) {
         if (isDatePickerShow) {
-            DateRangePickerModal(adoptionFilterState.selectedDateRange,
-                onDateRangeSelected = { selectedDateRange ->
-                    adoptionFilterState.selectedCategory?.apply {
-                        isSelected.value = !selectedDateRange.isInitSameDate()
-                        displayNm.value =
-                            if (!selectedDateRange.isInitSameDate()) selectedDateRange.toString() else type.title
-                    }
-                    onEvent(
-                        AdoptionEvent.SelectedDateRange(selectedDateRange)
-                    )
-                },
-                onDismiss = {
-                    isDatePickerShow = false
-                })
+            Dialog(onDismissRequest = { isDatePickerShow = false }) {
+                HorizontalCalendar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(500.dp)
+                        .background(MaterialTheme.colorScheme.background)
+                )
+            }
         }
 
         BeMyPetTopAppBar(modifier = Modifier
@@ -190,17 +186,13 @@ private fun AdoptionScreen(
                 RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
             )
             .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)), title = {
-            Box(
+            Title(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = stringResource(R.string.adoption),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
+                title = stringResource(R.string.adoption),
+                style = MaterialTheme.typography.headlineSmall
+            )
         }, content = {
             LazyRow(
                 modifier = Modifier
@@ -275,8 +267,7 @@ private fun AdoptionScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "펫이 없어요!",
-                        style = MaterialTheme.typography.titleLarge
+                        text = "펫이 없어요!", style = MaterialTheme.typography.titleLarge
                     )
                 }
             } else {

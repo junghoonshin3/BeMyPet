@@ -1,6 +1,5 @@
 package kr.sjh.bemypet
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,8 +9,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.common.collect.ImmutableList
 import kr.sjh.bemypet.navigation.BeMyPetBottomNavigation
 import kr.sjh.bemypet.navigation.BeMyPetNavHost
+import kr.sjh.bemypet.navigation.BottomNavItem
+import okhttp3.internal.toImmutableList
 
 @Composable
 fun BeMyPetApp(
@@ -33,7 +35,8 @@ fun BeMyPetApp(
         )
     }) { contentPadding ->
         BeMyPetNavHost(
-            appState = appState, modifier = Modifier
+            appState = appState,
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding),
             onChangeDarkTheme = onChangeDarkTheme

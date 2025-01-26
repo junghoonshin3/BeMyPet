@@ -1,8 +1,8 @@
 import kr.sjh.convention.ext.androidTestImplementation
 
 plugins {
-    alias(libs.plugins.bemypet.android.library)
-    alias(libs.plugins.bemypet.android.hilt)
+    alias(libs.plugins.bemypet.android.library.compose)
+    alias(libs.plugins.bemypet.android.feature)
 }
 
 android {

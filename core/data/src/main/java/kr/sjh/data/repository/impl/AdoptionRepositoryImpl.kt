@@ -28,8 +28,7 @@ import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(
     private val service: AdoptionService,
-) :
-    AdoptionRepository {
+) : AdoptionRepository {
     override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =
         flow {
             emit(Response.Loading)
