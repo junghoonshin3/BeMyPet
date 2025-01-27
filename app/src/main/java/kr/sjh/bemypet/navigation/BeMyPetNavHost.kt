@@ -2,6 +2,7 @@ package kr.sjh.bemypet.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -22,16 +23,18 @@ fun BeMyPetNavHost(
     modifier: Modifier = Modifier, appState: BeMyPetAppState, onChangeDarkTheme: (Boolean) -> Unit
 ) {
     NavHost(
-        modifier = modifier, navController = appState.navController, startDestination = Adoption,
+        modifier = modifier,
+        navController = appState.navController, startDestination = Adoption,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
         composable<Adoption> {
-            AdoptionRoute(navigateToPetDetail = { pet ->
-                appState.navController.navigateToPetDetail(pet)
-            })
+            AdoptionRoute(
+                navigateToPetDetail = { pet ->
+                    appState.navController.navigateToPetDetail(pet)
+                })
         }
 
         composable<PetDetail>(

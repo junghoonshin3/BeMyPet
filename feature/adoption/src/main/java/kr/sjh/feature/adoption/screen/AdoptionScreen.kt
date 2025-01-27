@@ -169,79 +169,6 @@ private fun AdoptionScreen(
                 )
             }
         }
-
-        BeMyPetTopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .zIndex(1f)
-            .offset {
-                IntOffset(
-                    x = 0,
-                    y = appbarOffsetHeightPx
-                        .coerceIn(-scrollableHeightPx, 0f)
-                        .roundToInt()
-                )
-            }
-            .background(
-                MaterialTheme.colorScheme.primary,
-                RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
-            )
-            .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)), title = {
-            Title(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                title = stringResource(R.string.adoption),
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }, content = {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(appBarHeight - scrollableHeight)
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                item {
-                    IconButton(
-                        modifier = Modifier.padding(start = 5.dp, end = 5.dp),
-                        onClick = {
-                            onEvent(AdoptionEvent.InitCategory)
-                            coroutineScope.launch {
-                                gridState.animateScrollToItem(0, 0)
-                                appbarOffsetHeightPx = 0f
-                            }
-                        }) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
-                            contentDescription = "reset"
-                        )
-                    }
-                }
-                items(adoptionFilterState.filterList) { category ->
-                    RoundedCornerButton(modifier = Modifier.padding(5.dp),
-                        selected = category.isSelected.value,
-                        title = if (category.isSelected.value) category.displayNm.value else category.type.title,
-                        onClick = {
-                            when (category.type) {
-                                CategoryType.DATE_RANGE -> {
-                                    isDatePickerShow = true
-                                }
-
-                                else -> {
-                                    sheetState.currentDetent = peek
-                                }
-                            }
-                            onEvent(
-                                AdoptionEvent.SelectedCategory(
-                                    category
-                                )
-                            )
-                        })
-                }
-            }
-        })
-
         PullToRefreshBox(state = state,
             modifier = Modifier.fillMaxSize(),
             isRefreshing = adoptionUiState.isRefreshing,
@@ -318,7 +245,76 @@ private fun AdoptionScreen(
                 )
             }
         }
+        BeMyPetTopAppBar(modifier = Modifier
+            .fillMaxWidth()
+            .offset {
+                IntOffset(
+                    x = 0,
+                    y = appbarOffsetHeightPx
+                        .coerceIn(-scrollableHeightPx, 0f)
+                        .roundToInt()
+                )
+            }
+            .background(
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+            )
+            .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)), title = {
+            Title(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                title = stringResource(R.string.adoption),
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }, content = {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(appBarHeight - scrollableHeight)
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                item {
+                    IconButton(
+                        modifier = Modifier.padding(start = 5.dp, end = 5.dp),
+                        onClick = {
+                            onEvent(AdoptionEvent.InitCategory)
+                            coroutineScope.launch {
+                                gridState.animateScrollToItem(0, 0)
+                                appbarOffsetHeightPx = 0f
+                            }
+                        }) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
+                            contentDescription = "reset"
+                        )
+                    }
+                }
+                items(adoptionFilterState.filterList) { category ->
+                    RoundedCornerButton(modifier = Modifier.padding(5.dp),
+                        selected = category.isSelected.value,
+                        title = if (category.isSelected.value) category.displayNm.value else category.type.title,
+                        onClick = {
+                            when (category.type) {
+                                CategoryType.DATE_RANGE -> {
+                                    isDatePickerShow = true
+                                }
 
+                                else -> {
+                                    sheetState.currentDetent = peek
+                                }
+                            }
+                            onEvent(
+                                AdoptionEvent.SelectedCategory(
+                                    category
+                                )
+                            )
+                        })
+                }
+            }
+        })
     }
 }
 
@@ -404,7 +400,7 @@ private fun Notice(modifier: Modifier = Modifier) {
 )
 @Composable
 fun AdoptionScreenPreview() {
-    BeMyPetTheme() {
+    BeMyPetTheme {
         AdoptionScreen(modifier = Modifier
             .fillMaxSize()
             .padding(5.dp),
