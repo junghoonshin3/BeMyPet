@@ -29,6 +29,7 @@ fun BeMyPetApp(
     } else {
         Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary)
     }
 
     Scaffold(
