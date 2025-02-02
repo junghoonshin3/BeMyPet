@@ -14,7 +14,7 @@
 </div>
 
 <a align="center" href="https://play.google.com/store/apps/details?id=kr.sjh.bemypet">
-    <img src="https://i.namu.wiki/i/eRJ4F1pIk_HbZWgegNDAhu3jYgb-YbyB7vB4sgBLd1WrthI4VRS4lqothtJE9JdxE1zmeIHIhgYWeL_DmPy-CRd4-FK4PI5IWfOfbhAnjijNvdXINJcG20DLU2nw7e5E5wxCT2YrqQL0odpSnDbE8w.svg"  width="200" height="100"/>
+    <img src="https://i.namu.wiki/i/eRJ4F1pIk_HbZWgegNDAhu3jYgb-YbyB7vB4sgBLd1WrthI4VRS4lqothtJE9JdxE1zmeIHIhgYWeL_DmPy-CRd4-FK4PI5IWfOfbhAnjijNvdXINJcG20DLU2nw7e5E5wxCT2YrqQL0odpSnDbE8w.svg"  width="500" height="100"/>
 </a>
 
 ## Features
