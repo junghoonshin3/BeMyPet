@@ -25,10 +25,6 @@ import kr.sjh.feature.adoption.state.AdoptionFilterState
 import kr.sjh.feature.adoption.state.AdoptionUiState
 import javax.inject.Inject
 
-sealed class AdoptionSideEffect {
-    data object ScrollToFirst : AdoptionSideEffect()
-}
-
 @HiltViewModel
 class AdoptionViewModel @Inject constructor(
     private val adoptionRepository: AdoptionRepository,
@@ -126,7 +122,9 @@ class AdoptionViewModel @Inject constructor(
             is AdoptionEvent.SelectedDateRange -> {
                 _adoptionFilterState.update {
                     it.copy(
-                        selectedDateRange = event.dateRange
+                        selectedStartDate = event.startDate,
+                        selectedEndDate = event.endDate
+
                     )
                 }
                 getAbandonmentPublic(
@@ -209,7 +207,8 @@ class AdoptionViewModel @Inject constructor(
                         _adoptionUiState.update {
                             it.copy(
                                 isMore = false,
-                                pets = it.pets.plus(result.data.first).distinctBy { it.desertionNo },
+                                pets = it.pets.plus(result.data.first)
+                                    .distinctBy { it.desertionNo },
                                 totalCount = result.data.second
                             )
                         }

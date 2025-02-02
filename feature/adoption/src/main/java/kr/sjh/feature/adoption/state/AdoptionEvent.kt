@@ -4,6 +4,7 @@ import kr.sjh.core.model.adoption.filter.DateRange
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.feature.adoption.screen.filter.Category
+import java.time.LocalDate
 
 sealed interface AdoptionEvent {
     data object Refresh : AdoptionEvent
@@ -15,6 +16,6 @@ sealed interface AdoptionEvent {
     data class SelectedUpKind(val upKind: UpKind) : AdoptionEvent
     data class LoadSigungu(val sido: Sido) : AdoptionEvent
     data object LoadSido : AdoptionEvent
-    data class SelectedDateRange(val dateRange: DateRange) : AdoptionEvent
+    data class SelectedDateRange(val startDate: LocalDate, val endDate: LocalDate) : AdoptionEvent
 
 }

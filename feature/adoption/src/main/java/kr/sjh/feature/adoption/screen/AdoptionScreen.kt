@@ -1,6 +1,5 @@
 package kr.sjh.feature.adoption.screen
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,7 +57,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
@@ -69,7 +67,6 @@ import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.SheetDetent.Companion.Hidden
 import kotlinx.coroutines.launch
-import kr.sjh.core.common.calendar.HorizontalCalendar
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
@@ -81,6 +78,7 @@ import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
 import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.feature.adoption.screen.filter.CalendarContent
 import kr.sjh.feature.adoption.screen.filter.CategoryType
 import kr.sjh.feature.adoption.screen.filter.FilterContent
 import kr.sjh.feature.adoption.state.AdoptionEvent
@@ -161,11 +159,22 @@ private fun AdoptionScreen(
     ) {
         if (isDatePickerShow) {
             Dialog(onDismissRequest = { isDatePickerShow = false }) {
-                HorizontalCalendar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(500.dp)
-                        .background(MaterialTheme.colorScheme.background)
+                CalendarContent(
+                    selectedStartDate = adoptionFilterState.selectedStartDate,
+                    selectedEndDate = adoptionFilterState.selectedEndDate,
+                    onClose = { isDatePickerShow = false },
+                    onConfirm = { start, end ->
+                        when {
+                            start != null && end != null -> {
+                                onEvent(
+                                    AdoptionEvent.SelectedDateRange(
+                                        startDate = start, endDate = end
+                                    )
+                                )
+                                isDatePickerShow = false
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -396,7 +405,7 @@ private fun Notice(modifier: Modifier = Modifier) {
 }
 
 @Preview(
-    showBackground = true, uiMode = UI_MODE_NIGHT_YES, name = "DefaultPreviewDark"
+    showBackground = true, name = "DefaultPreviewDark"
 )
 @Composable
 fun AdoptionScreenPreview() {

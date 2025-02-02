@@ -12,6 +12,7 @@ import kr.sjh.feature.adoption.screen.filter.CategoryType.DATE_RANGE
 import kr.sjh.feature.adoption.screen.filter.CategoryType.LOCATION
 import kr.sjh.feature.adoption.screen.filter.CategoryType.NEUTER
 import kr.sjh.feature.adoption.screen.filter.CategoryType.UP_KIND
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 enum class UpKind(val title: String, val value: String?) {
@@ -30,7 +31,8 @@ data class AdoptionFilterState(
     val selectedCategory: Category? = null,
     val selectedSido: Sido = Sido(),
     val selectedSigungu: Sigungu = Sigungu(),
-    val selectedDateRange: DateRange = DateRange(),
+    val selectedStartDate: LocalDate = LocalDate.now().minusDays(7),
+    val selectedEndDate: LocalDate = LocalDate.now(),
     val selectedNeuter: Neuter = Neuter.ALL,
     val selectedUpKind: UpKind = UpKind.ALL,
     val sidoList: List<Sido> = emptyList(),
@@ -45,12 +47,8 @@ data class AdoptionFilterState(
         return AbandonmentPublicRequest(
             upkind = selectedUpKind.value,
             neuter_yn = selectedNeuter.value,
-            bgnde = selectedDateRange.startDate.format(
-                dateTimeFormat
-            ),
-            endde = selectedDateRange.endDate.format(
-                dateTimeFormat
-            ),
+            bgnde = selectedStartDate.format(dateTimeFormat),
+            endde = selectedEndDate.format(dateTimeFormat),
             upr_cd = selectedSido.orgCd,
             org_cd = selectedSigungu.orgCd,
             pageNo = pageNo
