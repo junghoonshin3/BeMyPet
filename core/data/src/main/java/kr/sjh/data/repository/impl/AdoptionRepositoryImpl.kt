@@ -1,115 +1,99 @@
 package kr.sjh.data.repository.impl
 
-import android.net.Uri
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kr.sjh.core.ktor.model.ApiResult
+import kotlinx.coroutines.withContext
 import kr.sjh.core.ktor.model.request.AbandonmentPublicRequest
-import kr.sjh.core.ktor.model.request.SidoRequest
 import kr.sjh.core.ktor.model.request.SigunguRequest
-import kr.sjh.core.ktor.repository.AdoptionService
+import kr.sjh.core.ktor.service.AdoptionService
 import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
-import kr.sjh.data.toPets
-import kr.sjh.data.toSidoList
-import kr.sjh.data.toSigunguList
-import kr.sjh.database.dao.FavouriteDao
-import java.net.URLEncoder
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
+import kr.sjh.database.dao.LocationDao
+import kr.sjh.database.entity.SidoEntity
+import kr.sjh.database.entity.SigunguEntity
 import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(
-    private val service: AdoptionService,
+    private val service: AdoptionService, private val dao: LocationDao
 ) : AdoptionRepository {
-    override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<Response<Pair<List<Pet>, Int>>> =
+
+    override suspend fun getAbandonmentPublic(req: AbandonmentPublicRequest): Flow<List<Pet>> =
         flow {
-            emit(Response.Loading)
-            when (val res = service.getAbandonmentPublic(req)) {
-                is ApiResult.ServiceError -> {
-                    val err = res.error
-                    val exception =
-                        RuntimeException("${err.cmmMsgHeader.errMsg}:${err.cmmMsgHeader.returnAuthMsg}")
-                    emit(Response.Failure(exception))
-                }
-
-                is ApiResult.Failure -> {
-                    emit(Response.Failure(res.exception))
-                }
-
-                is ApiResult.Success -> {
-                    if (res.data.header.errorMsg != null) {
-                        emit(Response.Failure(Exception(res.data.header.errorMsg)))
-                        return@flow
-                    }
-
-                    res.data.body?.let { body ->
-                        val totalCount = body.totalCount
-                        val pets = body.items.toPets()
-                        emit(Response.Success(Pair(pets, totalCount)))
-                    }
-                }
-            }
+            emit(emptyList<Pet>())
         }.flowOn(Dispatchers.IO)
 
-    override fun getSido(req: SidoRequest): Flow<Response<List<Sido>>> = flow {
-        emit(Response.Loading)
-        when (val res = service.getSido(req)) {
-            is ApiResult.ServiceError -> {
-                val err = res.error
-                val exception =
-                    RuntimeException("${err.cmmMsgHeader.errMsg}:${err.cmmMsgHeader.returnAuthMsg}")
-                emit(Response.Failure(exception))
+    override suspend fun insertSidoList() {
+        try {
+            withContext(Dispatchers.IO) {
+                if (dao.existSido()) return@withContext
+                dao.insertAllSido(
+                    listOf(
+                        SidoEntity(orgdownNm = "서울특별시", orgCd = "6110000"),
+                        SidoEntity(orgdownNm = "부산광역시", orgCd = "6260000"),
+                        SidoEntity(orgdownNm = "대구광역시", orgCd = "6270000"),
+                        SidoEntity(orgdownNm = "인천광역시", orgCd = "6280000"),
+                        SidoEntity(orgdownNm = "광주광역시", orgCd = "6290000"),
+                        SidoEntity(orgdownNm = "세종특별자치시", orgCd = "5690000"),
+                        SidoEntity(orgdownNm = "대전광역시", orgCd = "6300000"),
+                        SidoEntity(orgdownNm = "울산광역시", orgCd = "6310000"),
+                        SidoEntity(orgdownNm = "경기도", orgCd = "6410000"),
+                        SidoEntity(orgdownNm = "강원특별자치도", orgCd = "6530000"),
+                        SidoEntity(orgdownNm = "충청북도", orgCd = "6430000"),
+                        SidoEntity(orgdownNm = "충청남도", orgCd = "6440000"),
+                        SidoEntity(orgdownNm = "전북특별자치도", orgCd = "6540000"),
+                        SidoEntity(orgdownNm = "전라남도", orgCd = "6460000"),
+                        SidoEntity(orgdownNm = "경상북도", orgCd = "6470000"),
+                        SidoEntity(orgdownNm = "경상남도", orgCd = "6480000"),
+                        SidoEntity(orgdownNm = "제주특별자치도", orgCd = "6500000")
+                    )
+                )
             }
-
-            is ApiResult.Failure -> {
-                emit(Response.Failure(res.exception))
-            }
-
-            is ApiResult.Success -> {
-                if (res.data.header.errorMsg != null) {
-                    emit(Response.Failure(Exception(res.data.header.errorMsg)))
-                    return@flow
-                }
-                val sidoList = res.data.toSidoList().toMutableList().apply {
-                    add(0, Sido())
-                }.toList()
-                emit(Response.Success(sidoList))
-            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
-    override fun getSigungu(req: SigunguRequest): Flow<Response<List<Sigungu>>> = flow {
-        emit(Response.Loading)
-        when (val res = service.getSigungu(req)) {
-            is ApiResult.ServiceError -> {
-                val err = res.error
-                val exception =
-                    RuntimeException("${err.cmmMsgHeader.errMsg}:${err.cmmMsgHeader.returnAuthMsg}")
-                emit(Response.Failure(exception))
-            }
-
-            is ApiResult.Failure -> {
-                emit(Response.Failure(res.exception))
-            }
-
-            is ApiResult.Success -> {
-                if (res.data.header.errorMsg != null) {
-                    emit(Response.Failure(Exception(res.data.header.errorMsg)))
-                    return@flow
-                }
-                val sigunguList = res.data.toSigunguList().toMutableList().apply {
-                    add(0, Sigungu())
-                }.toList()
-                emit(Response.Success(sigunguList))
-            }
+    override suspend fun insertSigunguList(list: List<Sigungu>) {
+        try {
+            val sigunguListEntity =
+                list.map { SigunguEntity(it.orgCd, it.orgdownNm, it.orgdownNm) }.toMutableList()
+            sigunguListEntity.add(0, SigunguEntity())
+            dao.insertAllSigungu(sigunguListEntity)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-    }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getSidoList(): Flow<List<Sido>> =
+        dao.getSidoList().map { it.map { Sido(orgCd = it.orgCd, orgdownNm = it.orgdownNm) } }.map {
+            val list = it.toMutableList()
+            list.add(0, Sido(orgCd = "", orgdownNm = "전체"))
+            list
+        }
+
+
+    override fun getSigunguList(sido: Sido): Flow<List<Sigungu>> = flow {
+        if (!dao.existSigunguList(sido.orgCd)) {
+            val res = service.getSigungu(
+                SigunguRequest(
+                    upr_cd = sido.orgCd
+                )
+            )
+            val sigunguList = res.body.items.itemList.map {
+                SigunguEntity(it.orgCd, it.uprCd, it.orgdownNm)
+            }
+            dao.insertAllSigungu(sigunguList)
+        }
+        val sigunguList = dao.getSigunguList(sido.orgCd).map {
+            Sigungu(it.uprCd, it.orgCd, it.orgdownNm)
+        }
+        emit(sigunguList)
+    }
 }

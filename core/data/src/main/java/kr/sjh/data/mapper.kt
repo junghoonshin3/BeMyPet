@@ -1,6 +1,5 @@
 package kr.sjh.data
 
-import kr.sjh.core.ktor.model.response.AbandonmentPublicResponse
 import kr.sjh.core.ktor.model.response.KindResponse
 import kr.sjh.core.ktor.model.response.SidoResponse
 import kr.sjh.core.ktor.model.response.SigunguResponse
@@ -8,11 +7,10 @@ import kr.sjh.core.model.adoption.Pet
 import kr.sjh.core.model.adoption.filter.Kind
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
-import kr.sjh.core.model.setting.Setting
 import kr.sjh.database.entity.FavouriteEntity
 
 fun AbandonmentPublicResponse.Body.Items.toPets(): List<Pet> {
-    return this.item.map {
+    return this.item?.map {
         Pet(
             desertionNo = it.desertionNo,
             filename = it.filename,
@@ -37,23 +35,19 @@ fun AbandonmentPublicResponse.Body.Items.toPets(): List<Pet> {
             chargeNm = it.chargeNm,
             officetel = it.officetel,
         )
-    }
-}
-
-fun SidoResponse.toSidoList(): List<Sido> {
-    return this.body?.items?.item?.map {
-        Sido(
-            orgCd = it.orgCd, orgdownNm = it.orgdownNm
-        )
     } ?: emptyList()
 }
 
-fun SigunguResponse.toSigunguList(): List<Sigungu> {
-    return this.body?.items?.item?.map {
-        Sigungu(
-            orgCd = it.orgCd, orgdownNm = it.orgdownNm, uprCd = it.uprCd
-        )
-    } ?: emptyList()
+fun SidoResponse.Body.Items.Item.toSido(): Sido {
+    return Sido(
+        orgCd = orgCd, orgdownNm = orgdownNm
+    )
+}
+
+fun SigunguResponse.Body.Items.Item.toSigungu(): Sigungu {
+    return Sigungu(
+        orgCd = orgCd, orgdownNm = orgdownNm, uprCd = uprCd
+    )
 }
 
 fun KindResponse.toKindList(): List<Kind> {

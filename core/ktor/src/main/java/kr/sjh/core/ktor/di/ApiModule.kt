@@ -9,9 +9,6 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.serialization.kotlinx.xml.xml
@@ -19,8 +16,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import kr.sjh.core.ktor.BuildConfig
-import kr.sjh.core.ktor.repository.AdoptionService
-import kr.sjh.core.ktor.repository.impl.AdoptionServiceImpl
+import kr.sjh.core.ktor.service.AdoptionService
+import kr.sjh.core.ktor.service.impl.AdoptionServiceImpl
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.serialization.XML
 import javax.inject.Singleton

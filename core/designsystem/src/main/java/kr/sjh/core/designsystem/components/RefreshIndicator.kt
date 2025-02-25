@@ -80,8 +80,7 @@ fun RefreshIndicator(
     Box(
         modifier = modifier.pullToRefreshIndicator(
             elevation = 0.dp,
-            shape = CircleShape,
-            containerColor = Color.Transparent,
+            shape = CircleShape, containerColor = Color.LightGray,
             state = state,
             isRefreshing = refreshing,
             threshold = threshold
@@ -92,13 +91,18 @@ fun RefreshIndicator(
             animationSpec = tween(durationMillis = DefaultDurationMillis),
             label = "cross_fade"
         ) { refreshing ->
-            if (refreshing) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-            } else {
-                Image(imageVector = painter, contentDescription = "animal")
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                if (refreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(30.dp),
+                        color = Color(0xFFE97341),
+                        strokeWidth = 5.dp
+                    )
+                } else {
+                    Image(imageVector = painter, contentDescription = "animal")
+                }
             }
+
         }
     }
 }

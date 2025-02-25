@@ -1,34 +1,48 @@
 package kr.sjh.core.ktor.model.response
 
-import kotlinx.serialization.Serializable
 import kr.sjh.core.ktor.model.Header
-import kr.sjh.core.ktor.model.Response
-import nl.adaptivity.xmlutil.serialization.XmlElement
-import nl.adaptivity.xmlutil.serialization.XmlSerialName
+import org.simpleframework.xml.Element
+import org.simpleframework.xml.ElementList
+import org.simpleframework.xml.Root
 
-
-@Serializable
-@XmlSerialName("response")
+@Root(name = "response", strict = false)
 data class KindResponse(
-    @XmlElement val header: Header,
-    @XmlElement val body: Body? = null
-) : Response {
+    @field:Element(name = "header")
+    var header: Header = Header(),
 
-    @Serializable
-    @XmlSerialName("body")
+    @field:Element(name = "body", required = false)
+    var body: Body? = null
+) {
+    @Root(name = "header", strict = false)
+    data class Header(
+        @field:Element(name = "reqNo")
+        var reqNo: Int = 0,
+
+        @field:Element(name = "resultCode")
+        var resultCode: String = "",
+
+        @field:Element(name = "resultMsg")
+        var resultMsg: String = ""
+
+    )
+
+    @Root(name = "body", strict = false)
     data class Body(
-        @XmlElement val items: Items
+        @field:Element(name = "items")
+        var items: Items = Items()
     ) {
-        @Serializable
-        @XmlSerialName("items")
+        @Root(name = "items", strict = false)
         data class Items(
-            @XmlElement val item: List<Item>
+            @field:ElementList(entry = "item", inline = true, required = false)
+            var item: List<Item>? = null
         ) {
-            @Serializable
-            @XmlSerialName("item")
+            @Root(name = "item", strict = false)
             data class Item(
-                @XmlElement val kindCd: String,
-                @XmlElement val KNm: String
+                @field:Element(name = "kindCd")
+                var kindCd: String = "",
+
+                @field:Element(name = "KNm")
+                var KNm: String = ""
             )
         }
     }

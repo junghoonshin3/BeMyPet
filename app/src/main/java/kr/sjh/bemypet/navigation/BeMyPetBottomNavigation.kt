@@ -1,6 +1,7 @@
 package kr.sjh.bemypet.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,36 +44,23 @@ fun BeMyPetBottomNavigation(
     currentDestination: NavDestination?
 ) {
     val visible by remember(currentBottomNavItem) {
-        derivedStateOf {
+        mutableStateOf(
             when (currentBottomNavItem) {
                 BottomNavItem.Adoption, BottomNavItem.Favourite, BottomNavItem.Setting -> true
                 null -> false
             }
-        }
+        )
     }
-    val animationTime = 400
 
     AnimatedVisibility(
-        modifier = modifier,
-        visible = visible,
-        enter = slideInVertically(
-            initialOffsetY = { it / 2 },
-            animationSpec = tween(
-                durationMillis = animationTime,
-                easing = LinearEasing // interpolator
-            )
-        ),
-        exit = slideOutVertically(
-            targetOffsetY = { it / 2 },
-            animationSpec = tween(
-                durationMillis = animationTime,
-                easing = LinearEasing // interpolator
-            )
+        visible = visible, enter = slideInVertically(
+            initialOffsetY = { it },
+        ), exit = slideOutVertically(
+            targetOffsetY = { it },
         )
     ) {
         BottomAppBar(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ) {
             destinations.forEach { destination ->

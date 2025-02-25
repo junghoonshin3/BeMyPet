@@ -1,34 +1,46 @@
 package kr.sjh.core.ktor.model.response
 
-import kotlinx.serialization.Serializable
-import kr.sjh.core.ktor.model.Header
-import kr.sjh.core.ktor.model.Response
-import kr.sjh.core.ktor.model.response.SigunguResponse.Body
-import nl.adaptivity.xmlutil.serialization.XmlElement
-import nl.adaptivity.xmlutil.serialization.XmlSerialName
+import org.simpleframework.xml.Element
+import org.simpleframework.xml.ElementList
+import org.simpleframework.xml.Root
 
-@Serializable
-@XmlSerialName("response")
+@Root(name = "response", strict = false)
 data class ShelterResponse(
-    @XmlElement val header: Header,
-    @XmlElement val body: SigunguResponse.Body? = null
-) : Response {
+    @field:Element(name = "header")
+    var header: Header = Header(),
 
-    @Serializable
-    @XmlSerialName("body")
+    @field:Element(name = "body")
+    var body: Body = Body()
+) {
+    @Root(name = "header", strict = false)
+    data class Header(
+        @field:Element(name = "reqNo", required = false)
+        var reqNo: Int = 0,
+
+        @field:Element(name = "resultCode", required = false)
+        var resultCode: String = "",
+
+        @field:Element(name = "resultMsg", required = false)
+        var resultMsg: String = ""
+    )
+
+    @Root(name = "body", strict = false)
     data class Body(
-        @XmlElement val items: Items
+        @field:Element(name = "items")
+        var items: Items = Items()
     ) {
-        @Serializable
-        @XmlSerialName("items")
+        @Root(name = "items", strict = false)
         data class Items(
-            @XmlElement val item: List<Item>
+            @field:ElementList(entry = "item", inline = true, required = false)
+            var itemList: List<Item> = listOf()
         ) {
-            @Serializable
-            @XmlSerialName("item")
+            @Root(name = "item", strict = false)
             data class Item(
-                @XmlElement val careRegNo: String,
-                @XmlElement val careNm: String
+                @field:Element(name = "careRegNo", required = false)
+                var careRegNo: String = "",
+
+                @field:Element(name = "careNm", required = false)
+                var careNm: String = ""
             )
         }
     }

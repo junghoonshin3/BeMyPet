@@ -1,60 +1,101 @@
-package kr.sjh.core.ktor.model.response
+import org.simpleframework.xml.Element
+import org.simpleframework.xml.ElementList
+import org.simpleframework.xml.Root
 
-import kotlinx.serialization.Serializable
-import kr.sjh.core.ktor.model.Header
-import kr.sjh.core.ktor.model.Response
-import nl.adaptivity.xmlutil.serialization.XmlChildrenName
-import nl.adaptivity.xmlutil.serialization.XmlElement
-import nl.adaptivity.xmlutil.serialization.XmlSerialName
-
-@Serializable
-@XmlSerialName("response")
+@Root(name = "response", strict = false)
 data class AbandonmentPublicResponse(
-    @XmlElement val header: Header, @XmlElement val body: Body? = null,
-) : Response {
+    @field:Element(name = "header") var header: Header = Header(),
 
-    @Serializable
-    @XmlSerialName("body")
+    @field:Element(name = "body", required = false) var body: Body? = null  // body는 null일 수도 있음
+) {
+
+    @Root(name = "header", strict = false)
+    data class Header(
+        @field:Element(name = "reqNo")
+        var reqNo: Int = 0,
+
+        @field:Element(name = "resultCode")
+        var resultCode: String = "",
+
+        @field:Element(name = "resultMsg")
+        var resultMsg: String = "",
+
+        @field:Element(name = "errorMsg", required = false)
+        var errorMsg: String = ""
+    )
+
+    @Root(name = "body", strict = false)
     data class Body(
-        @XmlElement val items: Items,
-        @XmlElement val numOfRows: Int,
-        @XmlElement val pageNo: Int,
-        @XmlElement val totalCount: Int
+        @field:Element(name = "items") var items: Items = Items(),
+
+        @field:Element(name = "numOfRows") var numOfRows: Int = 0,
+
+        @field:Element(name = "pageNo") var pageNo: Int = 0,
+
+        @field:Element(name = "totalCount") var totalCount: Int = 0
     ) {
-        @Serializable
-        @XmlSerialName("items")
+        @Root(name = "items", strict = false)
         data class Items(
-            @XmlElement val item: List<Item>
+            @field:ElementList(
+                entry = "item",
+                inline = true,
+                required = false
+            ) var item: List<Item>? = null  // 리스트가 없을 수도 있음
         ) {
-            @Serializable
-            @XmlSerialName("item")
+            @Root(name = "item", strict = false)
             data class Item(
-                @XmlElement val desertionNo: String,
-                @XmlElement val filename: String,
-                @XmlElement val happenDt: String,
-                @XmlElement val happenPlace: String,
-                @XmlElement val kindCd: String,
-                @XmlElement val colorCd: String? = null,
-                @XmlElement val age: String,
-                @XmlElement val weight: String,
-                @XmlElement val noticeNo: String,
-                @XmlElement val noticeSdt: String,
-                @XmlElement val noticeEdt: String,
-                @XmlElement val popfile: String,
-                @XmlElement val processState: String,
-                @XmlElement val sexCd: String,
-                @XmlElement val neuterYn: String,
-                @XmlElement val specialMark: String,
-                @XmlElement val careNm: String,
-                @XmlElement val careTel: String,
-                @XmlElement val careAddr: String,
-                @XmlElement val orgNm: String,
-                @XmlElement val chargeNm: String? = null,
-                @XmlElement val officetel: String,
-                @XmlElement val noticeComment: String? = null
+                @field:Element(name = "desertionNo") var desertionNo: String = "",
+
+                @field:Element(name = "filename") var filename: String = "",
+
+                @field:Element(name = "happenDt") var happenDt: String = "",
+
+                @field:Element(name = "happenPlace") var happenPlace: String = "",
+
+                @field:Element(name = "kindCd") var kindCd: String = "",
+
+                @field:Element(name = "colorCd", required = false) var colorCd: String? = null,
+
+                @field:Element(name = "age") var age: String = "",
+
+                @field:Element(name = "weight") var weight: String = "",
+
+                @field:Element(name = "noticeNo") var noticeNo: String = "",
+
+                @field:Element(name = "noticeSdt") var noticeSdt: String = "",
+
+                @field:Element(name = "noticeEdt") var noticeEdt: String = "",
+
+                @field:Element(name = "popfile") var popfile: String = "",
+
+                @field:Element(name = "processState") var processState: String = "",
+
+                @field:Element(name = "sexCd") var sexCd: String = "",
+
+                @field:Element(name = "neuterYn") var neuterYn: String = "",
+
+                @field:Element(name = "specialMark") var specialMark: String = "",
+
+                @field:Element(name = "careNm") var careNm: String = "",
+
+                @field:Element(name = "careTel") var careTel: String = "",
+
+                @field:Element(name = "careAddr") var careAddr: String = "",
+
+                @field:Element(name = "orgNm") var orgNm: String = "",
+
+                @field:Element(name = "chargeNm", required = false) var chargeNm: String? = null,
+
+                @field:Element(name = "officetel") var officetel: String = "",
+
+                @field:Element(
+                    name = "noticeComment",
+                    required = false
+                ) var noticeComment: String? = null
             )
+
         }
+
     }
+
 }
-
-
