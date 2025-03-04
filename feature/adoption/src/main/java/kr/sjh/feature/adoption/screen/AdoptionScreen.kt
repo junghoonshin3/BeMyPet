@@ -248,7 +248,7 @@ private fun AdoptionScreen(
                 height = appBarHeight - scrollableHeight,
                 onFilterEvent = { event ->
                     coroutineScope.launch {
-                        gridState.animateScrollToItem(0)
+                        gridState.scrollToItem(0)
                         appbarOffsetHeightPx = 0f
                     }
                     onFilterEvent(event)
