@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "cf68532368d1f44d4f4ab79e7966b90d",
+    "identityHash": "c184cd8c73f9ddecf7aca81253d055bd",
     "entities": [
       {
         "tableName": "favourite_pet",
@@ -161,12 +161,70 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "sido",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`orgCd` TEXT NOT NULL, `orgdownNm` TEXT NOT NULL, PRIMARY KEY(`orgCd`))",
+        "fields": [
+          {
+            "fieldPath": "orgCd",
+            "columnName": "orgCd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orgdownNm",
+            "columnName": "orgdownNm",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "orgCd"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "sigungu",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`orgCd` TEXT NOT NULL, `uprCd` TEXT NOT NULL, `orgdownNm` TEXT NOT NULL, PRIMARY KEY(`orgCd`))",
+        "fields": [
+          {
+            "fieldPath": "orgCd",
+            "columnName": "orgCd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uprCd",
+            "columnName": "uprCd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orgdownNm",
+            "columnName": "orgdownNm",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "orgCd"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cf68532368d1f44d4f4ab79e7966b90d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c184cd8c73f9ddecf7aca81253d055bd')"
     ]
   }
 }

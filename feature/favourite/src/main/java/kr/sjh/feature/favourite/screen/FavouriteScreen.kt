@@ -45,6 +45,7 @@ fun FavouriteRoute(
     viewModel: FavouriteViewModel = hiltViewModel(),
 ) {
     val pets by viewModel.favouritePets.collectAsStateWithLifecycle()
+
     FavouriteScreen(
         Modifier
             .fillMaxSize()

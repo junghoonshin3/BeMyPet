@@ -1,6 +1,5 @@
 package kr.sjh.feature.adoption_detail.screen
 
-import android.location.Location
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +58,6 @@ fun PetDetailRoute(
     onBack: () -> Unit,
     viewModel: PetDetailViewModel = hiltViewModel(),
 ) {
-
     val location by viewModel.location.collectAsStateWithLifecycle()
 
     val isLike by viewModel.isLike.collectAsStateWithLifecycle()
@@ -157,7 +155,11 @@ private fun PetDetailContent(
         PetImage(imageReq) {
             isDialogShow = true
         }
-        Title(title = pet.kindCd)
+        Title(
+            modifier = Modifier.padding(16.dp),
+            title = pet.kindCd,
+            style = MaterialTheme.typography.titleMedium
+        )
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
@@ -179,32 +181,12 @@ private fun PetDetailContent(
         TextLine(title = "보호소 이름", content = pet.careNm)
         TextLine(title = "보호소 연락처", content = pet.careTel)
         TextLine(title = "보호장소", content = pet.careAddr)
-        Box(
-            modifier = Modifier
-                .aspectRatio(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            when (state) {
-                is LocationState.Failure -> {
-                    Text(text = "지도를 읽어오는데 실패했습니다")
-                }
-
-                LocationState.Loading -> {
-                    LoadingComponent()
-                }
-
-                is LocationState.Success -> {
-                    val location = state.location
-                    ShelterMap(
-                        modifier = Modifier.fillMaxSize(),
-                        mapId = pet.careAddr,
-                        careNm = pet.careNm,
-                        location = location
-                    )
-                }
-            }
-        }
-
+        ShelterMap(
+            modifier = Modifier.fillMaxSize(),
+            mapId = pet.careAddr,
+            careNm = pet.careNm,
+            state = state
+        )
         TextLine(title = "관할기관", content = pet.orgNm)
         pet.chargeNm?.let {
             TextLine(title = "담당자", content = it)
@@ -233,48 +215,65 @@ private fun PetImage(imageReq: ImageRequest, onClick: () -> Unit) {
 
 @Composable
 private fun ShelterMap(
-    modifier: Modifier = Modifier,
-    mapId: String,
-    careNm: String,
-    location: Location
+    modifier: Modifier = Modifier, mapId: String, careNm: String, state: LocationState
 ) {
-
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 17f)
-    }
-
-    val markerState = rememberMarkerState(
-        key = mapId, position = LatLng(location.latitude, location.longitude)
-    )
-    val mapProperties by remember {
-        mutableStateOf(
-            MapProperties(maxZoomPreference = 19f, minZoomPreference = 5f)
-        )
-    }
-    val mapUiSettings by remember {
-        mutableStateOf(
-            MapUiSettings(
-                compassEnabled = false,
-                indoorLevelPickerEnabled = false,
-                mapToolbarEnabled = false,
-                myLocationButtonEnabled = false,
-                rotationGesturesEnabled = false,
-                scrollGesturesEnabled = false,
-                scrollGesturesEnabledDuringRotateOrZoom = false,
-                tiltGesturesEnabled = false,
-                zoomControlsEnabled = true,
-                zoomGesturesEnabled = true,
-            )
-        )
-    }
-    GoogleMap(
-        modifier = modifier,
-        properties = mapProperties,
-        uiSettings = mapUiSettings,
-        cameraPositionState = cameraPositionState,
+    Box(
+        modifier = Modifier.aspectRatio(1f), contentAlignment = Alignment.Center
     ) {
-        Marker(
-            state = markerState, title = careNm
-        )
+        when (state) {
+            is LocationState.Failure -> {
+                Text(text = "지도를 읽어오는데 실패했습니다")
+            }
+
+            LocationState.Loading -> {
+                LoadingComponent()
+            }
+
+            is LocationState.Success -> {
+                val location = state.location
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(
+                        LatLng(location.latitude, location.longitude), 17f
+                    )
+                }
+
+                val markerState = rememberMarkerState(
+                    key = mapId, position = LatLng(location.latitude, location.longitude)
+                )
+                val mapProperties by remember {
+                    mutableStateOf(
+                        MapProperties(maxZoomPreference = 19f, minZoomPreference = 5f)
+                    )
+                }
+                val mapUiSettings by remember {
+                    mutableStateOf(
+                        MapUiSettings(
+                            compassEnabled = false,
+                            indoorLevelPickerEnabled = false,
+                            mapToolbarEnabled = false,
+                            myLocationButtonEnabled = false,
+                            rotationGesturesEnabled = false,
+                            scrollGesturesEnabled = false,
+                            scrollGesturesEnabledDuringRotateOrZoom = false,
+                            tiltGesturesEnabled = false,
+                            zoomControlsEnabled = true,
+                            zoomGesturesEnabled = true,
+                        )
+                    )
+                }
+
+                GoogleMap(
+                    modifier = modifier,
+                    properties = mapProperties,
+                    uiSettings = mapUiSettings,
+                    cameraPositionState = cameraPositionState,
+                ) {
+                    Marker(
+                        state = markerState, title = careNm
+                    )
+                }
+            }
+        }
     }
+
 }
