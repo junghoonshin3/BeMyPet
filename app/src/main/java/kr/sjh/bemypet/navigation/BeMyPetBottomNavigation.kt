@@ -11,6 +11,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOut
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,6 +54,7 @@ fun BeMyPetBottomNavigation(
     }
 
     AnimatedVisibility(
+        modifier = modifier,
         visible = visible, enter = slideInVertically(
             initialOffsetY = { it },
         ), exit = slideOutVertically(

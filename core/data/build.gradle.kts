@@ -18,4 +18,5 @@ dependencies {
     implementation(project(":core:ktor"))
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
+    implementation(libs.ktor.serialization.kotlinx.json)
 }

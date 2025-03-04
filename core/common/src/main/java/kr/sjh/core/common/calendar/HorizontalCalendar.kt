@@ -1,13 +1,12 @@
 package kr.sjh.core.common.calendar
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,31 +18,24 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import kr.sjh.core.designsystem.components.RoundedCornerButton
 import java.time.LocalDate
-import java.time.YearMonth
 
 @Composable
 fun HorizontalCalendar(
@@ -51,15 +43,17 @@ fun HorizontalCalendar(
     selectedStartDate: LocalDate,
     selectedEndDate: LocalDate,
     yearRange: IntRange = IntRange(1970, LocalDate.now().year),
-    onClose: () -> Unit,
-    onConfirm: (LocalDate?, LocalDate?) -> Unit
+    close: () -> Unit,
+    confirm: (LocalDate?, LocalDate?) -> Unit
 ) {
     val currentDate = LocalDate.now()
-    val initialPage = (yearRange.last - yearRange.first) * 12 + currentDate.month.value
+    val initialPage = (yearRange.last - yearRange.first) * 12 + selectedEndDate.month.value
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = {
         (yearRange.last - yearRange.first) * 12 + currentDate.month.value
     })
+
     var startDate: LocalDate? by remember { mutableStateOf(selectedStartDate) }
+
     var endDate: LocalDate? by remember { mutableStateOf(selectedEndDate) }
 
     val currentYear by remember(pagerState.currentPage) {
@@ -114,14 +108,14 @@ fun HorizontalCalendar(
                     .height(30.dp)
                     .padding(10.dp),
                 title = "닫기",
-                onClick = onClose
+                onClick = close
             )
             RoundedCornerButton(modifier = Modifier
                 .width(50.dp)
                 .height(30.dp)
                 .padding(10.dp),
                 title = "확인",
-                onClick = { onConfirm(startDate, endDate) })
+                onClick = { confirm(startDate, endDate) })
         }
 
     }
@@ -196,7 +190,7 @@ private fun CalendarContent(
                 val isToday = remember(date, today) { date == today }
 
                 CalendarDay(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.aspectRatio(1f),
                     date = date,
                     isToday = isToday,
                     isStartDateSelected = isStartDateSelected,
@@ -309,8 +303,8 @@ fun HorizontalCalendarPreview() {
             yearRange = IntRange(1970, 2100),
             selectedStartDate = LocalDate.now(),
             selectedEndDate = LocalDate.now(),
-            onConfirm = { a, b -> },
-            onClose = {})
+            confirm = { a, b -> },
+            close = {})
     }
 
 }

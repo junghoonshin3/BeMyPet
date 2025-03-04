@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,45 +40,73 @@ fun LocationContent(
     selectedSido: Sido,
     selectedSigungu: Sigungu,
     onFilterEvent: (FilterEvent) -> Unit,
-//    confirm: (Sido, Sigungu) -> Unit = { _, _ -> },
-//    onSido: (Sido) -> Unit = { _ -> },
-//    close: () -> Unit = {}
 ) {
-    var updateSido by remember {
+    val sidoState = rememberLazyListState()
+
+    val sigunguState = rememberLazyListState()
+
+    var updateSido by remember(selectedSido) {
         mutableStateOf(selectedSido)
     }
-    var updateSigungu by remember {
+
+    var updateSigungu by remember(selectedSigungu) {
         mutableStateOf(selectedSigungu)
     }
-    Column(modifier = Modifier.fillMaxSize()) {
+
+    // 선택한 인덱스를 찾기
+    val sidoIndex = sidoList.indexOf(selectedSido).coerceAtLeast(0)
+    val sigunguIndex = sigunguList.indexOf(selectedSigungu).coerceAtLeast(0)
+
+    LaunchedEffect(Unit) {
+        sidoState.scrollToItem(sidoIndex) // 선택한 아이템으로 스크롤
+    }
+
+    LaunchedEffect(Unit) {
+        sigunguState.scrollToItem(sigunguIndex)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
         FilterTopBar(title = title, confirm = {
-//            confirm(updateSido, updateSigungu)
+            onFilterEvent(FilterEvent.ConfirmLocation(updateSido, updateSigungu))
         }, close = {
+            updateSido = selectedSido
+            updateSigungu = selectedSigungu
             onFilterEvent(FilterEvent.CloseBottomSheet)
         })
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+        ) {
             LazyColumn(
-                modifier = Modifier.weight(0.4f),
+                modifier = Modifier
+                    .fillMaxWidth(0.4f),
+                state = sidoState,
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 contentPadding = PaddingValues(
                     top = 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
                 )
             ) {
-                items(sidoList) { sido ->
+                items(sidoList, key = { sido -> sido.orgCd }) { sido ->
                     RoundedCornerButton(modifier = Modifier.fillMaxSize(),
                         title = sido.orgdownNm,
                         selected = updateSido.orgCd == sido.orgCd,
                         onClick = {
                             if (updateSido.orgCd != sido.orgCd) {
-                                onFilterEvent(FilterEvent.SelectedSido(sido))
                                 updateSido = sido
-                                updateSigungu = Sigungu()
+                                onFilterEvent(FilterEvent.FetchSigungu(sido))
                             }
                         })
                 }
             }
             Spacer(Modifier.width(5.dp))
-            Box(modifier = Modifier.weight(0.6f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         LoadingComponent()
@@ -81,17 +115,20 @@ fun LocationContent(
                 }
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    state = sigunguState,
                     verticalArrangement = Arrangement.spacedBy(5.dp),
                     contentPadding = PaddingValues(
                         top = 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
                     )
                 ) {
-                    items(sigunguList) { sigungu ->
+                    items(sigunguList, key = { sigungu -> sigungu.orgCd }) { sigungu ->
                         RoundedCornerButton(modifier = Modifier.fillMaxSize(),
                             title = sigungu.orgdownNm,
                             selected = updateSigungu.orgCd == sigungu.orgCd,
                             onClick = {
-                                updateSigungu = sigungu
+                                if (updateSigungu.orgCd != sigungu.orgCd) {
+                                    updateSigungu = sigungu
+                                }
                             })
                     }
 

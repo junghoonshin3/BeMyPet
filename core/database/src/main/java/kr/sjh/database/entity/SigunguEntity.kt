@@ -8,5 +8,5 @@ data class SigunguEntity(
     @PrimaryKey
     val orgCd: String = "",
     val uprCd: String = "",
-    val orgdownNm: String = "전체",
+    val orgdownNm: String = "전국",
 )

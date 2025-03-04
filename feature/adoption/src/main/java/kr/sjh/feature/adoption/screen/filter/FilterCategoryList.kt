@@ -22,9 +22,7 @@ import kr.sjh.feature.adoption.state.FilterEvent
 
 @Composable
 fun FilterCategoryList(
-    categories: List<Category>,
-    height: Dp,
-    onFilterEvent: (FilterEvent) -> Unit
+    categories: List<Category>, height: Dp, onFilterEvent: (FilterEvent) -> Unit
 ) {
     LazyRow(
         modifier = Modifier
@@ -35,11 +33,9 @@ fun FilterCategoryList(
         verticalAlignment = Alignment.CenterVertically
     ) {
         item {
-            IconButton(
-                modifier = Modifier.padding(start = 5.dp, end = 5.dp), onClick = {
-                    onFilterEvent(FilterEvent.Reset)
-                }
-            ) {
+            IconButton(modifier = Modifier.padding(start = 5.dp, end = 5.dp), onClick = {
+                onFilterEvent(FilterEvent.Reset)
+            }) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
                     contentDescription = "reset"
@@ -48,7 +44,11 @@ fun FilterCategoryList(
         }
         items(categories) { category ->
             RoundedCornerButton(modifier = Modifier.padding(5.dp),
-                title = category.type.title,
+                title = if (category.isSelected.value) {
+                    category.selectedText.value
+                } else {
+                    category.type.title
+                },
                 selected = category.isSelected.value,
                 onClick = {
                     onFilterEvent(FilterEvent.SelectedCategory(category))

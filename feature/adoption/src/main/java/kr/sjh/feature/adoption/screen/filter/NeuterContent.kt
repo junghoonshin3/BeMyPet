@@ -26,7 +26,7 @@ fun NeuterContent(
     Column(modifier = Modifier.fillMaxWidth()) {
         FilterTopBar(title = title, close = close, confirm = {
             if (selectedNeuter != newNeuter) {
-                confirm(selectedNeuter)
+                confirm(newNeuter)
             }
         })
         LazyColumn(

@@ -13,22 +13,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kr.sjh.core.designsystem.components.CheckBoxButton
+import kr.sjh.feature.adoption.state.FilterEvent
 import kr.sjh.feature.adoption.state.UpKind
 
 @Composable
 fun UpKindContent(
     title: String,
     selectedUpKind: UpKind,
-    confirm: (UpKind) -> Unit = {},
-    close: () -> Unit = {},
+    confirm: (UpKind) -> Unit,
+    close: () -> Unit,
 ) {
-    var updateUpKind by remember {
+    var newUpKind by remember {
         mutableStateOf(selectedUpKind)
     }
     Column(modifier = Modifier.fillMaxWidth()) {
-        FilterTopBar(title = title, close = close, confirm = {
-            confirm(updateUpKind)
-        })
+        FilterTopBar(title = title, close = close, confirm = { confirm(newUpKind) })
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -37,9 +36,9 @@ fun UpKindContent(
             items(UpKind.entries.toTypedArray()) { item ->
                 CheckBoxButton(modifier = Modifier.fillMaxWidth(),
                     title = item.title,
-                    selected = updateUpKind == item,
+                    selected = newUpKind == item,
                     onClick = {
-                        updateUpKind = item
+                        newUpKind = item
                     })
             }
         }

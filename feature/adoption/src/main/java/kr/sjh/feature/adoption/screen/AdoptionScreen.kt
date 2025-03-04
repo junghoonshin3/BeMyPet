@@ -29,6 +29,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,6 +59,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.composables.core.ModalBottomSheetState
 import com.composables.core.SheetDetent
 import com.composables.core.rememberModalBottomSheetState
+import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
@@ -65,9 +68,7 @@ import kr.sjh.core.designsystem.components.RefreshIndicator
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
-import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.Pet
-import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.feature.adoption.screen.filter.FilterCategoryList
 import kr.sjh.feature.adoption.screen.filter.FilterViewModel
 import kr.sjh.feature.adoption.state.AdoptionEvent
@@ -88,7 +89,7 @@ fun AdoptionRoute(
     val filterUiState by filterViewModel.filterUiState.collectAsStateWithLifecycle()
 
     val Peek = SheetDetent("peek", calculateDetentHeight = { containerHeight, sheetHeight ->
-        containerHeight * 0.6f
+        containerHeight
     })
 
     val bottomSheetState = rememberModalBottomSheetState(
@@ -109,6 +110,14 @@ fun AdoptionRoute(
                 SideEffect.ShowBottomSheet -> {
                     bottomSheetState.currentDetent = Peek
                 }
+
+                SideEffect.FetchPets -> {
+                    viewModel.onEvent(
+                        AdoptionEvent.Refresh(
+                            filterUiState.toPetRequest()
+                        )
+                    )
+                }
             }
         }
     }
@@ -116,8 +125,7 @@ fun AdoptionRoute(
     AdoptionScreen(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .navigationBarsPadding(),
+            .background(MaterialTheme.colorScheme.background),
         adoptionUiState = adoptionUiState,
         filterUiState = filterUiState,
         sheetState = bottomSheetState,
@@ -140,7 +148,6 @@ private fun AdoptionScreen(
     onEvent: (AdoptionEvent) -> Unit,
     onFilterEvent: (FilterEvent) -> Unit
 ) {
-
     val density = LocalDensity.current
     val scrollableHeight = DefaultAppBarHeight
     val appBarHeight = 114.dp
@@ -161,7 +168,10 @@ private fun AdoptionScreen(
             }
         }
     }
+
     val state = rememberPullToRefreshState()
+
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier.then(Modifier.nestedScroll(nestedScrollConnection))
@@ -170,7 +180,7 @@ private fun AdoptionScreen(
             modifier = Modifier.fillMaxSize(),
             isRefreshing = adoptionUiState.isRefreshing,
             onRefresh = {
-                onEvent(AdoptionEvent.Refresh)
+                onEvent(AdoptionEvent.Refresh(filterUiState.toPetRequest().copy(pageNo = 1)))
                 appbarOffsetHeightPx = 0f
             },
             indicator = {
@@ -181,47 +191,34 @@ private fun AdoptionScreen(
                         .size(50.dp), state = state, isRefreshing = adoptionUiState.isRefreshing
                 )
             }) {
-            if (adoptionUiState.totalCount == 0) {
-                val scrollState = rememberScrollState()
-                Box(
+            EndlessLazyGridColumn(
+                modifier = Modifier.fillMaxSize(),
+                gridState = gridState,
+                userScrollEnabled = !adoptionUiState.isRefreshing,
+                items = adoptionUiState.pets,
+                isLoadMore = adoptionUiState.isMore,
+                contentPadding = PaddingValues(
+                    top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
+                ),
+                itemKey = { item -> item.desertionNo },
+                loadMore = {
+                    if (!adoptionUiState.isMore) { // 중복 요청 방지
+                        onEvent(
+                            AdoptionEvent.LoadMore(
+                                filterUiState.toPetRequest()
+                            )
+                        )
+                    }
+                },
+            ) { item ->
+                Pet(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(scrollState),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "펫이 없어요!", style = MaterialTheme.typography.titleLarge
-                    )
-                }
-            } else {
-                EndlessLazyGridColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    gridState = gridState,
-                    userScrollEnabled = !adoptionUiState.isRefreshing,
-                    items = adoptionUiState.pets,
-                    contentPadding = PaddingValues(
-                        top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
-                    ),
-                    itemKey = { item -> item.desertionNo },
-                    loadMore = {
-                        Log.d("sjh", "loadmore")
-                        // 현재 아이템의 갯수 < 전체 아이템의 수 && api 호출 중이 아니면 로드
-                        if (adoptionUiState.pets.size < adoptionUiState.totalCount && !adoptionUiState.isMore) {
-                            onEvent(AdoptionEvent.LoadMore)
-                        }
-                    },
-                ) { item ->
-                    Pet(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable(enabled = !adoptionUiState.isRefreshing) {
-                                navigateToPetDetail(item)
-                            }, pet = item
-                    )
-                }
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(enabled = !adoptionUiState.isRefreshing) {
+                            navigateToPetDetail(item)
+                        }, pet = item
+                )
             }
         }
         BeMyPetTopAppBar(modifier = Modifier
@@ -247,11 +244,15 @@ private fun AdoptionScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
         }, content = {
-            FilterCategoryList(
-                categories = filterUiState.categoryList,
+            FilterCategoryList(categories = filterUiState.categoryList,
                 height = appBarHeight - scrollableHeight,
-                onFilterEvent = onFilterEvent
-            )
+                onFilterEvent = { event ->
+                    coroutineScope.launch {
+                        gridState.animateScrollToItem(0)
+                        appbarOffsetHeightPx = 0f
+                    }
+                    onFilterEvent(event)
+                })
         })
         FilterComponent(
             modifier = Modifier
