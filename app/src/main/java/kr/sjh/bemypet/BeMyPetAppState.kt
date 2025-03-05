@@ -37,7 +37,6 @@ class BeMyPetAppState(
                 val (message, duration) = msg
                 snackBarHostState.showSnackbar(
                     message,
-                    "재시도",
                     withDismissAction = true,
                     duration = duration ?: SnackbarDuration.Short
                 )

@@ -52,8 +52,8 @@ class AdoptionViewModel @Inject constructor(
             it.copy(isRefreshing = req.pageNo == 1, isMore = req.pageNo > 1)
         }
     }.retryWhen { cause, attempt ->
-        if (attempt < 3) {
-            delay(1000)
+        if (attempt < 2) {
+            delay(500)
             true
         } else {
             false

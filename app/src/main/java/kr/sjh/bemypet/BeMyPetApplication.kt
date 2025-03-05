@@ -16,6 +16,7 @@ class BeMyPetApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
+
     }
 
     override fun newImageLoader(): ImageLoader {

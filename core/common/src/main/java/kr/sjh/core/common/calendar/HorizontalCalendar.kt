@@ -1,5 +1,6 @@
 package kr.sjh.core.common.calendar
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +49,11 @@ fun HorizontalCalendar(
     confirm: (LocalDate?, LocalDate?) -> Unit
 ) {
     val currentDate = LocalDate.now()
-    val initialPage = (yearRange.last - yearRange.first) * 12 + selectedEndDate.month.value
+    val pageCount = (yearRange.last - yearRange.first) * 12 + currentDate.month.value
+    val initialPage =
+        (selectedEndDate.year - yearRange.first) * 12 + (selectedEndDate.month.value - 1)
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = {
-        (yearRange.last - yearRange.first) * 12 + currentDate.month.value
+        pageCount
     })
 
     var startDate: LocalDate? by remember { mutableStateOf(selectedStartDate) }
@@ -187,12 +191,12 @@ private fun CalendarContent(
                     isStartDateSelected || isEndDateSelected || isDateInRange
                 }
 
-                val isToday = remember(date, today) { date == today }
+                val isSelectable = remember(date, today) { date <= today }
 
                 CalendarDay(
                     modifier = Modifier.aspectRatio(1f),
                     date = date,
-                    isToday = isToday,
+                    isSelectable = isSelectable,
                     isStartDateSelected = isStartDateSelected,
                     isEndDateSelected = isEndDateSelected,
                     isDateInRange = isDateInRange,
@@ -233,7 +237,7 @@ private fun DayOfWeek(modifier: Modifier = Modifier, dayOfWeek: DaysOfWeek) {
 private fun CalendarDay(
     modifier: Modifier = Modifier,
     date: LocalDate,
-    isToday: Boolean,
+    isSelectable: Boolean,
     isStartDateSelected: Boolean,
     isEndDateSelected: Boolean,
     isDateInRange: Boolean,
@@ -278,11 +282,14 @@ private fun CalendarDay(
                 return@drawBehind
             }
         }
-        .clickable {
+        .clickable(enabled = isSelectable) {
             onSelectedDate(date)
         }
         .padding(10.dp), contentAlignment = Alignment.Center) {
-        Text(text = date.dayOfMonth.toString())
+        Text(
+            color = if (isSelectable) MaterialTheme.colorScheme.onPrimary else Color.Gray.copy(0.5f),
+            text = date.dayOfMonth.toString()
+        )
     }
 }
 

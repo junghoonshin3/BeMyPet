@@ -26,14 +26,28 @@ import kr.sjh.core.designsystem.theme.BeMyPetTheme
 class StartActivity : ComponentActivity() {
 
     private val startViewModel: StartViewModel by viewModels()
-
+    private var isThemeLoaded by mutableStateOf(false)
+    private var isTheme by mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+
+        // SplashScreen 유지하면서 테마 값 로드
+        splashScreen.setKeepOnScreenCondition { !isThemeLoaded }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                startViewModel.isDarkTheme.collect { isDark ->
+                    isThemeLoaded = true
+                    isTheme = isDark
+                }
+            }
+        }
+
         setContent {
-            val isDarkTheme by startViewModel.isDarkTheme.collectAsStateWithLifecycle(false, this)
-            BeMyPetTheme(isDarkTheme) {
+            BeMyPetTheme(isTheme) {
                 BeMyPetApp(onChangeDarkTheme = {
                     startViewModel.updateIsDarkTheme(it)
                 })

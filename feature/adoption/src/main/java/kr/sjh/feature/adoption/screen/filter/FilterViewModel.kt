@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -131,7 +132,8 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
                 it.copy(isLoading = true, sigunguList = emptyList(), errorMsg = "")
             }
         }.retryWhen { cause, attempt ->
-            attempt < 3
+            delay(500)
+            attempt < 2
         }.catch { e ->
             snackBarManager.showMessage("서버 상태가 원활하지 않아 데이터를 불러오지 못했습니다.")
             //그외 다른 Exception 들은 Ui상태를 업데이트
