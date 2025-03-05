@@ -191,12 +191,12 @@ private fun CalendarContent(
                     isStartDateSelected || isEndDateSelected || isDateInRange
                 }
 
-                val isToday = remember(date, today) { date == today }
+                val isSelectable = remember(date, today) { date <= today }
 
                 CalendarDay(
                     modifier = Modifier.aspectRatio(1f),
                     date = date,
-                    isToday = isToday,
+                    isSelectable = isSelectable,
                     isStartDateSelected = isStartDateSelected,
                     isEndDateSelected = isEndDateSelected,
                     isDateInRange = isDateInRange,
@@ -237,7 +237,7 @@ private fun DayOfWeek(modifier: Modifier = Modifier, dayOfWeek: DaysOfWeek) {
 private fun CalendarDay(
     modifier: Modifier = Modifier,
     date: LocalDate,
-    isToday: Boolean,
+    isSelectable: Boolean,
     isStartDateSelected: Boolean,
     isEndDateSelected: Boolean,
     isDateInRange: Boolean,
@@ -282,11 +282,14 @@ private fun CalendarDay(
                 return@drawBehind
             }
         }
-        .clickable {
+        .clickable(enabled = isSelectable) {
             onSelectedDate(date)
         }
         .padding(10.dp), contentAlignment = Alignment.Center) {
-        Text(text = date.dayOfMonth.toString())
+        Text(
+            color = if (isSelectable) MaterialTheme.colorScheme.onPrimary else Color.Gray.copy(0.5f),
+            text = date.dayOfMonth.toString()
+        )
     }
 }
 
