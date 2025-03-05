@@ -244,26 +244,42 @@ private fun AdoptionScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
         }, content = {
-            FilterCategoryList(categories = filterUiState.categoryList,
+            FilterCategoryList(
+                categories = filterUiState.categoryList,
                 height = appBarHeight - scrollableHeight,
                 onFilterEvent = { event ->
-                    coroutineScope.launch {
-                        gridState.scrollToItem(0)
-                        appbarOffsetHeightPx = 0f
+                    if(event is FilterEvent.Reset){
+                        coroutineScope.launch {
+                            appbarOffsetHeightPx = 0f
+                            gridState.scrollToItem(0)
+                        }
                     }
                     onFilterEvent(event)
-                })
+                }
+            )
         })
-        FilterComponent(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .navigationBarsPadding(),
+        FilterComponent(modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .navigationBarsPadding(),
             filterUiState = filterUiState,
             sheetState = sheetState,
-            onFilterEvent = onFilterEvent
-        )
+            onFilterEvent = { event ->
+                when (event) {
+                    is FilterEvent.ConfirmLocation, is FilterEvent.ConfirmUpKind, is FilterEvent.ConfirmNeuter, is FilterEvent.ConfirmDateRange -> {
+                        coroutineScope.launch {
+                            appbarOffsetHeightPx = 0f
+                            gridState.scrollToItem(0)
+                        }
+                        onFilterEvent(event)
+                    }
+
+                    else -> {
+                        onFilterEvent(event)
+                    }
+                }
+            })
     }
 }
 

@@ -31,7 +31,7 @@ object ApiModule {
     fun provideHttpClient(): HttpClient {
         return HttpClient(Android) {
             install(HttpTimeout) {
-                requestTimeoutMillis = 5000
+                requestTimeoutMillis = 2000
             }
             install(Logging) {
                 logger = Logger.DEFAULT

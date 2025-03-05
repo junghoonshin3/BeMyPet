@@ -1,5 +1,6 @@
 package kr.sjh.core.designsystem.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,7 +67,11 @@ fun <T> EndlessLazyGridColumn(
     }
 }
 
-private fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
+private fun LazyGridState.reachedBottom(buffer: Int = 1, atLeastCount: Int = 5): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
-    return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
+    return if (lastVisibleItem == null) {
+        false
+    } else {
+        lastVisibleItem.index > atLeastCount && lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
+    }
 }
