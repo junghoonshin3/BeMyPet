@@ -6,7 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navigation
 import kr.sjh.bemypet.BeMyPetAppState
+import kr.sjh.bemypet.canGoBack
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
@@ -29,6 +31,11 @@ fun BeMyPetNavHost(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
+        navigation<Adoption>(
+            startDestination = Adoption
+        ) {
+
+        }
         composable<Adoption> {
             AdoptionRoute(
                 navigateToPetDetail = { pet ->
@@ -40,7 +47,10 @@ fun BeMyPetNavHost(
             typeMap = PetDetail.typeMap
         ) {
             PetDetailRoute(onBack = {
-                appState.navController.popBackStack()
+                if (appState.navController.canGoBack()) {
+                    appState.navController.popBackStack()
+                }
+
             })
         }
 

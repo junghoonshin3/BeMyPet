@@ -38,7 +38,7 @@ fun PinchZoomComponent(
     }
 
     BoxWithConstraints(
-        modifier = modifier.padding(top = DefaultAppBarHeight),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         val state = rememberTransformableState { zoomChange, panChange, _ ->
