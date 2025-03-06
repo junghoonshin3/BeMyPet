@@ -31,11 +31,6 @@ fun BeMyPetNavHost(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None },
     ) {
-        navigation<Adoption>(
-            startDestination = Adoption
-        ) {
-
-        }
         composable<Adoption> {
             AdoptionRoute(
                 navigateToPetDetail = { pet ->
