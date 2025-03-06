@@ -63,6 +63,7 @@ class BeMyPetAppState(
     fun navigateToBottomNavItem(bottomNavItem: BottomNavItem) {
         val topLevelNavOptions = navOptions {
             popUpTo(navController.graph.findStartDestination().id) {
+                inclusive = false
                 saveState = true
             }
             launchSingleTop = true
@@ -84,6 +85,10 @@ class BeMyPetAppState(
     }
 }
 
+fun NavHostController.canGoBack(): Boolean {
+    return this.previousBackStackEntry != null
+}
+
 
 @Composable
 fun rememberAppState(
@@ -95,11 +100,4 @@ fun rememberAppState(
     BeMyPetAppState(
         navController, snackBarHostState, snackBarManager, coroutineScope
     )
-}
-
-@Composable
-@ReadOnlyComposable
-fun resources(): Resources {
-    LocalConfiguration.current
-    return LocalContext.current.resources
 }
