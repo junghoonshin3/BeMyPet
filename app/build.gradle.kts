@@ -119,6 +119,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.play.services.ads)
 
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))

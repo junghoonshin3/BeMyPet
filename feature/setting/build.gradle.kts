@@ -1,3 +1,5 @@
+import kr.sjh.convention.ext.implementation
+
 plugins {
     alias(libs.plugins.bemypet.android.library.compose)
     alias(libs.plugins.bemypet.android.feature)
