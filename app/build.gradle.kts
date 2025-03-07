@@ -16,11 +16,11 @@ plugins {
 }
 
 // properties 파일 로드
-val properties = Properties().apply {
+val secretsProps = Properties().apply {
     load(FileInputStream(rootProject.file("secrets.properties")))
 }
 
-val versionPropsFile = Properties().apply {
+val versionProps = Properties().apply {
     load(FileInputStream(rootProject.file("version.properties")))
 }
 
@@ -56,16 +56,16 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        manifestPlaceholders["MAPS_API_KEY"] = properties["MAPS_API_KEY"].toString()
+        manifestPlaceholders["MAPS_API_KEY"] = secretsProps["MAPS_API_KEY"].toString()
 
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file(properties["STORE_FILE"].toString())
-            keyAlias = properties["KEY_ALIAS"].toString()
-            keyPassword = properties["KEY_PASSWORD"].toString()
-            storePassword = properties["STORE_PASSWORD"].toString()
+            storeFile = file(secretsProps["STORE_FILE"].toString())
+            keyAlias = secretsProps["KEY_ALIAS"].toString()
+            keyPassword = secretsProps["KEY_PASSWORD"].toString()
+            storePassword = secretsProps["STORE_PASSWORD"].toString()
         }
     }
 
@@ -78,6 +78,7 @@ android {
             applicationIdSuffix = ".debug"
             manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
+            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
         }
         release {
             isMinifyEnabled = true
@@ -87,6 +88,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             manifestPlaceholders["APP_NAME"] = "@string/app_name"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
+            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
         }
 
     }
@@ -123,6 +125,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.play.services.ads)
 
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))

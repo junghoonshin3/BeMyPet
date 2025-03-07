@@ -2,8 +2,11 @@ package kr.sjh.feature.adoption_detail.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -56,24 +59,21 @@ private fun PetPinedZoomScreen(
                 .background(Color.Transparent)
                 .zIndex(1f),
             visible = topBarShow,
-            enter = slideInVertically(
-                initialOffsetY = { fullHeight -> -fullHeight },
-                animationSpec = tween(durationMillis = 150, easing = LinearOutSlowInEasing)
-            ),
-            exit = slideOutVertically(
-                targetOffsetY = { fullHeight -> -fullHeight },
-                animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
-            )
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
-            BeMyPetTopAppBar(title = {
-                IconButton(onClick = close) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back"
-                    )
-                }
-                Text("사진")
-            }, modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(0.8f)))
+            BeMyPetTopAppBar(
+                title = {
+                    IconButton(onClick = close) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
+                            contentDescription = "back"
+                        )
+                    }
+                    Text("사진", style = MaterialTheme.typography.headlineSmall)
+                },
+                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(0.8f))
+            )
         }
 
         PinchZoomComponent(modifier = Modifier.fillMaxSize(), imageRequest = imageRequest, onTap = {

@@ -1,8 +1,13 @@
 package kr.sjh.core.designsystem.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,6 +26,7 @@ fun <T> EndlessLazyGridColumn(
     gridState: LazyGridState = rememberLazyGridState(),
     userScrollEnabled: Boolean,
     contentPadding: PaddingValues = PaddingValues(5.dp),
+    isLoadMore: Boolean = false,
     items: List<T>,
     columns: GridCells = GridCells.Fixed(2),
     itemKey: (T) -> Any,
@@ -46,10 +52,26 @@ fun <T> EndlessLazyGridColumn(
         items(items = items, key = { item: T -> itemKey(item) }) { item ->
             itemContent(item)
         }
+
+        item(span = { GridItemSpan(2) }) {
+            if (isLoadMore) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                ) {
+                    LoadingComponent()
+                }
+            }
+        }
     }
 }
 
-private fun LazyGridState.reachedBottom(buffer: Int = 1): Boolean {
+private fun LazyGridState.reachedBottom(buffer: Int = 1, atLeastCount: Int = 5): Boolean {
     val lastVisibleItem = this.layoutInfo.visibleItemsInfo.lastOrNull()
-    return lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
+    return if (lastVisibleItem == null) {
+        false
+    } else {
+        lastVisibleItem.index > atLeastCount && lastVisibleItem?.index != 0 && lastVisibleItem?.index == this.layoutInfo.totalItemsCount - buffer
+    }
 }

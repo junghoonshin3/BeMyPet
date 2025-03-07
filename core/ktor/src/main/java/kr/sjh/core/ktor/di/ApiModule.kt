@@ -13,16 +13,14 @@ import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.xml.xml
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.json.Json
 import kr.sjh.core.ktor.BuildConfig
-import kr.sjh.core.ktor.repository.AdoptionService
-import kr.sjh.core.ktor.repository.impl.AdoptionServiceImpl
-import nl.adaptivity.xmlutil.XmlDeclMode
-import nl.adaptivity.xmlutil.serialization.XML
+import kr.sjh.core.ktor.model.XML
+import kr.sjh.core.ktor.service.PetService
+import kr.sjh.core.ktor.service.impl.PetServiceImpl
 import javax.inject.Singleton
 
 @Module
@@ -33,32 +31,29 @@ object ApiModule {
     fun provideHttpClient(): HttpClient {
         return HttpClient(Android) {
             install(HttpTimeout) {
-                requestTimeoutMillis = 10000
+                requestTimeoutMillis = 5000
             }
             install(Logging) {
-//                logger = Logger.DEFAULT
-//                level = LogLevel.ALL
+                logger = Logger.DEFAULT
+                level = LogLevel.INFO
             }
             install(DefaultRequest) {
                 url(BuildConfig.BASE_URL)
+                url {
+                    parameters.append("serviceKey", BuildConfig.SERVICE_KEY)
+                    parameters.append("_type", XML)
+                }
             }
-
             install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-                xml(format = XML {
-                    xmlDeclMode = XmlDeclMode.Charset
-                })
+                xml(
+                    contentType = ContentType.Text.Xml
+                )
             }
         }
     }
 
     @Singleton
     @Provides
-    fun provideAdoptionService(httpClient: HttpClient): AdoptionService =
-        AdoptionServiceImpl(httpClient)
-
-    @Provides
-    fun provideDispatcher(): CoroutineDispatcher = Dispatchers.Default
-
+    fun provideAdoptionService(httpClient: HttpClient): PetService = PetServiceImpl(httpClient)
 
 }

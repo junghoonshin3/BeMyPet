@@ -13,6 +13,10 @@
   </p>
 </div>
 
+<a align="center" href="https://play.google.com/store/apps/details?id=kr.sjh.bemypet">
+    <img src="https://i.namu.wiki/i/eRJ4F1pIk_HbZWgegNDAhu3jYgb-YbyB7vB4sgBLd1WrthI4VRS4lqothtJE9JdxE1zmeIHIhgYWeL_DmPy-CRd4-FK4PI5IWfOfbhAnjijNvdXINJcG20DLU2nw7e5E5wxCT2YrqQL0odpSnDbE8w.svg"/>
+</a>
+
 ## Features
 
 - 유기동물 목록 조회
@@ -25,7 +29,10 @@
 
 - MVVM
 - Jetpack Compose
-- Dependency Injection with Hilt
+- Navigation Compose
+- Dependency Injection Hilt
+- HTTP 클라이언트 라이브러리 Ktro
+- 이미지 로딩 라이브러리 Coil
 
 ## API
 - [ 농림축산식품부 농림축산검역본부_국가동물보호정보시스템 구조동물 조회 서비스](https://www.data.go.kr/data/15098931/openapi.do)

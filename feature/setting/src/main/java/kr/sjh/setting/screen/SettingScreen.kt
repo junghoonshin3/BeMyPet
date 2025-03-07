@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kr.sjh.core.common.ads.AdMobBanner
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.CheckBoxButton
@@ -29,8 +30,7 @@ import kr.sjh.core.model.setting.SettingType
 
 @Composable
 fun SettingRoute(
-    isDarkTheme: Boolean = LocalDarkTheme.current,
-    onChangeDarkTheme: (Boolean) -> Unit
+    isDarkTheme: Boolean = LocalDarkTheme.current, onChangeDarkTheme: (Boolean) -> Unit
 ) {
     SettingScreen(
         modifier = Modifier
@@ -69,7 +69,8 @@ fun SettingScreen(
                     )
                 }
             })
-        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(10.dp)) {
+        AdMobBanner()
+        LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(10.dp)) {
             item {
                 Box(
                     modifier = Modifier
@@ -94,5 +95,6 @@ fun SettingScreen(
                     })
             }
         }
+
     }
 }

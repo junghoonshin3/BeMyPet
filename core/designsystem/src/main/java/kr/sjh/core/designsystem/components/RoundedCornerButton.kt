@@ -20,18 +20,18 @@ import androidx.compose.ui.unit.dp
 fun RoundedCornerButton(
     modifier: Modifier = Modifier,
     title: String,
-    onClick: (String) -> Unit,
+    onClick: () -> Unit,
     selected: Boolean = false,
 ) {
     Box(modifier = Modifier
-        .clip(RoundedCornerShape(10.dp))
         .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
         .border(
             1.dp,
             color = if (selected) Color.Red else Color.LightGray,
             shape = RoundedCornerShape(10.dp)
         )
-        .clickable { onClick(title) }
+        .clip(RoundedCornerShape(10.dp))
+        .clickable { onClick() }
         .then(modifier), contentAlignment = Alignment.Center) {
         Text(text = title, style = MaterialTheme.typography.bodySmall)
     }
