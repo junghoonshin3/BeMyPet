@@ -45,6 +45,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kr.sjh.core.common.ads.AdMobBanner
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
@@ -101,39 +102,42 @@ private fun PetDetailScreen(
             if (selectedLike) Color.Red else color
         }
     }
-
-    LazyColumn(
-        modifier = modifier
-    ) {
-        stickyHeader {
-            BeMyPetTopAppBar(modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary.copy(0.8f))
-                .zIndex(1f), title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                    )
-                }
-            }, iconButton = {
-                IconButton(onClick = {
-                    selectedLike = !selectedLike
-                    onLike(selectedLike)
-                }) {
-                    Icon(
-                        modifier = Modifier.size(30.dp),
-                        imageVector = ImageVector.vectorResource(id = R.drawable.like),
-                        contentDescription = "like",
-                        tint = selectedColor
-                    )
-                }
-            })
+    Column(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
+            stickyHeader {
+                BeMyPetTopAppBar(modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary.copy(0.8f))
+                    .zIndex(1f), title = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
+                            contentDescription = "back",
+                        )
+                    }
+                }, iconButton = {
+                    IconButton(onClick = {
+                        selectedLike = !selectedLike
+                        onLike(selectedLike)
+                    }) {
+                        Icon(
+                            modifier = Modifier.size(30.dp),
+                            imageVector = ImageVector.vectorResource(id = R.drawable.like),
+                            contentDescription = "like",
+                            tint = selectedColor
+                        )
+                    }
+                })
+            }
+            item {
+                PetDetailContent(imageRequest, pet, state)
+            }
         }
-        item {
-            PetDetailContent(imageRequest, pet, state)
-        }
+        AdMobBanner()
     }
+
 }
 
 @Composable

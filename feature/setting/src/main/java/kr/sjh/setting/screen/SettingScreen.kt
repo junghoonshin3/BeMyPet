@@ -94,10 +94,6 @@ fun SettingScreen(
                     })
             }
         }
-        AdMobBanner(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp)
-        )
+        AdMobBanner()
     }
 }
