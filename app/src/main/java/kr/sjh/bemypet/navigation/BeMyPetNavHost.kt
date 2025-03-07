@@ -45,7 +45,6 @@ fun BeMyPetNavHost(
                 if (appState.navController.canGoBack()) {
                     appState.navController.popBackStack()
                 }
-
             })
         }
 
