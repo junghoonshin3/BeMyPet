@@ -69,6 +69,7 @@ fun SettingScreen(
                     )
                 }
             })
+        AdMobBanner()
         LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(10.dp)) {
             item {
                 Box(
@@ -94,6 +95,6 @@ fun SettingScreen(
                     })
             }
         }
-        AdMobBanner()
+
     }
 }

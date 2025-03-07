@@ -109,8 +109,7 @@ private fun PetDetailScreen(
             stickyHeader {
                 BeMyPetTopAppBar(modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary.copy(0.8f))
-                    .zIndex(1f), title = {
+                    .background(MaterialTheme.colorScheme.primary), title = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
@@ -130,12 +129,12 @@ private fun PetDetailScreen(
                         )
                     }
                 })
+                AdMobBanner()
             }
             item {
                 PetDetailContent(imageRequest, pet, state)
             }
         }
-        AdMobBanner()
     }
 
 }
