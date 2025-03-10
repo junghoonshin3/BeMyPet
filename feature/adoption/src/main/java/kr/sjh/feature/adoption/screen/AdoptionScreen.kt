@@ -1,7 +1,6 @@
 package kr.sjh.feature.adoption.screen
 
 import FilterComponent
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,9 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,8 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -191,6 +186,9 @@ private fun AdoptionScreen(
                         .size(50.dp), state = state, isRefreshing = adoptionUiState.isRefreshing
                 )
             }) {
+            if (!adoptionUiState.isRefreshing && adoptionUiState.pets.isEmpty()) {
+                Text(modifier = Modifier.align(Alignment.Center), text = "검색된 펫이 없어요!")
+            }
             EndlessLazyGridColumn(
                 modifier = Modifier.fillMaxSize(),
                 gridState = gridState,
@@ -248,7 +246,7 @@ private fun AdoptionScreen(
                 categories = filterUiState.categoryList,
                 height = appBarHeight - scrollableHeight,
                 onFilterEvent = { event ->
-                    if(event is FilterEvent.Reset){
+                    if (event is FilterEvent.Reset) {
                         coroutineScope.launch {
                             appbarOffsetHeightPx = 0f
                             gridState.scrollToItem(0)

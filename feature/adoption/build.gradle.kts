@@ -14,5 +14,4 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.composables.core)
     implementation(libs.androidx.foundation.layout.android)
-    implementation(libs.litert.support.api)
 }
