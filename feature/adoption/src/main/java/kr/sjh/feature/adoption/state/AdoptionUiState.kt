@@ -86,7 +86,6 @@ data class AdoptionUiState(
     val isRefreshing: Boolean = false,
     val isMore: Boolean = false,
     val pets: List<Pet> = emptyList(),
-    val totalCount: Int = 0,
 )
 
 data class Category(

@@ -71,13 +71,19 @@ android {
 
     buildTypes {
         debug {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            )
             applicationIdSuffix = ".debug"
             manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
             manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )

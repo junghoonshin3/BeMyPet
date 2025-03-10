@@ -30,7 +30,11 @@ class AdoptionRepositoryImpl @Inject constructor(
     override fun getPets(req: PetRequest): Flow<List<Pet>> = flow {
         val res = service.getPets(req)
         if (res.header.resultCode == "00") {
-            val pets = res.body?.items?.itemList?.toPets() ?: emptyList()
+            val pets = if (res.body?.totalCount == 0) {
+                emptyList()
+            } else {
+                res.body?.items?.itemList?.toPets() ?: emptyList()
+            }
             emit(pets)
         } else {
             throw Exception(res.header.resultMsg)
