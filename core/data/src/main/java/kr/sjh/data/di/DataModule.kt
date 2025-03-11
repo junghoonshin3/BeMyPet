@@ -1,18 +1,16 @@
 package kr.sjh.data.di
 
-import android.content.Context
-import android.location.Geocoder
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.data.repository.AdoptionRepository
+import kr.sjh.data.repository.AuthRepository
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
 import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.repository.impl.AdoptionRepositoryImpl
+import kr.sjh.data.repository.impl.AuthRepositoryImpl
 import kr.sjh.data.repository.impl.FavouriteRepositoryImpl
 import kr.sjh.data.repository.impl.GeoLocationRepositoryImpl
 import kr.sjh.data.repository.impl.SettingRepositoryImpl
@@ -36,4 +34,9 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun provideGeoLocationRepository(impl: GeoLocationRepositoryImpl): GeoLocationRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
 }

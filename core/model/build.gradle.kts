@@ -11,9 +11,7 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.compose.runtime)
-    implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.collections.immutable)
 }

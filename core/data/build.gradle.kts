@@ -14,9 +14,9 @@ android {
 dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(project(":core:model"))
-    implementation(libs.firebase.auth)
     implementation(project(":core:ktor"))
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:supabase"))
     implementation(libs.ktor.serialization.kotlinx.json)
 }

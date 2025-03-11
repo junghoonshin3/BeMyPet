@@ -15,8 +15,6 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.xml.xml
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kr.sjh.core.ktor.BuildConfig
 import kr.sjh.core.ktor.model.XML
 import kr.sjh.core.ktor.service.PetService

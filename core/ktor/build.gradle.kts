@@ -15,8 +15,7 @@ properties.load(project.rootProject.file("secrets.properties").inputStream())
 android {
     namespace = "kr.sjh.core.ktor"
 
-    //TODO buildConfig Deprecated 될 예정
-    android.buildFeatures.buildConfig = true
+    buildFeatures.buildConfig = true
 
     defaultConfig {
         buildConfigField("String", "SERVICE_KEY", properties["SERVICE_KEY"].toString())
