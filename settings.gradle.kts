@@ -1,5 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":feature:login")
+
+
+include(":core:supabase")
+
+
 include(":core:datastore")
 
 
