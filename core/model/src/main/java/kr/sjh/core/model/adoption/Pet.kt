@@ -33,7 +33,7 @@ data class Pet(
     val orgNm: String = "",
     val chargeNm: String? = null,
     val officetel: String = "",
-    val noticeComment: String? = null,
+    val noticeComment: String? = null
 ) : Parcelable {
     val sexCdToText: String
         get() {

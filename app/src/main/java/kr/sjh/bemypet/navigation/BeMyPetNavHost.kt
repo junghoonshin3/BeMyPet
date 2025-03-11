@@ -21,7 +21,7 @@ import kr.sjh.setting.screen.SettingRoute
 
 @Composable
 fun BeMyPetNavHost(
-    modifier: Modifier = Modifier, appState: BeMyPetAppState, onChangeDarkTheme: (Boolean) -> Unit
+    modifier: Modifier = Modifier, appState: BeMyPetAppState, onChangeDarkTheme: (Boolean) -> Unit,
 ) {
     NavHost(
         modifier = modifier,

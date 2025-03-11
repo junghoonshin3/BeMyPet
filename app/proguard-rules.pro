@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+
+# Ktor 관련 클래스 유지
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-keep class io.ktor.client.plugins.** { *; }
+
+# Kotlin Coroutines 관련 유지 (필요할 수도 있음)
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**

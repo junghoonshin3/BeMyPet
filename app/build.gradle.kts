@@ -125,18 +125,19 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.analytics)
     implementation(libs.play.services.ads)
 
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
+    implementation(project(":feature:login"))
     implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:supabase"))
+
 
 }

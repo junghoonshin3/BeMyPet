@@ -1,10 +1,7 @@
 package kr.sjh.data.repository.impl
 
-import android.util.Log
-import io.ktor.serialization.JsonConvertException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -17,14 +14,15 @@ import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.toEntities
 import kr.sjh.data.toPets
+import kr.sjh.database.dao.FavouriteDao
 import kr.sjh.database.dao.LocationDao
 import kr.sjh.database.entity.SidoEntity
 import kr.sjh.database.entity.SigunguEntity
-import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 class AdoptionRepositoryImpl @Inject constructor(
-    private val service: PetService, private val dao: LocationDao
+    private val service: PetService,
+    private val locationDao: LocationDao
 ) : AdoptionRepository {
 
     override fun getPets(req: PetRequest): Flow<List<Pet>> = flow {
@@ -45,8 +43,8 @@ class AdoptionRepositoryImpl @Inject constructor(
     override suspend fun insertSidoList() {
         try {
             withContext(Dispatchers.IO) {
-                if (dao.existSido()) return@withContext
-                dao.insertAllSido(
+                if (locationDao.existSido()) return@withContext
+                locationDao.insertAllSido(
                     listOf(
                         SidoEntity(orgdownNm = "서울특별시", orgCd = "6110000"),
                         SidoEntity(orgdownNm = "부산광역시", orgCd = "6260000"),
@@ -78,18 +76,19 @@ class AdoptionRepositoryImpl @Inject constructor(
             val sigunguListEntity =
                 list.map { SigunguEntity(it.orgCd, it.orgdownNm, it.orgdownNm) }.toMutableList()
             sigunguListEntity.add(0, SigunguEntity())
-            dao.insertAllSigungu(sigunguListEntity)
+            locationDao.insertAllSigungu(sigunguListEntity)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     override fun getSidoList(): Flow<List<Sido>> =
-        dao.getSidoList().map { it.map { Sido(orgCd = it.orgCd, orgdownNm = it.orgdownNm) } }.map {
-            val list = it.toMutableList()
-            list.add(0, Sido(orgCd = "", orgdownNm = "전국"))
-            list
-        }
+        locationDao.getSidoList()
+            .map { it.map { Sido(orgCd = it.orgCd, orgdownNm = it.orgdownNm) } }.map {
+                val list = it.toMutableList()
+                list.add(0, Sido(orgCd = "", orgdownNm = "전국"))
+                list
+            }
 
 
     override fun getSigunguList(sido: Sido): Flow<List<Sigungu>> = flow {
@@ -97,7 +96,7 @@ class AdoptionRepositoryImpl @Inject constructor(
             emit(emptyList())
             return@flow
         }
-        if (!dao.existSigunguList(sido.orgCd)) {
+        if (!locationDao.existSigunguList(sido.orgCd)) {
             val res = service.getSigungu(
                 SigunguRequest(
                     upr_cd = sido.orgCd
@@ -105,10 +104,10 @@ class AdoptionRepositoryImpl @Inject constructor(
             )
             if (res.header.resultCode == "00") {
                 val sigunguList = res.body?.items?.itemList ?: emptyList()
-                dao.insertAllSigungu(sigunguList.toEntities())
+                locationDao.insertAllSigungu(sigunguList.toEntities())
             }
         }
-        val sigunguList = dao.getSigunguList(sido.orgCd).map {
+        val sigunguList = locationDao.getSigunguList(sido.orgCd).map {
             Sigungu(it.uprCd, it.orgCd, it.orgdownNm)
         }
         emit(sigunguList)
