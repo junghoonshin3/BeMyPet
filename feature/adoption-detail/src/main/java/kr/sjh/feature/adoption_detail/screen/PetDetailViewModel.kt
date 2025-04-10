@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.data.repository.CommentRepository
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
@@ -38,6 +39,7 @@ sealed class LocationUiState {
 class PetDetailViewModel @Inject constructor(
     private val geoLocationRepository: GeoLocationRepository,
     private val favouriteRepository: FavouriteRepository,
+    private val commentRepository: CommentRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -45,6 +47,7 @@ class PetDetailViewModel @Inject constructor(
         savedStateHandle.getStateFlow("pet", Pet()).onEach { pet ->
             isFavorite(pet.desertionNo)
             getLocation(pet.careAddr)
+            commentCount(pet.noticeNo)
         }.map { pet ->
             DetailUiState.Success(pet) as DetailUiState
         }.onStart {
@@ -57,9 +60,12 @@ class PetDetailViewModel @Inject constructor(
             initialValue = DetailUiState.Loading
         )
 
-    val _location = MutableStateFlow<LocationUiState>(LocationUiState.Loading)
+    private val _location = MutableStateFlow<LocationUiState>(LocationUiState.Loading)
 
     val location = _location.asStateFlow()
+
+    private val _commentCount = MutableStateFlow(0)
+    val commentCount = _commentCount.asStateFlow()
 
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
@@ -95,15 +101,21 @@ class PetDetailViewModel @Inject constructor(
         _isFavorite.value = favouriteRepository.isExist(desertionNo)
     }
 
+    private suspend fun commentCount(postId: String) {
+        _commentCount.value = commentRepository.getCommentCount(postId)
+    }
+
     private suspend fun getLocation(shelterAddress: String) {
         _location.value = LocationUiState.Loading
         try {
             _location.value = withContext(Dispatchers.IO) {
                 val addresses = geoLocationRepository.getFromLocationName(shelterAddress, 1)
-                LocationUiState.Success(Location("").apply {
-                    latitude = addresses[0].latitude
-                    longitude = addresses[0].longitude
-                })
+                LocationUiState.Success(
+                    Location("").apply {
+                        latitude = addresses[0].latitude
+                        longitude = addresses[0].longitude
+                    },
+                )
             }
 
         } catch (e: Exception) {

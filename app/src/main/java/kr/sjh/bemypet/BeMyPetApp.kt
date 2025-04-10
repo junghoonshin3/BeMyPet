@@ -18,7 +18,8 @@ import kr.sjh.bemypet.navigation.BeMyPetNavHost
 
 @Composable
 fun BeMyPetApp(
-    appState: BeMyPetAppState = rememberAppState(), onChangeDarkTheme: (Boolean) -> Unit
+    appState: BeMyPetAppState = rememberAppState(),
+    onChangeDarkTheme: (Boolean) -> Unit
 ) {
     // SDK 35 이상 타켓팅 시 Statusbar와 AppBar 겹치는 현상 대응
     val modifier = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -51,7 +52,8 @@ fun BeMyPetApp(
             appState = appState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(contentPadding),
+                .padding(contentPadding)
+            ,
             onChangeDarkTheme = onChangeDarkTheme
         )
     }

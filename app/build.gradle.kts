@@ -57,7 +57,6 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = secretsProps["MAPS_API_KEY"].toString()
-
     }
 
     signingConfigs {
@@ -71,15 +70,15 @@ android {
 
     buildTypes {
         debug {
-            isMinifyEnabled = true
-            isShrinkResources = true
+//            isMinifyEnabled = true
+//            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             applicationIdSuffix = ".debug"
             manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
-            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
+            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
         release {
             isMinifyEnabled = true
@@ -90,7 +89,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             manifestPlaceholders["APP_NAME"] = "@string/app_name"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
-            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
+            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
 
     }
@@ -126,18 +125,19 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
     implementation(libs.play.services.ads)
-
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth.kt)
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
-    implementation(project(":feature:login"))
+    implementation(project(":feature:signIn"))
+    implementation(project(":feature:comments"))
+    implementation(project(":feature:report"))
     implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
     implementation(project(":core:supabase"))
-
-
 }

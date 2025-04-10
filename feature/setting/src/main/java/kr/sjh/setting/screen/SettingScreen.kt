@@ -1,51 +1,89 @@
 package kr.sjh.setting.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import kr.sjh.core.common.ads.AdMobBanner
+import kr.sjh.core.common.credential.AccountManager
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.designsystem.theme.LocalDarkTheme
+import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.setting.SettingType
 
 @Composable
 fun SettingRoute(
-    isDarkTheme: Boolean = LocalDarkTheme.current, onChangeDarkTheme: (Boolean) -> Unit
+    viewModel: SettingViewModel = hiltViewModel(),
+    accountManager: AccountManager,
+    session: SessionState,
+    isDarkTheme: Boolean = LocalDarkTheme.current,
+    onChangeDarkTheme: (Boolean) -> Unit,
+    onNavigateToSignIn: () -> Unit,
+    onNavigateToAdoption: () -> Unit
 ) {
-    SettingScreen(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+    val coroutineScope = rememberCoroutineScope()
+
+    SettingScreen(modifier = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background),
         isDarkTheme = isDarkTheme,
-        onChangeDarkTheme = onChangeDarkTheme
-    )
+        session = session,
+        onChangeDarkTheme = onChangeDarkTheme,
+        onNavigateToSignIn = onNavigateToSignIn,
+        onSignOut = {
+            coroutineScope.launch {
+                accountManager.signOut()
+                viewModel.signOut()
+            }
+        },
+        onDeleteAccount = { userId ->
+            viewModel.deleteAccount(userId, {
+                coroutineScope.launch {
+                    accountManager.signOut()
+                    onNavigateToAdoption()
+                }
+            }, {})
+        })
 }
 
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
+    session: SessionState,
     onChangeDarkTheme: (Boolean) -> Unit,
+    onNavigateToSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onDeleteAccount: (String) -> Unit
 ) {
 
     var selectedTheme by remember(isDarkTheme) {
@@ -94,7 +132,151 @@ fun SettingScreen(
                         onChangeDarkTheme(selectedTheme == SettingType.DARK_THEME)
                     })
             }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "계정", style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+            item {
+                when (session) {
+                    is SessionState.Authenticated -> {
+                        session.user?.id?.let { id ->
+                            BlockedUser(onNavigateToBlockedUser = {})
+                            DeleteUser(userId = id,
+                                onSignOut = onSignOut,
+                                onDeleteAccount = { onDeleteAccount(session.user?.id.toString()) })
+
+                        }
+                    }
+
+                    SessionState.Initializing -> {}
+                    is SessionState.NoAuthenticated -> {
+                        Button(
+                            onClick = {
+                                onNavigateToSignIn()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Text(text = "로그인", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+
+                    SessionState.RefreshFailure -> {}
+                }
+            }
         }
 
     }
+}
+
+@Composable
+fun DeleteUser(userId: String, onSignOut: () -> Unit, onDeleteAccount: (String) -> Unit) {
+    var isDeleteUserShow by remember {
+        mutableStateOf(false)
+    }
+    if (isDeleteUserShow) {
+        AlertDialog(onDismissRequest = { },
+            title = { Text("회원탈퇴") },
+            text = { Text("회원탈퇴를 하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteAccount(userId)
+                    isDeleteUserShow = false
+                }) {
+                    Text("예", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    // 다이얼로그만 닫고 유지
+                    isDeleteUserShow = false
+                }) {
+                    Text("아니오", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            })
+    }
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = "계정", style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        Button(
+            onClick = {
+                onSignOut()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Text(text = "로그아웃", style = MaterialTheme.typography.titleMedium)
+
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { isDeleteUserShow = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = Color.Red
+            )
+        ) {
+            Text(text = "회원탈퇴", style = MaterialTheme.typography.titleMedium)
+
+        }
+    }
+}
+
+
+@Composable
+fun BlockedUser(onNavigateToBlockedUser: () -> Unit) {
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = "사용자 설정", style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onNavigateToBlockedUser),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                modifier = Modifier.padding(16.dp),
+                text = "사용자 차단목록",
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+
 }

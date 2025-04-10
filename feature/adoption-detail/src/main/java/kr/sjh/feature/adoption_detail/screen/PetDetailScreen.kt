@@ -3,8 +3,10 @@ package kr.sjh.feature.adoption_detail.screen
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,11 +47,13 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import kr.sjh.core.common.ads.AdMobBanner
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
+import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.feature.adoption_detail.state.AdoptionDetailEvent
 import kr.sjh.feature.adoption_detail.state.DetailUiState
@@ -57,7 +61,10 @@ import kr.sjh.feature.adoption_detail.state.DetailUiState
 @Composable
 fun PetDetailRoute(
     onBack: () -> Unit,
+    session: SessionState,
     viewModel: PetDetailViewModel = hiltViewModel(),
+    onNavigateToComments: (String, String) -> Unit,
+    onNavigateToSignUp: () -> Unit
 ) {
     val location by viewModel.location.collectAsStateWithLifecycle()
 
@@ -65,15 +72,35 @@ fun PetDetailRoute(
 
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
 
-    PetDetailScreen(modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background),
+    val commentCount by viewModel.commentCount.collectAsStateWithLifecycle()
+
+    PetDetailScreen(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         uiState = uiState,
         isFavorite = isFavorite,
         onBack = onBack,
         state = location,
+        commentCount = commentCount,
         onFavorite = { like ->
             viewModel.onEvent(AdoptionDetailEvent.OnFavorite(like))
+        },
+        onNavigateToComments = {
+            when (session) {
+                is SessionState.Authenticated -> {
+                    onNavigateToComments(it, session.user?.id.toString())
+                }
+
+                SessionState.Initializing -> {}
+                is SessionState.NoAuthenticated -> {
+                    SnackBarManager.showMessage("회원가입 화면으로 이동합니다.")
+                    onNavigateToSignUp()
+                }
+
+                SessionState.RefreshFailure -> {}
+            }
+
         })
 }
 
@@ -82,9 +109,11 @@ private fun PetDetailScreen(
     modifier: Modifier = Modifier,
     uiState: DetailUiState,
     isFavorite: Boolean,
+    commentCount: Int,
     state: LocationUiState,
     onBack: () -> Unit,
     onFavorite: (Boolean) -> Unit,
+    onNavigateToComments: (String) -> Unit
 ) {
 
     var selectedLike by remember(isFavorite) {
@@ -98,117 +127,129 @@ private fun PetDetailScreen(
             if (selectedLike) Color.Red else color
         }
     }
-    Column(modifier = modifier) {
-        BeMyPetTopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary),
-            title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                    )
-                }
-            },
-            iconButton = {
-                IconButton(
-                    onClick = {
-                        selectedLike = !selectedLike
-                        onFavorite(selectedLike)
-                    }) {
-                    Icon(
-                        modifier = Modifier.size(30.dp),
-                        imageVector = ImageVector.vectorResource(id = R.drawable.like),
-                        contentDescription = "like",
-                        tint = selectedColor
-                    )
-                }
-            })
-        AdMobBanner()
+    Box(modifier = modifier) {
         when (uiState) {
             is DetailUiState.Failure -> {
+                uiState.e.printStackTrace()
                 Log.d("PetDetailScreen", "Failure")
             }
 
             DetailUiState.Loading -> {
-                Log.d("PetDetailScreen", "Loading")
                 LoadingComponent()
             }
 
             is DetailUiState.Success -> {
                 val imageRequest =
                     ImageRequest.Builder(LocalContext.current).data(uiState.pet.popfile).build()
-                PetDetailContent(imageRequest, uiState.pet, state)
+                Column(modifier = Modifier.fillMaxSize()) {
+                    BeMyPetTopAppBar(modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary), title = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
+                                contentDescription = "back",
+                            )
+                        }
+                    }, iconButton = {
+                        IconButton(onClick = {
+                            selectedLike = !selectedLike
+                            onFavorite(selectedLike)
+                        }) {
+                            Icon(
+                                modifier = Modifier.size(30.dp),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.like),
+                                contentDescription = "like",
+                                tint = selectedColor
+                            )
+                        }
+                    })
+                    AdMobBanner()
+                    PetDetailContent(
+                        imageRequest, uiState.pet, commentCount, state, onNavigateToComments
+                    )
+                }
+
             }
         }
+
     }
+
 }
 
 @Composable
 private fun PetDetailContent(
     imageReq: ImageRequest,
     pet: Pet,
+    commentCount: Int,
     state: LocationUiState,
+    onNavigateToComments: (String) -> Unit
 ) {
     var isDialogShow by remember { mutableStateOf(false) }
 
     if (isDialogShow) {
         Dialog(properties = DialogProperties(
-            decorFitsSystemWindows = false,
-            usePlatformDefaultWidth = false
-        ),
-            onDismissRequest = { isDialogShow = false }) {
+            decorFitsSystemWindows = false, usePlatformDefaultWidth = false
+        ), onDismissRequest = { isDialogShow = false }) {
             PetPinedZoomRoute(imageRequest = imageReq, close = { isDialogShow = false })
         }
     }
-
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item {
-            PetImage(imageReq) {
-                isDialogShow = true
-            }
-            Title(
-                modifier = Modifier.padding(16.dp),
-                title = pet.kindCd,
-                style = MaterialTheme.typography.titleMedium
-            )
-            HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 5.dp, bottom = 5.dp),
-                thickness = 1.dp
-            )
-            TextLine(title = "유기번호", content = pet.desertionNo)
-            TextLine(title = "접수일", content = pet.happenDt)
-            TextLine(title = "발견장소", content = pet.happenPlace)
-            TextLine(title = "품종", content = pet.kindCd)
-            TextLine(title = "색상", content = pet.colorCd ?: "정보없음")
-            TextLine(title = "나이", content = pet.age)
-            TextLine(title = "체중", content = pet.weight)
-            TextLine(title = "공고기간", content = "${pet.noticeSdt} ~ ${pet.noticeEdt}")
-            TextLine(title = "중성화", content = pet.neuterYnToText)
-            TextLine(title = "상태", content = pet.processState)
-            TextLine(title = "성별", content = pet.sexCdToText)
-            TextLine(title = "나이", content = pet.age)
-            TextLine(title = "특징", content = pet.specialMark)
-            TextLine(title = "보호소 이름", content = pet.careNm)
-            TextLine(title = "보호소 연락처", content = pet.careTel)
-            TextLine(title = "보호장소", content = pet.careAddr)
-            ShelterMap(
-                modifier = Modifier.fillMaxSize(),
-                mapId = pet.careAddr,
-                careNm = pet.careNm,
-                state = state
-            )
-            TextLine(title = "관할기관", content = pet.orgNm)
-            pet.chargeNm?.let {
-                TextLine(title = "담당자", content = it)
-            }
-            TextLine(title = "담당자 연락처", content = pet.officetel)
-            pet.noticeComment?.let {
-                TextLine(title = "특이사항", content = it)
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item {
+                PetImage(imageReq) {
+                    isDialogShow = true
+                }
+                Title(
+                    modifier = Modifier.padding(16.dp),
+                    title = pet.kindCd,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 5.dp, bottom = 5.dp),
+                    thickness = 1.dp
+                )
+                TextLine(title = "유기번호", content = pet.desertionNo)
+                TextLine(title = "접수일", content = pet.happenDt)
+                TextLine(title = "발견장소", content = pet.happenPlace)
+                TextLine(title = "품종", content = pet.kindCd)
+                TextLine(title = "색상", content = pet.colorCd ?: "정보없음")
+                TextLine(title = "나이", content = pet.age)
+                TextLine(title = "체중", content = pet.weight)
+                TextLine(title = "공고기간", content = "${pet.noticeSdt} ~ ${pet.noticeEdt}")
+                TextLine(title = "중성화", content = pet.neuterYnToText)
+                TextLine(title = "상태", content = pet.processState)
+                TextLine(title = "성별", content = pet.sexCdToText)
+                TextLine(title = "나이", content = pet.age)
+                TextLine(title = "특징", content = pet.specialMark)
+                TextLine(title = "보호소 이름", content = pet.careNm)
+                TextLine(title = "보호소 연락처", content = pet.careTel)
+                TextLine(title = "보호장소", content = pet.careAddr)
+                ShelterMap(
+                    modifier = Modifier.fillMaxSize(),
+                    mapId = pet.careAddr,
+                    careNm = pet.careNm,
+                    state = state
+                )
+                TextLine(title = "관할기관", content = pet.orgNm)
+                pet.chargeNm?.let {
+                    TextLine(title = "담당자", content = it)
+                }
+                TextLine(title = "담당자 연락처", content = pet.officetel)
+                pet.noticeComment?.let {
+                    TextLine(title = "특이사항", content = it)
+                }
             }
         }
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+        CommentSummary(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable(onClick = { onNavigateToComments(pet.noticeNo) }), count = commentCount
+        )
     }
 }
 
@@ -289,5 +330,19 @@ private fun ShelterMap(
             }
         }
     }
+}
 
+@Composable
+private fun CommentSummary(modifier: Modifier = Modifier, count: Int) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+            text = "댓글 ${count}개",
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
 }

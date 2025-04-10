@@ -31,3 +31,6 @@
 # Kotlin Coroutines 관련 유지 (필요할 수도 있음)
 -keep class kotlinx.coroutines.** { *; }
 -dontwarn kotlinx.coroutines.**
+
+-keepnames class kr.sjh.core.model.ReportType
+-keep class kr.sjh.core.model.ReportType { *; }

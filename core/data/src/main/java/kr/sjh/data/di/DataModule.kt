@@ -6,11 +6,13 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.CommentRepository
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
 import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.repository.impl.AdoptionRepositoryImpl
 import kr.sjh.data.repository.impl.AuthRepositoryImpl
+import kr.sjh.data.repository.impl.CommentRepositoryImpl
 import kr.sjh.data.repository.impl.FavouriteRepositoryImpl
 import kr.sjh.data.repository.impl.GeoLocationRepositoryImpl
 import kr.sjh.data.repository.impl.SettingRepositoryImpl
@@ -38,5 +40,9 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun provideAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideCommentRepository(impl: CommentRepositoryImpl): CommentRepository
 
 }

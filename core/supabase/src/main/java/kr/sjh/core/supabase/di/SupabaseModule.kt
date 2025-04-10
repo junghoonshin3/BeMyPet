@@ -9,27 +9,29 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.realtime.Realtime
 import kr.sjh.core.supabase.BuildConfig
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
 object SupabaseModule {
+
     @Provides
     @Singleton
     fun provideSupabaseClient(): SupabaseClient {
         return createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_ANON_KEY
+            supabaseUrl = BuildConfig.SUPABASE_URL, supabaseKey = BuildConfig.SUPABASE_ANON_KEY
         ) {
             install(Postgrest)
             install(Auth) {
                 flowType = FlowType.PKCE
-                scheme = "app"
-                host = "supabase.com"
             }
+            install(Realtime)
+            install(Functions)
         }
     }
 
@@ -44,4 +46,5 @@ object SupabaseModule {
     fun provideSupabaseAuth(client: SupabaseClient): Auth {
         return client.auth
     }
+
 }

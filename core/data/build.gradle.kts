@@ -4,7 +4,6 @@ import kr.sjh.convention.ext.implementation
 plugins {
     alias(libs.plugins.bemypet.android.library)
     alias(libs.plugins.bemypet.android.hilt)
-
 }
 
 android {
@@ -19,4 +18,5 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:supabase"))
     implementation(libs.ktor.serialization.kotlinx.json)
+
 }

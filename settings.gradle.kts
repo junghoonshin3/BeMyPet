@@ -1,5 +1,17 @@
 @file:Suppress("UnstableApiUsage")
 
+include(":feature:block")
+
+
+include(":feature:report")
+
+
+include(":feature:report")
+
+
+include(":feature:comments")
+
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -35,7 +47,7 @@ include(":feature:favourite")
 include(":feature:adoption-detail")
 include(":core:common")
 include(":feature:setting")
-include(":feature:login")
+include(":feature:signIn")
 include(":core:datastore")
 include(":core:supabase")
 

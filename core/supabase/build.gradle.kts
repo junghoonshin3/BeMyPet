@@ -4,7 +4,6 @@ import java.io.FileInputStream
 plugins {
     alias(libs.plugins.bemypet.android.library)
     alias(libs.plugins.bemypet.android.hilt)
-    alias(libs.plugins.bemypet.ktor)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -25,11 +24,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth.kt)
     implementation(libs.supabase.realtime.kt)
     implementation(libs.supabase.postgrest.kt)
-//    implementation(libs.ktor.client.android)
-//    implementation(libs.ktor.client.core)
-//    implementation(libs.ktor.util)
+    implementation(libs.supabase.functions.kt)
+    implementation(project(":core:ktor"))
 }
