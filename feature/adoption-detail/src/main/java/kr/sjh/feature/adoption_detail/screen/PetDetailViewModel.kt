@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.data.repository.AuthRepository
 import kr.sjh.data.repository.CommentRepository
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
@@ -40,6 +42,7 @@ class PetDetailViewModel @Inject constructor(
     private val geoLocationRepository: GeoLocationRepository,
     private val favouriteRepository: FavouriteRepository,
     private val commentRepository: CommentRepository,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -70,11 +73,15 @@ class PetDetailViewModel @Inject constructor(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
 
+    val session = authRepository.getSessionFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SessionState.Initializing)
+
     private fun addPet(pet: Pet) {
         viewModelScope.launch {
             favouriteRepository.addPet(pet)
         }
     }
+
 
     private fun removePet(desertionNo: String) {
         viewModelScope.launch {

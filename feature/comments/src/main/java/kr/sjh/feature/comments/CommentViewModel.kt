@@ -10,17 +10,21 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import kr.sjh.core.model.BlockUser
 import kr.sjh.core.model.Comment
-import kr.sjh.core.model.User
+import kr.sjh.core.model.SessionState
+import kr.sjh.data.repository.AuthRepository
 import kr.sjh.data.repository.CommentRepository
 import kr.sjh.feature.comments.navigation.CommentEvent
 import kr.sjh.feature.comments.navigation.CommentSideEffect
@@ -35,15 +39,14 @@ data class CommentUiState(
     val isDeleteDialogVisible: Boolean = false,
     val isStartEditing: Boolean = false,
     val currentComment: Comment? = null,
-    val blockedUser: List<String> = emptyList(),
     val textFieldValue: TextFieldValue = TextFieldValue(),
-    val isBlockedUser: Boolean = false,
-
-    )
+)
 
 @HiltViewModel
 class CommentViewModel @Inject constructor(
-    private val commentRepository: CommentRepository, savedStateHandle: SavedStateHandle
+    private val commentRepository: CommentRepository,
+    private val authRepository: AuthRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val arg = savedStateHandle.toRoute<Comments>()
@@ -54,45 +57,30 @@ class CommentViewModel @Inject constructor(
     private val _sideEffect = Channel<CommentSideEffect>()
     val sideEffect = _sideEffect.receiveAsFlow()
 
+    val session = authRepository.getSessionFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SessionState.Initializing)
+
     init {
-        combine(
-            commentRepository.getComments(arg.noticeNo), commentRepository.getBlockUsers(arg.userId)
-        ) { comments, blockUsers ->
-            val blockedList = blockUsers.map { it.blockedUser }
-            val newComments = comments.filterNot { comment ->
-                comment.userId in blockedList
-            }
+        getComments(arg.noticeNo, arg.userId)
+    }
+
+    private fun getComments(postId: String, userId: String) {
+        commentRepository.getComments(postId, userId).onStart {
             _uiState.update {
-                it.copy(comments = newComments, blockedUser = blockedList, loading = false)
+                it.copy(loading = true)
             }
-        }.onStart {
+        }.onEach { result ->
             _uiState.update {
                 it.copy(
-                    loading = true
+                    comments = result, loading = false
                 )
             }
         }.launchIn(viewModelScope)
     }
 
-    private fun isBlockedUser(comment: Comment) {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(isBlockedUser = it.blockedUser.contains(comment.userId))
-            }
-        }
-    }
-
-    private fun unBlock(blockerId: String, blockedId: String) {
-        viewModelScope.launch {
-            commentRepository.unblockUser(blockerId, blockedId, {
-                _uiState.update {
-                    it.copy(isBlockedUser = false)
-                }
-            }, { e -> e.printStackTrace() })
-        }
-    }
-
-    private fun delete(id: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+    private fun delete(
+        id: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             commentRepository.deleteComment(id, onSuccess = onSuccess, onFailure = onFailure)
         }
@@ -122,13 +110,13 @@ class CommentViewModel @Inject constructor(
         }
     }
 
-    private fun blockUser(blockerId: String, blockedId: String) {
+    private fun blockUser(blockerId: String, blockedId: String, rawUserMetaData: JsonObject) {
         viewModelScope.launch {
             commentRepository.blockUser(BlockUser(
-                blockerUser = blockerId, blockedUser = blockedId
-            ),
-                { _uiState.update { it.copy(isBlockedUser = true) } },
-                { e -> e.printStackTrace() })
+                blockerUser = blockerId,
+                blockedUser = blockedId,
+                rawUserMetaData = rawUserMetaData
+            ), {}, { e -> e.printStackTrace() })
         }
     }
 
@@ -162,7 +150,6 @@ class CommentViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(currentComment = event.comment)
                 }
-                isBlockedUser(event.comment)
                 showBottomSheet()
             }
 
@@ -182,7 +169,7 @@ class CommentViewModel @Inject constructor(
             }
 
             is CommentEvent.Block -> {
-                blockUser(event.blockerId, event.blockedId)
+                blockUser(event.blockerId, event.blockedId, event.rawUserMetaData)
                 hideBottomSheet()
             }
 
@@ -235,7 +222,7 @@ class CommentViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(comments = it.comments.toMutableList().apply {
                             removeIf {
-                                it.id.toString() == id
+                                it.id == id
                             }
                         })
                     }
@@ -245,11 +232,6 @@ class CommentViewModel @Inject constructor(
 
             CommentEvent.DismissDeleteDialog -> {
                 dismissDeleteDialog()
-            }
-
-            is CommentEvent.UnBlock -> {
-                unBlock(event.blockerId, event.blockedId)
-                hideBottomSheet()
             }
         }
     }

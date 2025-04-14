@@ -1,5 +1,6 @@
 package kr.sjh.core.supabase.service.impl
 
+import android.util.Log
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.postgrest
@@ -7,6 +8,7 @@ import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kr.sjh.core.model.BlockUser
 import kr.sjh.core.supabase.service.BlockService
 import javax.inject.Inject
@@ -33,28 +35,42 @@ class BlockServiceImpl @Inject constructor(supabaseClient: SupabaseClient) : Blo
     ) {
         try {
             blockTable.delete {
+                Log.d("sjh", "blockerId : $blockerId, blockedId : $blockedId")
                 filter {
-                    eq("blocker_id", blockerId)
-                    eq("blocked_id", blockedId)
+                    and {
+                        eq("blocker_id", blockerId)
+                        eq("blocked_id", blockedId)
+                    }
                 }
             }
             onSuccess()
         } catch (e: Exception) {
             onFailure(e)
         }
-
     }
 
     @OptIn(SupabaseExperimental::class)
-    override fun getBlockUsers(blockerId: String): Flow<List<BlockUser>> {
+    override fun getBlockUsersFlow(blockerId: String): Flow<List<BlockUser>> {
         return blockTable.selectAsFlow(
-            listOf(
-                BlockUser::blockerUser,
-                BlockUser::blockedUser
-            ),
-            filter = FilterOperation("blocker_id", FilterOperator.EQ, blockerId),
+            primaryKeys = listOf(BlockUser::blockerUser, BlockUser::blockedUser),
+            filter = FilterOperation("blocker_id", FilterOperator.EQ, blockerId)
         )
     }
 
-
+    override suspend fun getBlockUsers(
+        blockerId: String,
+        onSuccess: (List<BlockUser>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        try {
+            val list = blockTable.select {
+                filter {
+                    eq("blocker_id", blockerId)
+                }
+            }.decodeList<BlockUser>()
+            onSuccess(list)
+        } catch (e: Exception) {
+            onFailure(e)
+        }
+    }
 }

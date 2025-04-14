@@ -79,6 +79,7 @@ import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportType
+import kr.sjh.core.model.Role
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.feature.comments.navigation.CommentEvent
@@ -128,41 +129,33 @@ fun CommentRoute(
                 is CommentSideEffect.NavigateToReport -> {
                     bottomSheetState.animateTo(SheetDetent.Hidden)
                     navigateToReport(event.reportType, event.comment, event.user)
-
                 }
             }
         }
     }
-
     when (session) {
         is SessionState.Authenticated -> {
-            session.user?.let { user ->
-                CommentScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primary)
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
-                            })
-                        }
-                        .imePadding(),
-                    uiState = uiState,
-                    bottomSheetState = bottomSheetState,
-                    user = user,
-                    onBack = onBack,
-                    onEvent = commentViewModel::onEvent,
-                )
-            }
+            val user = session.user
+            CommentScreen(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        })
+                    }
+                    .imePadding(),
+                uiState = uiState,
+                bottomSheetState = bottomSheetState,
+                user = user,
+                onBack = onBack,
+                onEvent = commentViewModel::onEvent,
+            )
         }
 
-        SessionState.Initializing -> {}
-        is SessionState.NoAuthenticated -> {
-            Log.d("CommentRoute", "NoAuthenticated")
-        }
-
-        SessionState.RefreshFailure -> {}
+        else -> {}
     }
 
 }
@@ -263,7 +256,7 @@ fun CommentScreen(
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = "댓글이 없어요.\n 궁금한 점이나 후기를 작성해보세요!",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
             }
@@ -276,7 +269,7 @@ fun CommentScreen(
             ) {
                 items(uiState.comments, key = { it.id }) { comment ->
                     CommentItem(comment = comment,
-                        isMe = user.id == comment.userId,
+                        user = user,
                         modifier = Modifier.fillMaxWidth(),
                         onDelete = {
                             onEvent(CommentEvent.ShowDeleteDialog(comment))
@@ -290,8 +283,6 @@ fun CommentScreen(
                 }
             }
         }
-
-
         CommentInput(modifier = Modifier
             .fillMaxWidth()
             .padding(start = 5.dp, end = 5.dp)
@@ -336,8 +327,7 @@ fun CommentInput(
     Row(
         modifier = modifier, verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(
-            value = textField,
+        TextField(value = textField,
             onValueChange = {
                 onTextChange(it.copy(selection = TextRange(it.text.length)))
             },
@@ -382,7 +372,7 @@ fun CommentInput(
 @Composable
 fun CommentItem(
     modifier: Modifier = Modifier,
-    isMe: Boolean,
+    user: User,
     comment: Comment,
     onDelete: (String) -> Unit,
     onReport: (Comment) -> Unit,
@@ -390,6 +380,7 @@ fun CommentItem(
 ) {
     val createAt = LocalDateTime.parse(comment.createdAt)
         .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분"))
+    val isMe = user.id == comment.userId
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -422,10 +413,11 @@ fun CommentItem(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
-                if (isMe) {
+                if (isMe || user.role == Role.ADMIN) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(modifier = Modifier.size(25.dp),
-                        onClick = { onDelete(comment.id.toString()) }) {
+                    IconButton(
+                        modifier = Modifier.size(25.dp),
+                        onClick = { onDelete(comment.id) }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Comment",
@@ -441,7 +433,7 @@ fun CommentItem(
                         )
                     }
                 }
-                if (!isMe) {
+                if (!isMe || user.role == Role.ADMIN) {
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(modifier = Modifier.size(25.dp), onClick = { onReport(comment) }) {
                         Icon(
@@ -542,25 +534,19 @@ fun ReportBottomSheet(
                             .height(80.dp)
                             .clickable {
                                 val blockedUserId = uiState.currentComment?.userId
-
+                                val rawUserMetaData =
+                                    uiState.currentComment?.rawUserMetaData ?: return@clickable
                                 blockedUserId?.let { blocked ->
                                     onEvent(
-                                        if (uiState.isBlockedUser) {
-                                            CommentEvent.UnBlock(
-                                                user.id, blocked
-                                            )
-                                        } else {
-                                            CommentEvent.Block(
-                                                user.id, blocked
-                                            )
-                                        }
+                                        CommentEvent.Block(
+                                            user.id, blocked, rawUserMetaData
+                                        )
                                     )
                                 }
                             }, contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (uiState.isBlockedUser) "이 사용자 차단해제" else "이 사용자 차단",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            text = "이 사용자 차단", style = MaterialTheme.typography.titleMedium.copy(
                                 color = Color.DarkGray,
                             )
                         )

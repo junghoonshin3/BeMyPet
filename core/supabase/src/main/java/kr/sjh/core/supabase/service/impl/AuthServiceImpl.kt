@@ -4,16 +4,18 @@ import android.util.Log
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.SignOutScope
+import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.functions.functions
-import io.github.jan.supabase.safeBody
 import io.ktor.client.call.body
 import io.ktor.client.request.setBody
-import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kr.sjh.core.model.Role
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.core.supabase.service.AuthService
@@ -22,15 +24,10 @@ import javax.inject.Inject
 class AuthServiceImpl @Inject constructor(
     private val auth: Auth, private val client: SupabaseClient
 ) : AuthService {
+
     override suspend fun signInWithGoogle(
         idToken: String, rawNonce: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     ) {
-        Log.d(
-            "sjh", """
-                idToken: $idToken
-                rawNonce: $rawNonce
-        """.trimMargin()
-        )
         try {
             auth.signInWith(IDToken) {
                 this.idToken = idToken
@@ -39,8 +36,15 @@ class AuthServiceImpl @Inject constructor(
             }
             onSuccess()
         } catch (e: Exception) {
-            e.printStackTrace()
-            onFailure(e)
+            when (e) {
+                is AuthRestException -> {
+                    onFailure(Exception(e.errorDescription))
+                }
+
+                else -> {
+                    onFailure(e)
+                }
+            }
         }
     }
 
@@ -48,26 +52,16 @@ class AuthServiceImpl @Inject constructor(
         userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     ) {
         try {
-            Log.d(
-                "sjh", """
-                userId: $userId
-        """.trimMargin()
-            )
-            val result = client.functions.invoke("delete_user") {
+            client.functions.invoke("delete_user") {
                 setBody(
-                    """
-                {"user_id": "$userId"}
-            """.trimIndent()
+                    "{\"user_id\": \"$userId\"}"
                 )
             }
-            if (result.status.isSuccess()) {
-                onSuccess()
-            }
+            onSuccess()
         } catch (e: Exception) {
             e.printStackTrace()
             onFailure(e)
         }
-
 
     }
 
@@ -79,26 +73,51 @@ class AuthServiceImpl @Inject constructor(
     override fun getSessionFlow() = auth.sessionStatus.map { result ->
         when (result) {
             is SessionStatus.Authenticated -> {
-                val user = result.session.user
+                val userInfo = result.session.user
+                val id = userInfo?.id.toString()
+                val rawUserMetaData = userInfo?.userMetadata ?: JsonObject(emptyMap())
+                val bannedObj = client.functions.invoke("banned_until") {
+                    setBody(
+                        "{\"user_id\": \"$id\"}"
+                    )
+                }.body<JsonObject>()
+
+                val isBanned = bannedObj["isBanned"]?.jsonPrimitive?.booleanOrNull ?: false
+                Log.d("sjh", "isBanned : ${isBanned}")
+
+                val bannedUntil = bannedObj["bannedUntil"]?.jsonPrimitive?.content ?: "알수없음"
+                Log.d("sjh", "bannedUntil : $bannedUntil")
+
+                if (isBanned) {
+                    auth.sessionManager.deleteSession()
+//                    auth.signOut(SignOutScope.LOCAL)
+                    return@map SessionState.Banned(bannedUntil)
+                }
+
                 SessionState.Authenticated(
                     User(
-                        id = user?.id.toString(),
-                        rawUserMetaData = user?.userMetadata ?: JsonObject(
-                            emptyMap()
-                        )
+                        id = id,
+                        rawUserMetaData = rawUserMetaData,
+                        role = Role.USER,
+                        bannedUntil = bannedUntil,
+                        isBanned = isBanned
                     )
                 )
             }
 
             SessionStatus.Initializing -> {
+                Log.d("sjh", "Initializing")
+
                 SessionState.Initializing
             }
 
             is SessionStatus.NotAuthenticated -> {
+                Log.d("sjh", "NotAuthenticated")
                 SessionState.NoAuthenticated(result.isSignOut)
             }
 
             is SessionStatus.RefreshFailure -> {
+                Log.d("sjh", "RefreshFailure")
                 SessionState.RefreshFailure
             }
         }

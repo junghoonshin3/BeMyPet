@@ -4,39 +4,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.auth.Auth
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kr.sjh.core.model.SessionState
+import kr.sjh.data.repository.AuthRepository
 import kr.sjh.data.repository.SettingRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class StartViewModel @Inject constructor(
-    private val settingRepository: SettingRepository, private val auth: Auth
+    private val authRepository: AuthRepository,
+    private val settingRepository: SettingRepository,
 ) : ViewModel() {
 
     val isDarkTheme = settingRepository.getDarkTheme()
 
+    val session = authRepository.getSessionFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SessionState.Initializing)
+
     fun updateIsDarkTheme(isDarkTheme: Boolean) = viewModelScope.launch {
         settingRepository.updateIsDarkTheme(isDarkTheme)
     }
-
-//    private fun getSession() {
-//        viewModelScope.launch {
-//            val userInfo = auth.sessionManager.loadSession()?.user
-//            if (userInfo == null) {
-//                _user.value = null
-//            } else {
-//                Log.d("sjh", "userInfo: ${userInfo.userMetadata?.toString()}")
-//                _user.update {
-//                    UserModel(
-//                        id = userInfo.id,
-//                        nickname = userInfo.userMetadata?.get("name").toString(),
-//                        email = userInfo.email.toString(),
-//                        profileImageUrl = userInfo.userMetadata?.get("avatar_url").toString()
-//                    )
-//                }
-//            }
-//        }
-//
-//    }
-
 }

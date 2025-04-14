@@ -19,7 +19,6 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
 
     fun deleteAccount(userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         viewModelScope.launch {
-            authRepository.signOut()
             authRepository.deleteAccount(userId, onSuccess, onFailure)
         }
     }

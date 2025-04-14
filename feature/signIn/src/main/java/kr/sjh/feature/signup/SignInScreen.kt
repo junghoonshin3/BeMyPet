@@ -1,7 +1,5 @@
 package kr.sjh.feature.signup
 
-import android.util.Log
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,24 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,9 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,14 +43,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.credential.AccountManager
 import kr.sjh.core.common.credential.SignInResult
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.LoadingComponent
 
 
 @Composable
 fun SignInRoute(
     viewModel: SignInViewModel = hiltViewModel(),
     accountManager: AccountManager,
-    onSignInSuccess: () -> Unit
+    onSignInSuccess: () -> Unit,
+    onBack: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -83,6 +75,7 @@ fun SignInRoute(
         uiState = uiState,
         accountManager = accountManager,
         onSignIn = viewModel::onSignIn,
+        onBack = onBack
     )
 }
 
@@ -92,14 +85,31 @@ private fun SignInScreen(
     uiState: SignInUiState,
     onSignIn: (SignUpModel) -> Unit,
     accountManager: AccountManager,
+    onBack: () -> Unit
 ) {
+    val googleLoginImage = ImageVector.vectorResource(R.drawable.android_light_rd_ctn)
+    val coroutineScope = rememberCoroutineScope()
 
+    LaunchedEffect(uiState.errorMessage) {
+        if (!uiState.errorMessage.isNullOrBlank()) {
+            SnackBarManager.showMessage(uiState.errorMessage)
+        }
+    }
 
     Column(
         modifier = modifier
     ) {
-        val googleLoginImage = ImageVector.vectorResource(R.drawable.android_light_rd_ctn)
-        val coroutineScope = rememberCoroutineScope()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp), contentAlignment = Alignment.TopStart
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.Close, contentDescription = "닫기"
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -140,8 +150,12 @@ private fun SignInScreen(
             )
         }
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (uiState.isLoading) {
+                LoadingComponent()
+                return@Box
+            }
             SocialLoginButton(modifier = Modifier
-                .fillMaxWidth()
+                .width(300.dp)
                 .padding(10.dp)
                 .height(60.dp),
                 imageVector = googleLoginImage,
@@ -175,97 +189,99 @@ private fun SocialLoginButton(
     imageVector: ImageVector,
     onClick: () -> Unit,
 ) {
-    Image(
-        imageVector = imageVector,
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
-        contentDescription = "",
-    )
-}
-
-@Composable
-fun EmailInputField(
-    email: String, onEmailChange: (String) -> Unit, modifier: Modifier = Modifier
-) {
-    var isValidEmail = remember(email) { Patterns.EMAIL_ADDRESS.matcher(email).matches() }
-
-    OutlinedTextField(value = email, onValueChange = onEmailChange, label = {
-        Text(
-            "이메일 주소"
+    Box(modifier = modifier.clickable(onClick = onClick)) {
+        Image(
+            imageVector = imageVector,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(10.dp)),
+            contentDescription = "",
         )
-    }, placeholder = {
-        Text(
-            text = "example@domain.com"
-        )
-    }, isError = !isValidEmail, // 이메일 형식이 잘못된 경우 에러 표시
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Email
-        ), singleLine = true, modifier = modifier, colors = TextFieldDefaults.colors(
-            selectionColors = TextSelectionColors(
-                MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.onPrimary
-            ),
-            errorContainerColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.primary,
-            unfocusedContainerColor = MaterialTheme.colorScheme.primary,
-            focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            cursorColor = MaterialTheme.colorScheme.onPrimary,
-
-            ), trailingIcon = {
-            if (!isValidEmail) {
-                IconButton(onClick = {
-                    onEmailChange("")
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Invalid Email",
-                        tint = Color.Red
-                    )
-                }
-            }
-        })
+    }
 }
 
-@Composable
-fun PasswordInputField(
-    password: String, onPasswordChange: (String) -> Unit, modifier: Modifier = Modifier
-) {
-    var passwordVisible by remember { mutableStateOf(false) } // 비밀번호 보이기 상태
-
-    OutlinedTextField(value = password,
-        onValueChange = onPasswordChange,
-        label = { Text("비밀번호") },
-        placeholder = { Text("비밀번호 입력") },
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Password
-        ),
-        singleLine = true,
-        modifier = modifier,
-        colors = TextFieldDefaults.colors(
-            selectionColors = TextSelectionColors(
-                MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.onPrimary
-            ),
-            errorContainerColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.primary,
-            unfocusedContainerColor = MaterialTheme.colorScheme.primary,
-            focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            cursorColor = MaterialTheme.colorScheme.onPrimary,
-        ),
-        trailingIcon = {
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                Icon(
-                    imageVector = if (passwordVisible) ImageVector.vectorResource(R.drawable.passworkd_show) else ImageVector.vectorResource(
-                        R.drawable.password_hide
-                    ),
-                    contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                )
-            }
-        })
-}
+//@Composable
+//fun EmailInputField(
+//    email: String, onEmailChange: (String) -> Unit, modifier: Modifier = Modifier
+//) {
+//    var isValidEmail = remember(email) { Patterns.EMAIL_ADDRESS.matcher(email).matches() }
+//
+//    OutlinedTextField(value = email, onValueChange = onEmailChange, label = {
+//        Text(
+//            "이메일 주소"
+//        )
+//    }, placeholder = {
+//        Text(
+//            text = "example@domain.com"
+//        )
+//    }, isError = !isValidEmail, // 이메일 형식이 잘못된 경우 에러 표시
+//        keyboardOptions = KeyboardOptions.Default.copy(
+//            keyboardType = KeyboardType.Email
+//        ), singleLine = true, modifier = modifier, colors = TextFieldDefaults.colors(
+//            selectionColors = TextSelectionColors(
+//                MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.onPrimary
+//            ),
+//            errorContainerColor = MaterialTheme.colorScheme.primary,
+//            focusedContainerColor = MaterialTheme.colorScheme.primary,
+//            unfocusedContainerColor = MaterialTheme.colorScheme.primary,
+//            focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+//            unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+//            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//            cursorColor = MaterialTheme.colorScheme.onPrimary,
+//
+//            ), trailingIcon = {
+//            if (!isValidEmail) {
+//                IconButton(onClick = {
+//                    onEmailChange("")
+//                }) {
+//                    Icon(
+//                        imageVector = Icons.Default.Close,
+//                        contentDescription = "Invalid Email",
+//                        tint = Color.Red
+//                    )
+//                }
+//            }
+//        })
+//}
+//
+//@Composable
+//fun PasswordInputField(
+//    password: String, onPasswordChange: (String) -> Unit, modifier: Modifier = Modifier
+//) {
+//    var passwordVisible by remember { mutableStateOf(false) } // 비밀번호 보이기 상태
+//
+//    OutlinedTextField(value = password,
+//        onValueChange = onPasswordChange,
+//        label = { Text("비밀번호") },
+//        placeholder = { Text("비밀번호 입력") },
+//        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//        keyboardOptions = KeyboardOptions.Default.copy(
+//            keyboardType = KeyboardType.Password
+//        ),
+//        singleLine = true,
+//        modifier = modifier,
+//        colors = TextFieldDefaults.colors(
+//            selectionColors = TextSelectionColors(
+//                MaterialTheme.colorScheme.onPrimary, MaterialTheme.colorScheme.onPrimary
+//            ),
+//            errorContainerColor = MaterialTheme.colorScheme.primary,
+//            focusedContainerColor = MaterialTheme.colorScheme.primary,
+//            unfocusedContainerColor = MaterialTheme.colorScheme.primary,
+//            focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+//            unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+//            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//            cursorColor = MaterialTheme.colorScheme.onPrimary,
+//        ),
+//        trailingIcon = {
+//            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                Icon(
+//                    imageVector = if (passwordVisible) ImageVector.vectorResource(R.drawable.passworkd_show) else ImageVector.vectorResource(
+//                        R.drawable.password_hide
+//                    ),
+//                    contentDescription = if (passwordVisible) "Hide password" else "Show password"
+//                )
+//            }
+//        })
+//}

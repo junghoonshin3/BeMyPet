@@ -134,10 +134,12 @@ dependencies {
     implementation(project(":feature:signIn"))
     implementation(project(":feature:comments"))
     implementation(project(":feature:report"))
+    implementation(project(":feature:block"))
     implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
     implementation(project(":core:supabase"))
+
 }

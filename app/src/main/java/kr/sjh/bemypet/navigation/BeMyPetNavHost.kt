@@ -7,10 +7,19 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -21,15 +30,18 @@ import kotlinx.serialization.json.Json
 import kr.sjh.bemypet.BeMyPetAppState
 import kr.sjh.bemypet.canGoBack
 import kr.sjh.core.common.credential.AccountManager
+import kr.sjh.core.model.SessionState
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
 import kr.sjh.feature.adoption_detail.navigation.navigateToPetDetail
 import kr.sjh.feature.adoption_detail.screen.PetDetailRoute
+import kr.sjh.feature.block.BlockRoute
 import kr.sjh.feature.comments.CommentRoute
 import kr.sjh.feature.comments.navigation.Comments
 import kr.sjh.feature.favourite.navigation.Favourite
 import kr.sjh.feature.favourite.screen.FavouriteRoute
+import kr.sjh.feature.navigation.Block
 import kr.sjh.feature.report.ReportRoute
 import kr.sjh.feature.report.navigation.Report
 import kr.sjh.feature.signup.SignInRoute
@@ -43,12 +55,12 @@ import kotlin.reflect.typeOf
 fun BeMyPetNavHost(
     modifier: Modifier = Modifier,
     appState: BeMyPetAppState,
+    session: SessionState,
     onChangeDarkTheme: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val accountManager = AccountManager(context)
-    val signInViewModel = viewModel<SignInViewModel>()
-    val session by signInViewModel.session.collectAsStateWithLifecycle()
+
     NavHost(
         modifier = modifier,
         navController = appState.navController, startDestination = Adoption,
@@ -71,7 +83,7 @@ fun BeMyPetNavHost(
                 if (appState.navController.canGoBack()) {
                     appState.navController.popBackStack()
                 }
-            }, session = session, onNavigateToComments = { noticeNo, userId ->
+            }, onNavigateToComments = { noticeNo, userId ->
                 appState.navController.navigate(Comments(noticeNo, userId))
             }, onNavigateToSignUp = {
                 appState.navController.navigate(SignUp)
@@ -84,19 +96,22 @@ fun BeMyPetNavHost(
             })
         }
         composable<Setting> {
-            SettingRoute(accountManager = accountManager,
-                session = session,
+            SettingRoute(session = session,
+                accountManager = accountManager,
                 onChangeDarkTheme = onChangeDarkTheme,
                 onNavigateToSignIn = {
                     appState.navController.navigate(SignUp)
                 },
                 onNavigateToAdoption = {
                     appState.navController.navigate(Adoption)
+                },
+                onNavigateToBlockedUser = { uid ->
+                    appState.navController.navigate(Block(uid))
                 })
         }
 
-        composable<Comments> { backStackEntry ->
-            CommentRoute(session, onBack = {
+        composable<Comments> {
+            CommentRoute(session = session, onBack = {
                 appState.navController.popBackStack()
             }, navigateToReport = { type, comment, user ->
                 appState.navController.navigate(
@@ -125,6 +140,8 @@ fun BeMyPetNavHost(
                         inclusive = true
                     }
                 }
+            }, onBack = {
+                appState.navController.popBackStack()
             })
         }
 
@@ -135,6 +152,12 @@ fun BeMyPetNavHost(
             ReportRoute(report, onBack = {
                 appState.navController.popBackStack()
             }, onSuccess = {
+                appState.navController.popBackStack()
+            })
+        }
+
+        composable<Block> {
+            BlockRoute(onBack = {
                 appState.navController.popBackStack()
             })
         }

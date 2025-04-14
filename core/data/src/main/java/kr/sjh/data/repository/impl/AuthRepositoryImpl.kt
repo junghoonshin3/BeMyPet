@@ -1,5 +1,6 @@
 package kr.sjh.data.repository.impl
 
+import kr.sjh.core.model.User
 import kr.sjh.core.supabase.service.AuthService
 import kr.sjh.data.repository.AuthRepository
 import javax.inject.Inject
@@ -23,7 +24,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun getSessionFlow() = authService.getSessionFlow()
 
-    override suspend fun deleteAccount(userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    override suspend fun deleteAccount(
+        userId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         authService.deleteAccount(userId, onSuccess, onFailure)
     }
+
 }

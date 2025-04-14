@@ -4,11 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kr.sjh.core.model.SessionState
 import kr.sjh.data.repository.AuthRepository
 import javax.inject.Inject
 
@@ -17,7 +14,9 @@ data class SignUpModel(
 )
 
 data class SignInUiState(
-    val isLoading: Boolean = false, val isSignedIn: Boolean = false
+    val isLoading: Boolean = false,
+    val isSignedIn: Boolean = false,
+    val errorMessage: String? = null
 )
 
 @HiltViewModel
@@ -26,9 +25,6 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
 
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState = _uiState.asStateFlow()
-
-    val session = authRepository.getSessionFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SessionState.Initializing)
 
     fun onSignIn(
         loginState: SignUpModel
@@ -42,14 +38,13 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
     }
 
     private suspend fun signInWithGoogle(idToken: String, nonce: String) {
-        _uiState.value = _uiState.value.copy(isLoading = true)
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = "")
         authRepository.signInWithGoogle(idToken, nonce, {
-            _uiState.value = _uiState.value.copy(isSignedIn = true, isLoading = false)
+            _uiState.value =
+                _uiState.value.copy(isSignedIn = true, isLoading = false, errorMessage = "")
         }, { e ->
-            _uiState.value = _uiState.value.copy(isSignedIn = false, isLoading = true)
-
+            _uiState.value =
+                _uiState.value.copy(isSignedIn = false, isLoading = false, errorMessage = e.message)
         })
     }
-
-
 }

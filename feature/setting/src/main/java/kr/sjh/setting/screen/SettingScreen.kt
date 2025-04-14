@@ -1,5 +1,6 @@
 package kr.sjh.setting.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -43,15 +44,15 @@ import kr.sjh.core.model.setting.SettingType
 @Composable
 fun SettingRoute(
     viewModel: SettingViewModel = hiltViewModel(),
-    accountManager: AccountManager,
     session: SessionState,
+    accountManager: AccountManager,
     isDarkTheme: Boolean = LocalDarkTheme.current,
     onChangeDarkTheme: (Boolean) -> Unit,
     onNavigateToSignIn: () -> Unit,
-    onNavigateToAdoption: () -> Unit
+    onNavigateToAdoption: () -> Unit,
+    onNavigateToBlockedUser: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-
     SettingScreen(modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background),
@@ -67,11 +68,16 @@ fun SettingRoute(
         },
         onDeleteAccount = { userId ->
             viewModel.deleteAccount(userId, {
+                Log.d("sjh", "삭제 완료")
                 coroutineScope.launch {
+                    viewModel.signOut()
                     accountManager.signOut()
                     onNavigateToAdoption()
                 }
             }, {})
+        },
+        onNavigateToBlockedUser = { id ->
+            onNavigateToBlockedUser(id)
         })
 }
 
@@ -83,7 +89,8 @@ fun SettingScreen(
     onChangeDarkTheme: (Boolean) -> Unit,
     onNavigateToSignIn: () -> Unit,
     onSignOut: () -> Unit,
-    onDeleteAccount: (String) -> Unit
+    onDeleteAccount: (String) -> Unit,
+    onNavigateToBlockedUser: (String) -> Unit
 ) {
 
     var selectedTheme by remember(isDarkTheme) {
@@ -134,31 +141,29 @@ fun SettingScreen(
             }
 
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = "계정", style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-            item {
                 when (session) {
                     is SessionState.Authenticated -> {
-                        session.user?.id?.let { id ->
-                            BlockedUser(onNavigateToBlockedUser = {})
-                            DeleteUser(userId = id,
-                                onSignOut = onSignOut,
-                                onDeleteAccount = { onDeleteAccount(session.user?.id.toString()) })
+                        BlockedUser(onNavigateToBlockedUser = {
+                            onNavigateToBlockedUser(session.user.id)
+                        })
 
-                        }
+                        DeleteUser(userId = session.user.id,
+                            onSignOut = onSignOut,
+                            onDeleteAccount = { onDeleteAccount(session.user.id) })
                     }
 
                     SessionState.Initializing -> {}
-                    is SessionState.NoAuthenticated -> {
+                    is SessionState.Banned, is SessionState.NoAuthenticated -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "계정", style = MaterialTheme.typography.titleMedium
+                            )
+                        }
                         Button(
                             onClick = {
                                 onNavigateToSignIn()

@@ -5,14 +5,16 @@ import kr.sjh.core.model.BlockUser
 
 interface BlockService {
     suspend fun blockUser(
-        blockUser: BlockUser, onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        blockUser: BlockUser, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     )
 
     suspend fun unblockUser(
-        blockerId: String, blockedId: String, onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        blockerId: String, blockedId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     )
 
-    fun getBlockUsers(blockerId: String): Flow<List<BlockUser>>
+    fun getBlockUsersFlow(blockerId: String): Flow<List<BlockUser>>
+
+    suspend fun getBlockUsers(
+        blockerId: String, onSuccess: (List<BlockUser>) -> Unit, onFailure: (Exception) -> Unit
+    )
 }

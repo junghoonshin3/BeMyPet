@@ -6,7 +6,7 @@ import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportForm
 
 interface CommentRepository {
-    fun getComments(postId: String): Flow<List<Comment>>
+    fun getComments(postId: String, userId: String): Flow<List<Comment>>
     suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
     )
@@ -15,12 +15,6 @@ interface CommentRepository {
     suspend fun updateComment(comment: Comment)
     suspend fun getCommentCount(postId: String): Int
     suspend fun reportUsers(report: ReportForm)
-    suspend fun blockUser(
-        blockUser: BlockUser, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
-    )
-
+    suspend fun blockUser(blockUser: BlockUser, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
     fun getBlockUsers(blockerId: String): Flow<List<BlockUser>>
-    suspend fun unblockUser(
-        blockerId: String, blockedId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
-    )
 }

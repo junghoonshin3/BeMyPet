@@ -14,8 +14,6 @@ interface AuthRepository {
     fun getSessionFlow(): Flow<SessionState>
 
     suspend fun deleteAccount(
-        userId: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     )
 }

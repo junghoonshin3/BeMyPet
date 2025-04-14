@@ -11,13 +11,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.bemypet.navigation.BeMyPetBottomNavigation
 import kr.sjh.bemypet.navigation.BeMyPetNavHost
 
 @Composable
 fun BeMyPetApp(
+    startViewModel: StartViewModel,
     appState: BeMyPetAppState = rememberAppState(),
     onChangeDarkTheme: (Boolean) -> Unit
 ) {
@@ -32,6 +36,8 @@ fun BeMyPetApp(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     }
+
+    val session by startViewModel.session.collectAsStateWithLifecycle()
 
     Scaffold(modifier = modifier, snackbarHost = {
         SnackbarHost(hostState = appState.snackBarHostState,
@@ -50,10 +56,10 @@ fun BeMyPetApp(
     }) { contentPadding ->
         BeMyPetNavHost(
             appState = appState,
+            session = session,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(contentPadding)
-            ,
+                .padding(contentPadding),
             onChangeDarkTheme = onChangeDarkTheme
         )
     }

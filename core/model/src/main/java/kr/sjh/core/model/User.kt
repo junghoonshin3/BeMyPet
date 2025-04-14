@@ -6,8 +6,14 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class User(
-    @SerialName("id")
-    val id: String,
-    @SerialName("raw_user_meta_data")
-    val rawUserMetaData: JsonObject
+    @SerialName("id") val id: String,
+    @SerialName("raw_user_meta_data") val rawUserMetaData: JsonObject,
+    @SerialName("role") val role: Role = Role.GUEST,
+    @SerialName("isBanned") val isBanned: Boolean = false,
+    @SerialName("banned_until") val bannedUntil: String?
 )
+
+@Serializable
+enum class Role(val role: String) {
+    USER("user"), ADMIN("admin"), BANNED("banned"), GUEST("guest")
+}
