@@ -327,7 +327,8 @@ fun CommentInput(
     Row(
         modifier = modifier, verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(value = textField,
+        TextField(
+            value = textField,
             onValueChange = {
                 onTextChange(it.copy(selection = TextRange(it.text.length)))
             },
@@ -433,7 +434,7 @@ fun CommentItem(
                         )
                     }
                 }
-                if (!isMe || user.role == Role.ADMIN) {
+                if (!isMe) {
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(modifier = Modifier.size(25.dp), onClick = { onReport(comment) }) {
                         Icon(

@@ -9,6 +9,8 @@ import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import io.ktor.client.call.body
 import io.ktor.client.request.setBody
 import kotlinx.coroutines.flow.map
@@ -19,6 +21,7 @@ import kr.sjh.core.model.Role
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.core.supabase.service.AuthService
+import java.util.Locale
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
@@ -70,6 +73,20 @@ class AuthServiceImpl @Inject constructor(
         auth.signOut(SignOutScope.LOCAL)
     }
 
+    private suspend fun getRole(userId: String): Role {
+        val result = client.from("user_roles").select(Columns.raw("role")) {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeSingle<Map<String, String>>()
+        val role = result["role"]?.lowercase()
+        return if (role == "admin") {
+            Role.ADMIN
+        } else {
+            Role.USER
+        }
+    }
+
     override fun getSessionFlow() = auth.sessionStatus.map { result ->
         when (result) {
             is SessionStatus.Authenticated -> {
@@ -90,15 +107,16 @@ class AuthServiceImpl @Inject constructor(
 
                 if (isBanned) {
                     auth.sessionManager.deleteSession()
-//                    auth.signOut(SignOutScope.LOCAL)
                     return@map SessionState.Banned(bannedUntil)
                 }
+
+                val role = getRole(id)
 
                 SessionState.Authenticated(
                     User(
                         id = id,
                         rawUserMetaData = rawUserMetaData,
-                        role = Role.USER,
+                        role = role,
                         bannedUntil = bannedUntil,
                         isBanned = isBanned
                     )

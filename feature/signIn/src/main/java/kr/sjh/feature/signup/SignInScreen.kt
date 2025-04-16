@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -98,37 +100,42 @@ private fun SignInScreen(
 
     Column(
         modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp), contentAlignment = Alignment.TopStart
+                .padding(top = 10.dp),
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Close, contentDescription = "닫기"
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "닫기"
                 )
             }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(10.dp),
-            contentAlignment = Alignment.Center
-        ) {
+
             Text(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    color = MaterialTheme.colorScheme.onPrimary, fontSize = 30.sp
-                ), text = stringResource(R.string.app_name)
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 30.sp
+                )
             )
         }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
         Column(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .weight(1f), // 가운데 정렬을 위해 무게 부여
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Image(
                 modifier = Modifier.size(80.dp),
@@ -146,39 +153,49 @@ private fun SignInScreen(
                         append("3초")
                     }
                     append("만에 가입해보세요!")
-                }, style = MaterialTheme.typography.headlineSmall.copy(fontSize = 20.sp)
+                },
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 20.sp),
+                textAlign = TextAlign.Center
             )
         }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 30.dp),
+            contentAlignment = Alignment.Center
+        ) {
             if (uiState.isLoading) {
                 LoadingComponent()
-                return@Box
-            }
-            SocialLoginButton(modifier = Modifier
-                .width(300.dp)
-                .padding(10.dp)
-                .height(60.dp),
-                imageVector = googleLoginImage,
-                onClick = {
-                    coroutineScope.launch {
-                        when (val result = accountManager.signIn(false)) {
-                            SignInResult.Cancelled -> {}
-                            is SignInResult.Failure -> {}
-                            SignInResult.NoCredentials -> {
-                                // 인증 관리자 등록된 계정이 없는 경우
-                                accountManager.signIn(false)
-                            }
+            } else {
+                SocialLoginButton(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .height(60.dp),
+                    imageVector = googleLoginImage,
+                    onClick = {
+                        coroutineScope.launch {
+                            when (val result = accountManager.signIn(false)) {
+                                SignInResult.Cancelled -> {}
+                                is SignInResult.Failure -> {}
+                                SignInResult.NoCredentials -> {
+                                    accountManager.signIn(false)
+                                }
 
-                            is SignInResult.Success -> {
-                                onSignIn(
-                                    SignUpModel(
-                                        result.idToken, result.nonce, "google"
+                                is SignInResult.Success -> {
+                                    onSignIn(
+                                        SignUpModel(
+                                            result.idToken,
+                                            result.nonce,
+                                            "google"
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
-                })
+                )
+            }
         }
     }
 }

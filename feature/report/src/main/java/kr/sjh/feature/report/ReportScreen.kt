@@ -2,6 +2,7 @@ package kr.sjh.feature.report
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -66,7 +70,6 @@ fun ReportRoute(
         }
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     ReportScreen(
         uiState = uiState,
         modifier = Modifier
@@ -104,13 +107,21 @@ fun ReportScreen(
     var selectedReason by remember { mutableStateOf(reportReasons.first()) }
     var description by remember { mutableStateOf("") }
 
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     LaunchedEffect(key1 = uiState.isSuccessful) {
         if (uiState.isSuccessful) {
             onSuccess()
         }
     }
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier.pointerInput(Unit) {
+        detectTapGestures(onTap = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        })
+    }) {
         BeMyPetTopAppBar(modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary),
@@ -179,7 +190,11 @@ fun ReportScreen(
 
             Button(
                 enabled = !uiState.loading,
-                onClick = { onReportSubmit(selectedReason, description) },
+                onClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    onReportSubmit(selectedReason, description)
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary

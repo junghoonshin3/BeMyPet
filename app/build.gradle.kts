@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.tasks.factory.registerTask
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
 import java.io.FileInputStream
@@ -81,6 +82,10 @@ android {
             manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
         release {
+            // 네이티브 디버그 심볼 생성
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -141,5 +146,4 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
     implementation(project(":core:supabase"))
-
 }
