@@ -1,3 +1,4 @@
+import com.android.build.gradle.internal.tasks.factory.registerTask
 import kr.sjh.convention.ext.androidTestImplementation
 import kr.sjh.convention.ext.implementation
 import java.io.FileInputStream
@@ -57,7 +58,6 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = secretsProps["MAPS_API_KEY"].toString()
-
     }
 
     signingConfigs {
@@ -71,17 +71,21 @@ android {
 
     buildTypes {
         debug {
-            isMinifyEnabled = true
-            isShrinkResources = true
+//            isMinifyEnabled = true
+//            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             applicationIdSuffix = ".debug"
             manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
-            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
+            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
         release {
+            // 네이티브 디버그 심볼 생성
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -90,7 +94,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             manifestPlaceholders["APP_NAME"] = "@string/app_name"
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
-            manifestPlaceholders["AD_ID"] = secretsProps.getProperty("AD_ID")
+            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
 
     }
@@ -125,18 +129,21 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.analytics)
     implementation(libs.play.services.ads)
-
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth.kt)
     implementation(project(":feature:adoption"))
     implementation(project(":feature:setting"))
     implementation(project(":feature:adoption-detail"))
     implementation(project(":feature:favourite"))
+    implementation(project(":feature:signIn"))
+    implementation(project(":feature:comments"))
+    implementation(project(":feature:report"))
+    implementation(project(":feature:block"))
     implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:datastore"))
-
+    implementation(project(":core:supabase"))
 }

@@ -1,6 +1,5 @@
 package kr.sjh.core.common.calendar
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -187,10 +185,6 @@ private fun CalendarContent(
                     startDate != null && endDate != null && date in startDate..endDate
                 }
 
-                val isSelected = remember(isStartDateSelected, isEndDateSelected, isDateInRange) {
-                    isStartDateSelected || isEndDateSelected || isDateInRange
-                }
-
                 val isSelectable = remember(date, today) { date <= today }
 
                 CalendarDay(
@@ -246,39 +240,49 @@ private fun CalendarDay(
     Box(modifier = modifier
         .drawBehind {
             if (isStartDateSelected) {
+                // 동그란 반원 (왼쪽)
                 drawArc(
                     color = Color.Red,
                     startAngle = 90f,
                     sweepAngle = 180f,
                     useCenter = true,
                 )
-                drawRect(
-                    color = Color.Red,
-                    topLeft = Offset(size.width / 2, 0f),
-                    size = Size(size.width / 2, size.height)
-                )
 
+                // 오른쪽 직사각형 이어붙이기
+                if (isEndDateSelected || isDateInRange) {
+                    drawRect(
+                        color = Color.Red,
+                        topLeft = Offset(size.width / 2, 0f),
+                        size = Size(size.width / 2, size.height)
+                    )
+                } else {
+                    // 시작만 선택한 경우에는 완전한 원형
+                    drawCircle(color = Color.Red)
+                }
                 return@drawBehind
             }
+
             if (isEndDateSelected) {
+                // 동그란 반원 (오른쪽)
                 drawArc(
                     color = Color.Red,
                     startAngle = 270f,
                     sweepAngle = 180f,
                     useCenter = true,
                 )
+
+                // 왼쪽 직사각형 이어붙이기
                 drawRect(
                     color = Color.Red,
                     topLeft = Offset(0f, 0f),
                     size = Size(size.width / 2, size.height)
                 )
-
                 return@drawBehind
             }
+
             if (isDateInRange) {
-                drawRect(
-                    color = Color.Red
-                )
+                // 중간 날짜는 그냥 직사각형으로 연결
+                drawRect(color = Color.Red)
                 return@drawBehind
             }
         }

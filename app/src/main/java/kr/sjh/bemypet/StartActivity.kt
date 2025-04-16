@@ -54,9 +54,11 @@ class StartActivity : ComponentActivity() {
 
         setContent {
             BeMyPetTheme(isTheme) {
-                BeMyPetApp(onChangeDarkTheme = {
-                    startViewModel.updateIsDarkTheme(it)
-                })
+                BeMyPetApp(
+                    startViewModel = startViewModel,
+                    onChangeDarkTheme = {
+                        startViewModel.updateIsDarkTheme(it)
+                    })
             }
         }
     }

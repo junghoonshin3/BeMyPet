@@ -1,6 +1,15 @@
 @file:Suppress("UnstableApiUsage")
 
-include(":core:datastore")
+include(":feature:block")
+
+
+include(":feature:report")
+
+
+include(":feature:report")
+
+
+include(":feature:comments")
 
 
 pluginManagement {
@@ -38,3 +47,7 @@ include(":feature:favourite")
 include(":feature:adoption-detail")
 include(":core:common")
 include(":feature:setting")
+include(":feature:signIn")
+include(":core:datastore")
+include(":core:supabase")
+

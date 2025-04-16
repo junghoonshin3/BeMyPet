@@ -30,7 +30,6 @@ fun AdMobBanner() {
             .heightIn(min = 60.dp)
             .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
     ) {
-        Log.d("sjh", "AD_MOB_BANNER_ID : ${BuildConfig.AD_MOB_BANNER_ID}")
         AndroidView(modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp), factory = { context ->

@@ -20,11 +20,17 @@ android {
             buildConfigField(
                 "String", "AD_MOB_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\""
             )
+            buildConfigField(
+                "String", "WEB_CLIENT_ID", secretsProps.getProperty("WEB_CLIENT_ID")
+            )
         }
 
         release {
             buildConfigField(
                 "String", "AD_MOB_BANNER_ID", "\"${secretsProps.getProperty("AD_MOB_BANNER_ID")}\""
+            )
+            buildConfigField(
+                "String", "WEB_CLIENT_ID", secretsProps.getProperty("WEB_CLIENT_ID")
             )
         }
     }
@@ -34,4 +40,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.play.services.ads)
+    implementation(libs.androidx.credentials)
+    implementation(libs.googleid)
+    implementation(libs.androidx.credentials.play.services.auth)
 }

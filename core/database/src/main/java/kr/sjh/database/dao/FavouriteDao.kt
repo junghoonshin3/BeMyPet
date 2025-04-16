@@ -23,6 +23,5 @@ interface FavouriteDao {
     suspend fun clear()
 
     @Query("SELECT EXISTS(SELECT * FROM favourite_pet WHERE desertionNo = :desertionNo)")
-    fun isExist(desertionNo: String): Flow<Boolean>
-
+    fun isExist(desertionNo: String): Boolean
 }

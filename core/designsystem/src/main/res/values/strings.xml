@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name" translatable="false">나의 펫이 되어줘</string>
     <string name="adoption">유기동물</string>
     <string name="pet_detail">유기동물 상세</string>
     <string name="setting">설정</string>

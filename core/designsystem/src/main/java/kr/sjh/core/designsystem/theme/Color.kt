@@ -40,7 +40,7 @@ val LightOnSecondary = Color(0xFF000000) // Black text on Light Gray
 val LightSecondaryContainer = Color(0xFFE8E8E8) // Subtle Gray
 val LightOnSecondaryContainer = Color(0xFF000000) // Black text on Subtle Gray
 
-val LightSurface = Color(0xFFFFFFFF) // White
+val LightSurface = Color(0xF5F5F5FF) // White
 val LightOnSurface = Color(0xFF000000) // Black text on White
 val LightSurfaceVariant = Color(0xFFF7F7F7) // Slightly darker White
 val LightOnSurfaceVariant = Color(0xFF333333) // Dark Gray for contrast
