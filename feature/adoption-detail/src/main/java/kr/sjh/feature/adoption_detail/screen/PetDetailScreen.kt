@@ -63,6 +63,7 @@ import kr.sjh.feature.adoption_detail.state.DetailUiState
 
 @Composable
 fun PetDetailRoute(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit,
     viewModel: PetDetailViewModel = hiltViewModel(),
     onNavigateToComments: (String, String) -> Unit,
@@ -78,9 +79,7 @@ fun PetDetailRoute(
 
     val session by viewModel.session.collectAsStateWithLifecycle()
 
-    PetDetailScreen(modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background),
+    PetDetailScreen(modifier = modifier,
         uiState = uiState,
         isFavorite = isFavorite,
         onBack = onBack,

@@ -89,6 +89,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun CommentRoute(
+    modifier: Modifier = Modifier,
     session: SessionState,
     onBack: () -> Unit,
     navigateToReport: (ReportType, Comment, User) -> Unit,
@@ -137,9 +138,7 @@ fun CommentRoute(
         is SessionState.Authenticated -> {
             val user = session.user
             CommentScreen(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primary)
+                modifier = modifier
                     .pointerInput(Unit) {
                         detectTapGestures(onTap = {
                             focusManager.clearFocus()

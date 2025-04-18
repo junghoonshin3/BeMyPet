@@ -7,6 +7,10 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -55,6 +60,7 @@ import kotlin.reflect.typeOf
 fun BeMyPetNavHost(
     modifier: Modifier = Modifier,
     appState: BeMyPetAppState,
+    bottomPadding: Dp,
     session: SessionState,
     onChangeDarkTheme: (Boolean) -> Unit,
 ) {
@@ -71,15 +77,22 @@ fun BeMyPetNavHost(
     ) {
 
         composable<Adoption> {
-            AdoptionRoute(navigateToPetDetail = { pet ->
-                appState.navController.navigateToPetDetail(pet)
-            })
+            AdoptionRoute(modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = bottomPadding)
+                .background(MaterialTheme.colorScheme.background),
+                navigateToPetDetail = { pet ->
+                    appState.navController.navigateToPetDetail(pet)
+                })
         }
 
         composable<PetDetail>(
             typeMap = PetDetail.typeMap
         ) {
-            PetDetailRoute(onBack = {
+            PetDetailRoute(modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = bottomPadding)
+                .background(MaterialTheme.colorScheme.background), onBack = {
                 if (appState.navController.canGoBack()) {
                     appState.navController.popBackStack()
                 }
@@ -96,7 +109,11 @@ fun BeMyPetNavHost(
             })
         }
         composable<Setting> {
-            SettingRoute(session = session,
+            SettingRoute(modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = bottomPadding)
+                .background(MaterialTheme.colorScheme.background),
+                session = session,
                 accountManager = accountManager,
                 onChangeDarkTheme = onChangeDarkTheme,
                 onNavigateToSignIn = {
@@ -111,18 +128,24 @@ fun BeMyPetNavHost(
         }
 
         composable<Comments> {
-            CommentRoute(session = session, onBack = {
-                appState.navController.popBackStack()
-            }, navigateToReport = { type, comment, user ->
-                appState.navController.navigate(
-                    Report(
-                        type = type,
-                        reportedUserId = comment.userId,
-                        reportByUserId = user.id,
-                        commentId = comment.id
+            CommentRoute(modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+                .navigationBarsPadding(),
+                session = session,
+                onBack = {
+                    appState.navController.popBackStack()
+                },
+                navigateToReport = { type, comment, user ->
+                    appState.navController.navigate(
+                        Report(
+                            type = type,
+                            reportedUserId = comment.userId,
+                            reportByUserId = user.id,
+                            commentId = comment.id
+                        )
                     )
-                )
-            })
+                })
         }
 
         composable<SignUp>(enterTransition = {  // 아래에서 위로 올라오는 애니메이션
@@ -134,15 +157,21 @@ fun BeMyPetNavHost(
         }, popExitTransition = {
             slideOutVertically(targetOffsetY = { 1000 }, animationSpec = tween(700))
         }) {
-            SignInRoute(accountManager = accountManager, onSignInSuccess = {
-                appState.navController.navigate(Adoption) {
-                    popUpTo(Adoption) {
-                        inclusive = true
+            SignInRoute(modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+                .navigationBarsPadding(),
+                accountManager = accountManager,
+                onSignInSuccess = {
+                    appState.navController.navigate(Adoption) {
+                        popUpTo(Adoption) {
+                            inclusive = true
+                        }
                     }
-                }
-            }, onBack = {
-                appState.navController.popBackStack()
-            })
+                },
+                onBack = {
+                    appState.navController.popBackStack()
+                })
         }
 
         composable<Report>(
