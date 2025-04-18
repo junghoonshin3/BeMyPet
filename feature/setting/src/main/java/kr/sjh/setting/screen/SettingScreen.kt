@@ -46,6 +46,7 @@ import kr.sjh.core.model.setting.SettingType
 
 @Composable
 fun SettingRoute(
+    modifier: Modifier = Modifier,
     viewModel: SettingViewModel = hiltViewModel(),
     session: SessionState,
     accountManager: AccountManager,
@@ -56,9 +57,7 @@ fun SettingRoute(
     onNavigateToBlockedUser: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    SettingScreen(modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background),
+    SettingScreen(modifier = modifier,
         isDarkTheme = isDarkTheme,
         session = session,
         onChangeDarkTheme = onChangeDarkTheme,

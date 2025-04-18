@@ -52,6 +52,7 @@ import kr.sjh.core.designsystem.components.LoadingComponent
 
 @Composable
 fun SignInRoute(
+    modifier: Modifier = Modifier,
     viewModel: SignInViewModel = hiltViewModel(),
     accountManager: AccountManager,
     onSignInSuccess: () -> Unit,
@@ -68,9 +69,7 @@ fun SignInRoute(
     }
 
     SignInScreen(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+        modifier = modifier
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() }) // 터치 감지해서 포커스 해제
             },
@@ -109,26 +108,21 @@ private fun SignInScreen(
                 .padding(top = 10.dp),
         ) {
             IconButton(
-                onClick = onBack,
-                modifier = Modifier.align(Alignment.TopStart)
+                onClick = onBack, modifier = Modifier.align(Alignment.TopStart)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "닫기"
+                    imageVector = Icons.Default.Close, contentDescription = "닫기"
                 )
             }
-
-            Text(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 30.sp
-                )
-            )
         }
-
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(Modifier.height(15.dp))
+        Text(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.headlineLarge.copy(
+                color = MaterialTheme.colorScheme.onPrimary, fontSize = 30.sp
+            )
+        )
 
         Column(
             modifier = Modifier
@@ -168,10 +162,9 @@ private fun SignInScreen(
             if (uiState.isLoading) {
                 LoadingComponent()
             } else {
-                SocialLoginButton(
-                    modifier = Modifier
-                        .width(300.dp)
-                        .height(60.dp),
+                SocialLoginButton(modifier = Modifier
+                    .width(300.dp)
+                    .height(60.dp),
                     imageVector = googleLoginImage,
                     onClick = {
                         coroutineScope.launch {
@@ -185,16 +178,13 @@ private fun SignInScreen(
                                 is SignInResult.Success -> {
                                     onSignIn(
                                         SignUpModel(
-                                            result.idToken,
-                                            result.nonce,
-                                            "google"
+                                            result.idToken, result.nonce, "google"
                                         )
                                     )
                                 }
                             }
                         }
-                    }
-                )
+                    })
             }
         }
     }

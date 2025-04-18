@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -44,6 +45,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,6 +77,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun AdoptionRoute(
+    modifier: Modifier = Modifier,
     viewModel: AdoptionViewModel = hiltViewModel(),
     filterViewModel: FilterViewModel = hiltViewModel(),
     navigateToPetDetail: (Pet) -> Unit
@@ -118,9 +121,7 @@ fun AdoptionRoute(
     }
 
     AdoptionScreen(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+        modifier = modifier,
         adoptionUiState = adoptionUiState,
         filterUiState = filterUiState,
         sheetState = bottomSheetState,
