@@ -10,6 +10,7 @@ build/
 local.properties
 secrets.properties
 version.properties
+*.keystore
 # Log/OS Files
 *.log
 
@@ -29,7 +30,6 @@ render.experimental.xml
 
 # Keystore files
 *.jks
-*.keystore
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
