@@ -286,7 +286,7 @@ private fun AdoptionScreen(
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val fontSize = 9.sp
-    val painter = rememberAsyncImagePainter(model = pet.popfile)
+    val painter = rememberAsyncImagePainter(model = pet.popfile1)
     Column(
         modifier = modifier
     ) {

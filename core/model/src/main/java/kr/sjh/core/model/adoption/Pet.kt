@@ -12,28 +12,45 @@ import java.time.format.DateTimeFormatter
 @Parcelize
 data class Pet(
     val desertionNo: String = "",
-    val filename: String = "",
+    val rfidCd: String? = null,
+
     val happenDt: String = "",
     val happenPlace: String = "",
+
+    val kindFullNm: String = "",
+    val upKindCd: String = "",
+    val upKindNm: String = "",
     val kindCd: String = "",
+    val kindNm: String = "",
+
     val colorCd: String? = null,
     val age: String = "",
     val weight: String = "",
-    val noticeNo: String = "",
-    val noticeSdt: String = "",
-    val noticeEdt: String = "",
-    val popfile: String = "",
-    val processState: String = "",
-    val sexCd: String = "",
-    val neuterYn: String = "",
-    val specialMark: String = "",
-    val careNm: String = "",
-    val careTel: String = "",
-    val careAddr: String = "",
-    val orgNm: String = "",
-    val chargeNm: String? = null,
-    val officetel: String = "",
-    val noticeComment: String? = null
+
+     val noticeNo: String = "",
+     val noticeSdt: String = "",
+     val noticeEdt: String = "",
+
+     val popfile1: String? = null,
+     val popfile2: String? = null,
+
+     val processState: String = "",
+     val sexCd: String = "",
+     val neuterYn: String = "",
+
+     val specialMark: String? = null,
+
+     val careRegNo: String = "",
+     val careNm: String = "",
+     val careTel: String = "",
+     val careAddr: String = "",
+     val careOwnerNm: String? = null,
+     val orgNm: String = "",
+     val healthChk: String? = null,
+     val vaccinationChk: String? = null,
+     val etcBigo: String? = null,
+
+     val updTm: String = ""
 ) : Parcelable {
     val sexCdToText: String
         get() {

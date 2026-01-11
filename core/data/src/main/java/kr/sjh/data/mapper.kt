@@ -18,7 +18,7 @@ fun List<PetItem>.toPets(): List<Pet> {
     return map {
         Pet(
             desertionNo = it.desertionNo,
-            filename = it.filename,
+            rfidCd = it.rfidCd,
             happenDt = it.happenDt,
             happenPlace = it.happenPlace,
             kindCd = it.kindCd,
@@ -28,7 +28,8 @@ fun List<PetItem>.toPets(): List<Pet> {
             noticeNo = it.noticeNo,
             noticeSdt = it.noticeSdt,
             noticeEdt = it.noticeEdt,
-            popfile = it.popfile,
+            popfile1 = it.popfile1,
+            popfile2 = it.popfile2,
             processState = it.processState,
             sexCd = it.sexCd,
             neuterYn = it.neuterYn,
@@ -37,17 +38,15 @@ fun List<PetItem>.toPets(): List<Pet> {
             careTel = it.careTel,
             careAddr = it.careAddr,
             orgNm = it.orgNm,
-            chargeNm = it.chargeNm,
-            officetel = it.officetel,
-            noticeComment = it.noticeComment,
+
         )
     }
 }
 
 fun Pet.toFavouriteEntity(): FavouriteEntity = FavouriteEntity(
     id = 0,
+    filename = "",
     desertionNo = this.desertionNo,
-    filename = this.filename,
     happenDt = this.happenDt,
     happenPlace = this.happenPlace,
     kindCd = this.kindCd,
@@ -57,24 +56,23 @@ fun Pet.toFavouriteEntity(): FavouriteEntity = FavouriteEntity(
     noticeNo = this.noticeNo,
     noticeSdt = this.noticeSdt,
     noticeEdt = this.noticeEdt,
-    popfile = this.popfile,
+    popfile = this.popfile1!!,
     processState = this.processState,
     sexCd = this.sexCd,
     neuterYn = this.neuterYn,
-    specialMark = this.specialMark,
+    specialMark = this.specialMark!!,
     careNm = this.careNm,
     careTel = this.careTel,
     careAddr = this.careAddr,
     orgNm = this.orgNm,
-    chargeNm = this.chargeNm,
-    officetel = this.officetel,
-    noticeComment = this.noticeComment
+    chargeNm = this.careNm,
+    officetel = this.careTel,
+    noticeComment =""
 )
 
 fun FavouriteEntity.toPet(): Pet {
     return Pet(
         desertionNo = this.desertionNo,
-        filename = this.filename,
         happenDt = this.happenDt,
         happenPlace = this.happenPlace,
         kindCd = this.kindCd,
@@ -84,7 +82,7 @@ fun FavouriteEntity.toPet(): Pet {
         noticeNo = this.noticeNo,
         noticeSdt = this.noticeSdt,
         noticeEdt = this.noticeEdt,
-        popfile = this.popfile,
+        popfile1 =  this.popfile,
         processState = this.processState,
         sexCd = this.sexCd,
         neuterYn = this.neuterYn,
@@ -92,9 +90,6 @@ fun FavouriteEntity.toPet(): Pet {
         careNm = this.careNm,
         careTel = this.careTel,
         careAddr = this.careAddr,
-        orgNm = this.orgNm,
-        chargeNm = this.chargeNm,
-        officetel = this.officetel,
-        noticeComment = this.noticeComment
+        orgNm = this.orgNm
     )
 }

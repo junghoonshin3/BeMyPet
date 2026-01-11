@@ -16,7 +16,7 @@ import javax.inject.Inject
 class PetServiceImpl @Inject constructor(private val client: HttpClient) : PetService {
 
     override suspend fun getSigungu(sigunguRequest: SigunguRequest): BaseResponse<SigunguItem> {
-        val res = client.get("sigungu?") {
+        val res = client.get("sigungu_v2?") {
             parameter("serviceKey", sigunguRequest.serviceKey)
             parameter("upr_cd", sigunguRequest.upr_cd)
             parameter("_type", sigunguRequest._type)
@@ -25,7 +25,7 @@ class PetServiceImpl @Inject constructor(private val client: HttpClient) : PetSe
     }
 
     override suspend fun getPets(petReq: PetRequest): BaseResponse<PetItem> {
-        val res = client.get("abandonmentPublic?") {
+        val res = client.get("abandonmentPublic_v2?") {
             parameter("bgnde", petReq.bgnde)
             parameter("endde", petReq.endde)
             parameter("upkind", petReq.upkind?.ifBlank { null })

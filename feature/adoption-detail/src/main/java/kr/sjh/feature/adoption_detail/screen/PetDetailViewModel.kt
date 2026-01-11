@@ -50,7 +50,7 @@ class PetDetailViewModel @Inject constructor(
         savedStateHandle.getStateFlow("pet", Pet()).onEach { pet ->
             isFavorite(pet.desertionNo)
             getLocation(pet.careAddr)
-            commentCount(pet.noticeNo)
+//            commentCount(pet.noticeNo)
         }.map { pet ->
             DetailUiState.Success(pet) as DetailUiState
         }.onStart {

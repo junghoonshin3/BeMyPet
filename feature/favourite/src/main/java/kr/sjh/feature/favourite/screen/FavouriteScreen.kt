@@ -105,7 +105,7 @@ private fun FavouriteScreen(
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val context = LocalContext.current
-    val imageRequest = ImageRequest.Builder(context).data(pet.popfile).build()
+    val imageRequest = ImageRequest.Builder(context).data(pet.popfile1).build()
     val fontSize = 9.sp
     Column(
         modifier = modifier

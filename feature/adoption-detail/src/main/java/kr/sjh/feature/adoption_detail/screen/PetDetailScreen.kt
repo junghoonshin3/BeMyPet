@@ -146,7 +146,7 @@ private fun PetDetailScreen(
 
             is DetailUiState.Success -> {
                 val imageRequest =
-                    ImageRequest.Builder(LocalContext.current).data(uiState.pet.popfile).build()
+                    ImageRequest.Builder(LocalContext.current).data(uiState.pet.popfile1).build()
                 Column(modifier = Modifier.fillMaxSize()) {
                     BeMyPetTopAppBar(modifier = Modifier
                         .fillMaxWidth()
@@ -229,7 +229,7 @@ private fun PetDetailContent(
                 TextLine(title = "상태", content = pet.processState)
                 TextLine(title = "성별", content = pet.sexCdToText)
                 TextLine(title = "나이", content = pet.age)
-                TextLine(title = "특징", content = pet.specialMark)
+                TextLine(title = "특징", content = pet.specialMark!!)
                 TextLine(title = "보호소 이름", content = pet.careNm)
                 TextLine(title = "보호소 연락처", content = pet.careTel)
                 TextLine(title = "보호장소", content = pet.careAddr)
@@ -240,22 +240,22 @@ private fun PetDetailContent(
                     state = state
                 )
                 TextLine(title = "관할기관", content = pet.orgNm)
-                pet.chargeNm?.let {
+                pet.careNm?.let {
                     TextLine(title = "담당자", content = it)
                 }
-                TextLine(title = "담당자 연락처", content = pet.officetel)
-                pet.noticeComment?.let {
-                    TextLine(title = "특이사항", content = it)
-                }
+                TextLine(title = "담당자 연락처", content = pet.careTel)
+//                pet.noticeComment?.let {
+//                    TextLine(title = "특이사항", content = it)
+//                }
             }
         }
-        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
-        CommentSummary(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clickable(onClick = { onNavigateToComments(pet.noticeNo) }), count = commentCount
-        )
+//        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+//        CommentSummary(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(60.dp)
+//                .clickable(onClick = { onNavigateToComments(pet.noticeNo) }), count = commentCount
+//        )
     }
 }
 
