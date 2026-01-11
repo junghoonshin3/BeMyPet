@@ -11,6 +11,7 @@ local.properties
 secrets.properties
 version.properties
 *.keystore
+*.jks
 # Log/OS Files
 *.log
 
