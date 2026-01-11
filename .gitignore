@@ -176,4 +176,6 @@ fabric.properties
 # Relase 폴더 무시
 release
 
+.pem
+
 # End of https://www.toptal.com/developers/gitignore/api/android,androidstudio,firebase
