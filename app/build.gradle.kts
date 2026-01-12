@@ -49,6 +49,27 @@ android {
         throw FileNotFoundException("Could not read version.properties")
     }
 
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            versionNameSuffix = "-dev"
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
+        }
+
+        create("prod") {
+            dimension = "env"
+            // suffix 없음 → 스토어용
+            manifestPlaceholders["APP_NAME"] = "@string/app_name"
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"https://api.bemypet.com\""
+            )
+        }
+    }
+
     defaultConfig {
         applicationId = "kr.sjh.bemypet"
         versionCode = versionBuildCode
@@ -71,32 +92,22 @@ android {
 
     buildTypes {
         debug {
-//            isMinifyEnabled = true
-//            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-            )
-            applicationIdSuffix = ".debug"
-            manifestPlaceholders["APP_NAME"] = "@string/app_name_dev"
+
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
             manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
+
         release {
-            // 네이티브 디버그 심볼 생성
             ndk {
                 debugSymbolLevel = "FULL"
             }
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-            )
             signingConfig = signingConfigs.getByName("release")
-            manifestPlaceholders["APP_NAME"] = "@string/app_name"
+
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
             manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
         }
-
     }
 
     composeCompiler {

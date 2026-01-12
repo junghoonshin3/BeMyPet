@@ -85,7 +85,7 @@ private fun FavouriteScreen(
         } else {
             EndlessLazyGridColumn(userScrollEnabled = true,
                 items = pets,
-                itemKey = { item -> item.desertionNo },
+                itemKey = { item -> item.desertionNo!! },
                 contentPadding = PaddingValues(
                     top = DefaultAppBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
                 ),
@@ -105,7 +105,7 @@ private fun FavouriteScreen(
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val context = LocalContext.current
-    val imageRequest = ImageRequest.Builder(context).data(pet.popfile1).build()
+    val imageRequest = ImageRequest.Builder(context).data(pet.thumbnailImageUrl).build()
     val fontSize = 9.sp
     Column(
         modifier = modifier
@@ -122,31 +122,31 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
             })
         TextLine(
             title = "공고번호",
-            content = pet.noticeNo,
+            content = "${pet.noticeNo}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "발견장소",
-            content = pet.happenPlace,
+            content = "${pet.happenPlace}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "품종",
-            content = pet.kindCd,
+            content = "${pet.kindFullName}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "성별",
-            content = pet.sexCdToText,
+            content = "${pet.sexCdToText}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "상태",
-            content = pet.processState,
+            content = "${pet.processState}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )

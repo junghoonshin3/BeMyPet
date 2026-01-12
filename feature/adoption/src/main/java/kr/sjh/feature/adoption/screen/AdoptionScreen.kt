@@ -199,7 +199,7 @@ private fun AdoptionScreen(
                 contentPadding = PaddingValues(
                     top = appBarHeight + 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp
                 ),
-                itemKey = { item -> item.desertionNo },
+                itemKey = { item -> "${item.desertionNo}" },
                 loadMore = {
                     if (!adoptionUiState.isMore) { // 중복 요청 방지
                         onEvent(
@@ -286,7 +286,7 @@ private fun AdoptionScreen(
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
     val fontSize = 9.sp
-    val painter = rememberAsyncImagePainter(model = pet.popfile1)
+    val painter = rememberAsyncImagePainter(model = "${pet.thumbnailImageUrl}")
     Column(
         modifier = modifier
     ) {
@@ -319,19 +319,19 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
 
         TextLine(
             title = "공고번호",
-            content = pet.noticeNo,
+            content = "${pet.noticeNo}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "발견장소",
-            content = pet.happenPlace,
+            content = "${pet.happenPlace}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
         TextLine(
             title = "품종",
-            content = pet.kindCd,
+            content = "${pet.kindName}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )
@@ -343,7 +343,7 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
         )
         TextLine(
             title = "상태",
-            content = pet.processState,
+            content = "${pet.processState}",
             titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
             contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
         )

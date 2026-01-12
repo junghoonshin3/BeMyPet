@@ -48,8 +48,8 @@ class PetDetailViewModel @Inject constructor(
 
     val uiState: StateFlow<DetailUiState> =
         savedStateHandle.getStateFlow("pet", Pet()).onEach { pet ->
-            isFavorite(pet.desertionNo)
-            getLocation(pet.careAddr)
+            isFavorite("${pet.desertionNo}")
+            getLocation("${pet.careAddress}")
 //            commentCount(pet.noticeNo)
         }.map { pet ->
             DetailUiState.Success(pet) as DetailUiState
@@ -97,7 +97,7 @@ class PetDetailViewModel @Inject constructor(
                     if (event.isFavorite) {
                         addPet(pet)
                     } else {
-                        removePet(pet.desertionNo)
+                        removePet("${pet.desertionNo}")
                     }
                 }
             }

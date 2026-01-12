@@ -31,7 +31,7 @@ class AdoptionRepositoryImpl @Inject constructor(
             val pets = if (res.body?.totalCount == 0) {
                 emptyList()
             } else {
-                res.body?.items?.itemList?.toPets() ?: emptyList()
+                res.body?.items?.item?.toPets() ?: emptyList()
             }
             emit(pets)
         } else {
@@ -103,7 +103,7 @@ class AdoptionRepositoryImpl @Inject constructor(
                 )
             )
             if (res.header.resultCode == "00") {
-                val sigunguList = res.body?.items?.itemList ?: emptyList()
+                val sigunguList = res.body?.items?.item ?: emptyList()
                 locationDao.insertAllSigungu(sigunguList.toEntities())
             }
         }

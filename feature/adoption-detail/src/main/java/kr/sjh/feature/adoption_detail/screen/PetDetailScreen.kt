@@ -146,7 +146,7 @@ private fun PetDetailScreen(
 
             is DetailUiState.Success -> {
                 val imageRequest =
-                    ImageRequest.Builder(LocalContext.current).data(uiState.pet.popfile1).build()
+                    ImageRequest.Builder(LocalContext.current).data(uiState.pet.thumbnailImageUrl).build()
                 Column(modifier = Modifier.fillMaxSize()) {
                     BeMyPetTopAppBar(modifier = Modifier
                         .fillMaxWidth()
@@ -208,7 +208,7 @@ private fun PetDetailContent(
                 }
                 Title(
                     modifier = Modifier.padding(16.dp),
-                    title = pet.kindCd,
+                    title = "${pet.kindName}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 HorizontalDivider(
@@ -217,33 +217,32 @@ private fun PetDetailContent(
                         .padding(top = 5.dp, bottom = 5.dp),
                     thickness = 1.dp
                 )
-                TextLine(title = "유기번호", content = pet.desertionNo)
-                TextLine(title = "접수일", content = pet.happenDt)
-                TextLine(title = "발견장소", content = pet.happenPlace)
-                TextLine(title = "품종", content = pet.kindCd)
-                TextLine(title = "색상", content = pet.colorCd ?: "정보없음")
-                TextLine(title = "나이", content = pet.age)
-                TextLine(title = "체중", content = pet.weight)
-                TextLine(title = "공고기간", content = "${pet.noticeSdt} ~ ${pet.noticeEdt}")
+                TextLine(title = "유기번호", content = "${pet.desertionNo}")
+                TextLine(title = "접수일", content = "${pet.happenDate}")
+                TextLine(title = "발견장소", content = "${pet.happenPlace}")
+                TextLine(title = "품종", content = "${pet.kindName}")
+                TextLine(title = "색상", content = pet.color ?: "정보없음")
+                TextLine(title = "나이", content = "${pet.age}")
+                TextLine(title = "체중", content ="${pet.weight}")
+                TextLine(title = "공고기간", content = "${pet.noticeStartDate} ~ ${pet.noticeEndDate}")
                 TextLine(title = "중성화", content = pet.neuterYnToText)
-                TextLine(title = "상태", content = pet.processState)
+                TextLine(title = "상태", content = "${pet.processState}")
                 TextLine(title = "성별", content = pet.sexCdToText)
-                TextLine(title = "나이", content = pet.age)
                 TextLine(title = "특징", content = pet.specialMark!!)
-                TextLine(title = "보호소 이름", content = pet.careNm)
-                TextLine(title = "보호소 연락처", content = pet.careTel)
-                TextLine(title = "보호장소", content = pet.careAddr)
+                TextLine(title = "보호소 이름", content = "${pet.careName}")
+                TextLine(title = "보호소 연락처", content = "${pet.careTel}")
+                TextLine(title = "보호장소", content = "${pet.careAddress}")
                 ShelterMap(
                     modifier = Modifier.fillMaxSize(),
-                    mapId = pet.careAddr,
-                    careNm = pet.careNm,
+                    mapId = "${pet.careTel}",
+                    careNm = "${pet.careName}",
                     state = state
                 )
-                TextLine(title = "관할기관", content = pet.orgNm)
-                pet.careNm?.let {
+                TextLine(title = "관할기관", content = "${pet.organizationName}")
+                pet.careName?.let {
                     TextLine(title = "담당자", content = it)
                 }
-                TextLine(title = "담당자 연락처", content = pet.careTel)
+                TextLine(title = "담당자 연락처", content = "${pet.careTel}")
 //                pet.noticeComment?.let {
 //                    TextLine(title = "특이사항", content = it)
 //                }
