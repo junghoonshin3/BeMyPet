@@ -6,90 +6,139 @@ import kr.sjh.core.model.adoption.Pet
 import kr.sjh.database.entity.FavouriteEntity
 import kr.sjh.database.entity.SigunguEntity
 
-fun List<SigunguItem>.toEntities(): List<SigunguEntity> {
-    return map {
+/* =========================
+ * Sigungu
+ * ========================= */
+
+fun List<SigunguItem>.toEntities(): List<SigunguEntity> =
+    map {
         SigunguEntity(
-            orgCd = it.orgCd, orgdownNm = it.orgdownNm, uprCd = it.uprCd
+            orgCd = it.orgCd,
+            orgdownNm = it.orgdownNm,
+            uprCd = it.uprCd
         )
     }
-}
 
-fun List<PetItem>.toPets(): List<Pet> {
-    return map {
-        Pet(
-            desertionNo = it.desertionNo,
-            rfidCd = it.rfidCd,
-            happenDt = it.happenDt,
-            happenPlace = it.happenPlace,
-            kindCd = it.kindCd,
-            colorCd = it.colorCd,
-            age = it.age,
-            weight = it.weight,
-            noticeNo = it.noticeNo,
-            noticeSdt = it.noticeSdt,
-            noticeEdt = it.noticeEdt,
-            popfile1 = it.popfile1,
-            popfile2 = it.popfile2,
-            processState = it.processState,
-            sexCd = it.sexCd,
-            neuterYn = it.neuterYn,
-            specialMark = it.specialMark,
-            careNm = it.careNm,
-            careTel = it.careTel,
-            careAddr = it.careAddr,
-            orgNm = it.orgNm,
+/* =========================
+ * PetItem (API) -> Pet (Domain)
+ * ========================= */
 
-        )
-    }
-}
+fun List<PetItem>.toPets(): List<Pet> =
+    map { it.toPet() }
 
-fun Pet.toFavouriteEntity(): FavouriteEntity = FavouriteEntity(
-    id = 0,
-    filename = "",
-    desertionNo = this.desertionNo,
-    happenDt = this.happenDt,
-    happenPlace = this.happenPlace,
-    kindCd = this.kindCd,
-    colorCd = this.colorCd,
-    age = this.age,
-    weight = this.weight,
-    noticeNo = this.noticeNo,
-    noticeSdt = this.noticeSdt,
-    noticeEdt = this.noticeEdt,
-    popfile = this.popfile1!!,
-    processState = this.processState,
-    sexCd = this.sexCd,
-    neuterYn = this.neuterYn,
-    specialMark = this.specialMark!!,
-    careNm = this.careNm,
-    careTel = this.careTel,
-    careAddr = this.careAddr,
-    orgNm = this.orgNm,
-    chargeNm = this.careNm,
-    officetel = this.careTel,
-    noticeComment =""
-)
+fun PetItem.toPet(): Pet =
+    Pet(
+        desertionNo = desertionNo ?: "",
+        noticeNo = noticeNo,
+        noticeStartDate = noticeSdt,
+        noticeEndDate = noticeEdt,
+        happenDate = happenDt,
+        happenPlace = happenPlace,
 
-fun FavouriteEntity.toPet(): Pet {
-    return Pet(
-        desertionNo = this.desertionNo,
-        happenDt = this.happenDt,
-        happenPlace = this.happenPlace,
-        kindCd = this.kindCd,
-        colorCd = this.colorCd,
-        age = this.age,
-        weight = this.weight,
-        noticeNo = this.noticeNo,
-        noticeSdt = this.noticeSdt,
-        noticeEdt = this.noticeEdt,
-        popfile1 =  this.popfile,
-        processState = this.processState,
-        sexCd = this.sexCd,
-        neuterYn = this.neuterYn,
-        specialMark = this.specialMark,
-        careNm = this.careNm,
-        careTel = this.careTel,
-        careAddr = this.careAddr,
-        orgNm = this.orgNm
+        upKindCode = upKindCd,
+        upKindName = upKindNm,
+        kindCode = kindCd,
+        kindName = kindNm,
+        kindFullName = kindFullNm,
+
+        color = colorCd,
+        age = age,
+        weight = weight,
+
+        sex = sexCd,
+        neutered = neuterYn,
+        processState = processState,
+        specialMark = specialMark,
+
+        thumbnailImageUrl = popfile1
+            ?: popfile2
+            ?: popfile3
+            ?: popfile4,
+
+        imageUrls = listOfNotNull(
+            popfile1,
+            popfile2,
+            popfile3,
+            popfile4,
+            popfile5,
+            popfile6,
+            popfile7,
+            popfile8
+        ),
+
+        careName = careNm,
+        careTel = careTel,
+        careAddress = careAddr,
+        organizationName = orgNm,
+        updatedAt = updTm
     )
-}
+
+/* =========================
+ * Pet (Domain) -> FavouriteEntity (DB)
+ * ========================= */
+
+fun Pet.toFavouriteEntity(): FavouriteEntity =
+    FavouriteEntity(
+        id = 0,
+        filename = organizationName,
+        desertionNo = desertionNo,
+        happenDt = happenDate,
+        happenPlace = happenPlace,
+        kindCd = kindCode,
+        colorCd = color,
+        age = age,
+        weight = weight,
+        noticeNo = noticeNo,
+        noticeSdt = noticeStartDate,
+        noticeEdt = noticeEndDate,
+        popfile = thumbnailImageUrl.orEmpty(),
+        processState = processState,
+        sexCd = sex,
+        neuterYn = neutered,
+        specialMark = specialMark.orEmpty(),
+        careNm = careName,
+        careTel = careTel,
+        careAddr = careAddress,
+        orgNm = organizationName,
+        chargeNm = careName,
+        officetel = careTel,
+        noticeComment = ""
+    )
+
+/* =========================
+ * FavouriteEntity (DB) -> Pet (Domain)
+ * ========================= */
+
+fun FavouriteEntity.toPet(): Pet =
+    Pet(
+        desertionNo = desertionNo,
+        noticeNo = noticeNo,
+        noticeStartDate = noticeSdt,
+        noticeEndDate = noticeEdt,
+        happenDate = happenDt,
+        happenPlace = happenPlace,
+
+        upKindCode = null,
+        upKindName = null,
+        kindCode = kindCd,
+        kindName = null,
+        kindFullName = null,
+
+        color = colorCd,
+        age = age,
+        weight = weight,
+
+        sex = sexCd,
+        neutered = neuterYn,
+        processState = processState,
+        specialMark = specialMark,
+
+        thumbnailImageUrl = popfile,
+        imageUrls = listOfNotNull(popfile),
+
+        careName = careNm,
+        careTel = careTel,
+        careAddress = careAddr,
+        organizationName = orgNm,
+        updatedAt = null
+    )

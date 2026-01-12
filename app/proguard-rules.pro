@@ -24,13 +24,8 @@
 # This is generated automatically by the Android Gradle plugin.
 
 # Ktor 관련 클래스 유지
--keep class io.ktor.** { *; }
--dontwarn io.ktor.**
--keep class io.ktor.client.plugins.** { *; }
-
-# Kotlin Coroutines 관련 유지 (필요할 수도 있음)
--keep class kotlinx.coroutines.** { *; }
--dontwarn kotlinx.coroutines.**
-
--keepnames class kr.sjh.core.model.ReportType
--keep class kr.sjh.core.model.ReportType { *; }
+-dontwarn io.ktor.client.plugins.observer.ResponseObserver$Plugin
+-dontwarn io.ktor.client.plugins.observer.ResponseObserver
+-dontwarn io.ktor.util.KtorDsl
+-dontwarn io.ktor.utils.io.CoroutinesKt
+-dontwarn io.ktor.utils.io.core.Input

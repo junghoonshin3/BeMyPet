@@ -35,6 +35,7 @@ class PetServiceImpl @Inject constructor(private val client: HttpClient) : PetSe
             parameter("pageNo", petReq.pageNo)
             parameter("numOfRows", petReq.numOfRows)
         }.body<BaseResponse<PetItem>>()
+
         return res
     }
 }

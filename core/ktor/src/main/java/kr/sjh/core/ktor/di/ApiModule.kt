@@ -19,6 +19,7 @@ import kr.sjh.core.ktor.BuildConfig
 import kr.sjh.core.ktor.model.XML
 import kr.sjh.core.ktor.service.PetService
 import kr.sjh.core.ktor.service.impl.PetServiceImpl
+import nl.adaptivity.xmlutil.serialization.XML
 import javax.inject.Singleton
 
 @Module
@@ -44,7 +45,11 @@ object ApiModule {
             }
             install(ContentNegotiation) {
                 xml(
-                    contentType = ContentType.Text.Xml
+                    contentType = ContentType.Text.Xml,
+//                    format = XML {
+//                        autoPolymorphic = true
+//
+//                    }
                 )
             }
         }
