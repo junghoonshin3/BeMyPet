@@ -27,9 +27,9 @@
 - [ ] 기존 운영 데이터 정합성 검증 (`notice_no`, `user_id` FK, soft delete)
 
 ### 3) 권한/보안 검증
-- [ ] 본인 외 댓글 수정/삭제 불가 확인
-- [ ] 차단 사용자 댓글 비노출 확인(RLS)
-- [ ] 닉네임 중복/쿨다운 위반 차단 확인
+- [x] 본인 외 댓글 수정/삭제 불가 확인 (2026-02-15, `supabase/scripts/rls_smoke_test.py`)
+- [x] 차단 사용자 댓글 비노출 확인(RLS) (2026-02-15, `supabase/scripts/rls_smoke_test.py`)
+- [x] 닉네임 중복/쿨다운 위반 차단 확인 (2026-02-15, `supabase/scripts/rls_smoke_test.py`)
 - [ ] 프로필 이미지 버킷 경로 권한 확인
 
 ### 4) 앱 기능 검증
