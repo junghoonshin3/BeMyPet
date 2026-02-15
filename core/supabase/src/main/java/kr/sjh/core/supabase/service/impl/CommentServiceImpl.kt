@@ -3,7 +3,6 @@ package kr.sjh.core.supabase.service.impl
 import android.util.Log
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
@@ -11,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kr.sjh.core.model.Comment
 import kr.sjh.core.supabase.service.CommentService
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 class CommentServiceImpl @Inject constructor(
@@ -18,12 +18,13 @@ class CommentServiceImpl @Inject constructor(
 ) : CommentService {
 
     private val commentTable = postgrest.from("comments")
+    private val commentFeedView = postgrest.from("comment_feed")
 
     @OptIn(SupabaseExperimental::class)
-    override fun getComments(postId: String): Flow<List<Comment>> {
-        return commentTable.selectAsFlow(
+    override fun getComments(noticeNo: String): Flow<List<Comment>> {
+        return commentFeedView.selectAsFlow(
             Comment::id,
-            filter = FilterOperation("post_id", FilterOperator.EQ, postId),
+            filter = FilterOperation("notice_no", FilterOperator.EQ, noticeNo),
         ).map { list ->
             list.sortedByDescending { it.createdAt }
         }
@@ -34,7 +35,9 @@ class CommentServiceImpl @Inject constructor(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
     ) {
         try {
-            commentTable.delete {
+            commentTable.update(
+                mapOf("deleted_at" to OffsetDateTime.now().toString())
+            ) {
                 Log.d("sjh", "commentId : ${commentId}")
                 filter { eq("id", commentId) }
             }
@@ -48,11 +51,14 @@ class CommentServiceImpl @Inject constructor(
         comment: Comment
     ) {
         try {
-            commentTable.insert(comment) {
-                order(
-                    "created_at", Order.ASCENDING
+            commentTable.insert(
+                mapOf(
+                    "id" to comment.id,
+                    "user_id" to comment.userId,
+                    "notice_no" to comment.noticeNo,
+                    "content" to comment.content
                 )
-            }
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -61,7 +67,12 @@ class CommentServiceImpl @Inject constructor(
 
     override suspend fun updateComment(comment: Comment) {
         try {
-            commentTable.update(comment) {
+            commentTable.update(
+                mapOf(
+                    "content" to comment.content,
+                    "updated_at" to OffsetDateTime.now().toString()
+                )
+            ) {
                 filter {
                     eq("id", comment.id)
                 }
@@ -71,10 +82,10 @@ class CommentServiceImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCommentCount(postId: String): Int {
-        val count = commentTable.select {
+    override suspend fun getCommentCount(noticeNo: String): Int {
+        val count = commentFeedView.select {
             filter {
-                eq("post_id", postId)
+                eq("notice_no", noticeNo)
             }
         }.decodeList<Comment>().size
         return count

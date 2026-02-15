@@ -16,13 +16,17 @@ import javax.inject.Inject
 class BlockServiceImpl @Inject constructor(supabaseClient: SupabaseClient) : BlockService {
 
     private val blockTable = supabaseClient.postgrest.from("blocks")
+    private val blockFeedView = supabaseClient.postgrest.from("block_feed")
 
     override suspend fun blockUser(
         blockUser: BlockUser, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     ) {
         try {
             blockTable.upsert(
-                blockUser
+                mapOf(
+                    "blocker_id" to blockUser.blockerUser,
+                    "blocked_id" to blockUser.blockedUser
+                )
             )
             onSuccess()
         } catch (e: Exception) {
@@ -51,7 +55,7 @@ class BlockServiceImpl @Inject constructor(supabaseClient: SupabaseClient) : Blo
 
     @OptIn(SupabaseExperimental::class)
     override fun getBlockUsersFlow(blockerId: String): Flow<List<BlockUser>> {
-        return blockTable.selectAsFlow(
+        return blockFeedView.selectAsFlow(
             primaryKeys = listOf(BlockUser::blockerUser, BlockUser::blockedUser),
             filter = FilterOperation("blocker_id", FilterOperator.EQ, blockerId)
         )
@@ -63,7 +67,7 @@ class BlockServiceImpl @Inject constructor(supabaseClient: SupabaseClient) : Blo
         onFailure: (Exception) -> Unit
     ) {
         try {
-            val list = blockTable.select {
+            val list = blockFeedView.select {
                 filter {
                     eq("blocker_id", blockerId)
                 }
