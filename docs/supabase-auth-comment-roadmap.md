@@ -2,8 +2,12 @@
 
 - Last Updated: 2026-02-15
 - Branch: `feat/supabase-auth-profile-comment-refactor`
-- Commit: `d4256e8`
+- Commit: `243b980`
 - PR: https://github.com/junghoonshin3/BeMyPet/pull/34
+
+## 현재 상태
+- Blocked: Supabase 프로젝트 `aqncppolwccgxluclerq`가 `paused` 상태라 CLI `link/db push`가 차단됨 (2026-02-15, `supabase link` 실행 결과)
+- 즉시 재개 조건: Supabase Dashboard에서 프로젝트 unpause
 
 ## 목표
 - `auth.users` + `public.profiles` 기반 회원 관리 표준화
@@ -19,7 +23,7 @@
 - [x] Android 모델/리포지토리/서비스/UI를 `profiles`/`comment_feed` 기준으로 전환
 
 ### 2) 마이그레이션 배포
-- [ ] Supabase SQL Editor에 `supabase/migrations/20260216_profiles_comments_auth_refactor.sql` 적용
+- [ ] Supabase SQL Editor에 `supabase/migrations/20260216_profiles_comments_auth_refactor.sql` 적용 (blocked: project paused, 2026-02-15)
 - [ ] 기존 운영 데이터 정합성 검증 (`notice_no`, `user_id` FK, soft delete)
 
 ### 3) 권한/보안 검증
