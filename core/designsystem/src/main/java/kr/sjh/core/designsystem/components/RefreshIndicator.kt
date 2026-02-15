@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -53,18 +52,14 @@ fun RefreshIndicator(
     threshold: Dp = 80.dp
 ) {
 
-    val df by rememberUpdatedState(state.distanceFraction)
-
-    val refreshing by rememberUpdatedState(isRefreshing)
-
-    val resId by remember(state.distanceFraction) {
+    val resId by remember {
         derivedStateOf {
             when {
-                df > 0f && df <= 0.5f -> {
+                state.distanceFraction > 0f && state.distanceFraction <= 0.5f -> {
                     R.drawable.animal_carnivore_cartoon_3_svgrepo_com
                 }
 
-                df <= 1f && df > 0.5f -> {
+                state.distanceFraction <= 1f && state.distanceFraction > 0.5f -> {
                     R.drawable.animal_carnivore_cartoon_8_svgrepo_com
                 }
 
@@ -82,12 +77,12 @@ fun RefreshIndicator(
             elevation = 0.dp,
             shape = CircleShape, containerColor = Color.LightGray,
             state = state,
-            isRefreshing = refreshing,
+            isRefreshing = isRefreshing,
             threshold = threshold
         ), contentAlignment = Alignment.Center
     ) {
         Crossfade(
-            targetState = refreshing,
+            targetState = isRefreshing,
             animationSpec = tween(durationMillis = DefaultDurationMillis),
             label = "cross_fade"
         ) { refreshing ->
