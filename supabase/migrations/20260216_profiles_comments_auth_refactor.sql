@@ -13,6 +13,12 @@ create table if not exists public.profiles (
 
 create unique index if not exists profiles_display_name_unique_idx on public.profiles (lower(display_name));
 
+create table if not exists public.user_roles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role text not null default 'user' check (role in ('user', 'admin')),
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
   notice_no text not null,
@@ -28,6 +34,17 @@ create table if not exists public.blocks (
   blocked_id uuid not null references public.profiles(user_id),
   created_at timestamptz not null default now(),
   primary key (blocker_id, blocked_id)
+);
+
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  type text not null,
+  reported_by uuid not null,
+  reported_user uuid not null,
+  comment_id uuid,
+  reason text not null,
+  description text not null default '',
+  created_at timestamptz not null default now()
 );
 
 do $$
@@ -126,6 +143,9 @@ $$;
 create index if not exists comments_notice_no_created_at_idx on public.comments (notice_no, created_at desc);
 create index if not exists comments_user_id_created_at_idx on public.comments (user_id, created_at desc);
 create index if not exists blocks_blocker_idx on public.blocks (blocker_id);
+create index if not exists reports_reported_by_created_at_idx on public.reports (reported_by, created_at desc);
+create index if not exists reports_reported_user_created_at_idx on public.reports (reported_user, created_at desc);
+create index if not exists reports_comment_id_idx on public.reports (comment_id);
 
 alter table public.comments
   drop constraint if exists comments_user_id_fkey,
