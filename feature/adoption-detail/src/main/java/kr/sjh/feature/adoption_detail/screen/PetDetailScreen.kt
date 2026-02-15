@@ -50,6 +50,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import kr.sjh.core.common.ads.AdMobBanner
+import kr.sjh.core.common.share.sharePet
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
@@ -79,12 +80,15 @@ fun PetDetailRoute(
 
     val session by viewModel.session.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
+
     PetDetailScreen(modifier = modifier,
         uiState = uiState,
         isFavorite = isFavorite,
         onBack = onBack,
         state = location,
         commentCount = commentCount,
+        onShare = { pet -> context.sharePet(pet) },
         onFavorite = { like ->
             viewModel.onEvent(AdoptionDetailEvent.OnFavorite(like))
         },
@@ -118,6 +122,7 @@ private fun PetDetailScreen(
     commentCount: Int,
     state: LocationUiState,
     onBack: () -> Unit,
+    onShare: (Pet) -> Unit,
     onFavorite: (Boolean) -> Unit,
     onNavigateToComments: (String) -> Unit
 ) {
@@ -158,16 +163,25 @@ private fun PetDetailScreen(
                             )
                         }
                     }, iconButton = {
-                        IconButton(onClick = {
-                            selectedLike = !selectedLike
-                            onFavorite(selectedLike)
-                        }) {
-                            Icon(
-                                modifier = Modifier.size(30.dp),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.like),
-                                contentDescription = "like",
-                                tint = selectedColor
-                            )
+                        Row {
+                            IconButton(onClick = { onShare(uiState.pet) }) {
+                                Icon(
+                                    modifier = Modifier.size(30.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_share_24),
+                                    contentDescription = "share"
+                                )
+                            }
+                            IconButton(onClick = {
+                                selectedLike = !selectedLike
+                                onFavorite(selectedLike)
+                            }) {
+                                Icon(
+                                    modifier = Modifier.size(30.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.like),
+                                    contentDescription = "like",
+                                    tint = selectedColor
+                                )
+                            }
                         }
                     })
                     AdMobBanner()
@@ -300,25 +314,21 @@ private fun ShelterMap(
                 val markerState = rememberMarkerState(
                     key = mapId, position = LatLng(location.latitude, location.longitude)
                 )
-                val mapProperties by remember {
-                    mutableStateOf(
-                        MapProperties(maxZoomPreference = 19f, minZoomPreference = 5f)
-                    )
+                val mapProperties = remember {
+                    MapProperties(maxZoomPreference = 19f, minZoomPreference = 5f)
                 }
-                val mapUiSettings by remember {
-                    mutableStateOf(
-                        MapUiSettings(
-                            compassEnabled = false,
-                            indoorLevelPickerEnabled = false,
-                            mapToolbarEnabled = false,
-                            myLocationButtonEnabled = false,
-                            rotationGesturesEnabled = false,
-                            scrollGesturesEnabled = false,
-                            scrollGesturesEnabledDuringRotateOrZoom = false,
-                            tiltGesturesEnabled = false,
-                            zoomControlsEnabled = true,
-                            zoomGesturesEnabled = true,
-                        )
+                val mapUiSettings = remember {
+                    MapUiSettings(
+                        compassEnabled = false,
+                        indoorLevelPickerEnabled = false,
+                        mapToolbarEnabled = false,
+                        myLocationButtonEnabled = false,
+                        rotationGesturesEnabled = false,
+                        scrollGesturesEnabled = false,
+                        scrollGesturesEnabledDuringRotateOrZoom = false,
+                        tiltGesturesEnabled = false,
+                        zoomControlsEnabled = true,
+                        zoomGesturesEnabled = true,
                     )
                 }
 

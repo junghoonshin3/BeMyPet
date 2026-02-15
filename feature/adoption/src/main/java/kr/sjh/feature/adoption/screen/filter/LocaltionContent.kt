@@ -57,11 +57,11 @@ fun LocationContent(
     val sidoIndex = sidoList.indexOf(selectedSido).coerceAtLeast(0)
     val sigunguIndex = sigunguList.indexOf(selectedSigungu).coerceAtLeast(0)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(sidoIndex) {
         sidoState.scrollToItem(sidoIndex) // 선택한 아이템으로 스크롤
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(sigunguIndex) {
         sigunguState.scrollToItem(sigunguIndex)
     }
 

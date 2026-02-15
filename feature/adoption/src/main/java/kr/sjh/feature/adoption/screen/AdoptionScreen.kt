@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,6 +64,10 @@ import kr.sjh.core.designsystem.components.RefreshIndicator
 import kr.sjh.core.designsystem.components.TextLine
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
+import kr.sjh.core.designsystem.theme.RoundedCorner10
+import kr.sjh.core.designsystem.theme.RoundedCorner3
+import kr.sjh.core.designsystem.theme.RoundedCornerBottom10
+import kr.sjh.core.designsystem.theme.RoundedCornerTop28
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.feature.adoption.screen.filter.FilterCategoryList
 import kr.sjh.feature.adoption.screen.filter.FilterViewModel
@@ -213,7 +216,7 @@ private fun AdoptionScreen(
                 Pet(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCorner10)
                         .clickable(enabled = !adoptionUiState.isRefreshing) {
                             navigateToPetDetail(item)
                         }, pet = item
@@ -232,9 +235,9 @@ private fun AdoptionScreen(
             }
             .background(
                 MaterialTheme.colorScheme.primary,
-                RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+                RoundedCornerBottom10
             )
-            .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)), title = {
+            .clip(RoundedCornerBottom10), title = {
             Title(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -259,7 +262,7 @@ private fun AdoptionScreen(
         })
         FilterComponent(modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .clip(RoundedCornerTop28)
             .background(MaterialTheme.colorScheme.background)
             .navigationBarsPadding(),
             filterUiState = filterUiState,
@@ -283,9 +286,11 @@ private fun AdoptionScreen(
 }
 
 
+private val PetItemTitleStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = 9.sp)
+private val PetItemContentStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = 9.sp)
+
 @Composable
 private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
-    val fontSize = 9.sp
     val painter = rememberAsyncImagePainter(model = "${pet.thumbnailImageUrl}")
     Column(
         modifier = modifier
@@ -293,7 +298,7 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
         SubcomposeAsyncImage(modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
-            .clip(RoundedCornerShape(10.dp)),
+            .clip(RoundedCorner10),
             model = painter.request,
             contentDescription = "Pet",
             loading = {
@@ -311,7 +316,7 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
                         Notice(
                             modifier = Modifier
                                 .alpha(0.6f)
-                                .background(Color.Red, RoundedCornerShape(3.dp))
+                                .background(Color.Red, RoundedCorner3)
                         )
                     }
                 }
@@ -320,32 +325,32 @@ private fun Pet(modifier: Modifier = Modifier, pet: Pet) {
         TextLine(
             title = "공고번호",
             content = "${pet.noticeNo}",
-            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
-            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+            titleTextStyle = PetItemTitleStyle,
+            contentTextStyle = PetItemContentStyle
         )
         TextLine(
             title = "발견장소",
             content = "${pet.happenPlace}",
-            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
-            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+            titleTextStyle = PetItemTitleStyle,
+            contentTextStyle = PetItemContentStyle
         )
         TextLine(
             title = "품종",
             content = "${pet.kindName}",
-            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
-            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+            titleTextStyle = PetItemTitleStyle,
+            contentTextStyle = PetItemContentStyle
         )
         TextLine(
             title = "성별",
             content = pet.sexCdToText,
-            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
-            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+            titleTextStyle = PetItemTitleStyle,
+            contentTextStyle = PetItemContentStyle
         )
         TextLine(
             title = "상태",
             content = "${pet.processState}",
-            titleTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = fontSize),
-            contentTextStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = fontSize)
+            titleTextStyle = PetItemTitleStyle,
+            contentTextStyle = PetItemContentStyle
         )
     }
 }

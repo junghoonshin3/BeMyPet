@@ -44,12 +44,12 @@ fun FilterCategoryList(
         }
         items(categories) { category ->
             RoundedCornerButton(modifier = Modifier.padding(5.dp),
-                title = if (category.isSelected.value) {
-                    category.selectedText.value
+                title = if (category.isSelected) {
+                    category.selectedText
                 } else {
                     category.type.title
                 },
-                selected = category.isSelected.value,
+                selected = category.isSelected,
                 onClick = {
                     onFilterEvent(FilterEvent.SelectedCategory(category))
                 })

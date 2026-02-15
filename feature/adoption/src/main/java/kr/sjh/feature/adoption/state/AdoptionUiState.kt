@@ -1,7 +1,5 @@
 package kr.sjh.feature.adoption.state
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import kr.sjh.core.ktor.model.request.PetRequest
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.core.model.adoption.filter.Sido
@@ -90,11 +88,6 @@ data class AdoptionUiState(
 
 data class Category(
     val type: CategoryType,
-    val isSelected: MutableState<Boolean> = mutableStateOf(false),
-    val selectedText: MutableState<String> = mutableStateOf(type.title)
-) {
-    fun reset() {
-        isSelected.value = false
-        selectedText.value = type.title
-    }
-}
+    val isSelected: Boolean = false,
+    val selectedText: String = type.title
+)
