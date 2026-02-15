@@ -1,6 +1,5 @@
 package kr.sjh.data.repository.impl
 
-import kr.sjh.core.model.User
 import kr.sjh.core.supabase.service.AuthService
 import kr.sjh.data.repository.AuthRepository
 import javax.inject.Inject
@@ -30,6 +29,18 @@ class AuthRepositoryImpl @Inject constructor(
         onFailure: (Exception) -> Unit
     ) {
         authService.deleteAccount(userId, onSuccess, onFailure)
+    }
+
+    override suspend fun getProfile(userId: String) = authService.getProfile(userId)
+
+    override suspend fun updateProfile(
+        userId: String,
+        displayName: String,
+        avatarUrl: String?,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        authService.updateProfile(userId, displayName, avatarUrl, onSuccess, onFailure)
     }
 
 }

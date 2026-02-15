@@ -2,7 +2,6 @@ package kr.sjh.feature.comments.navigation
 
 import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportType
 import kr.sjh.core.model.User
@@ -20,9 +19,7 @@ sealed class CommentEvent {
     data class Report(val comment: Comment, val user: User) : CommentEvent()
     data class OnChangeText(val textField: TextFieldValue) : CommentEvent()
     data object OnClearText : CommentEvent()
-    data class Block(
-        val blockerId: String, val blockedId: String, val rawUserMetaData: JsonObject
-    ) : CommentEvent()
+    data class Block(val blockerId: String, val blockedId: String) : CommentEvent()
 
     data object OnKeyboardClosedDuringEdit : CommentEvent()
     data class SelectReportType(val reportType: ReportType, val comment: Comment, val user: User) :

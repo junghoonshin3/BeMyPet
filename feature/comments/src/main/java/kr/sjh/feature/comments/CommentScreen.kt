@@ -72,7 +72,6 @@ import com.composables.core.Scrim
 import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.rememberModalBottomSheetState
-import kotlinx.serialization.json.jsonPrimitive
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
@@ -85,6 +84,7 @@ import kr.sjh.core.model.User
 import kr.sjh.feature.comments.navigation.CommentEvent
 import kr.sjh.feature.comments.navigation.CommentSideEffect
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -305,7 +305,6 @@ fun CommentScreen(
                             comment.copy(
                                 content = uiState.textFieldValue.text,
                                 userId = user.id,
-                                rawUserMetaData = user.rawUserMetaData
                             )
                         )
                     }
@@ -378,8 +377,17 @@ fun CommentItem(
     onReport: (Comment) -> Unit,
     onEdit: (Comment) -> Unit
 ) {
-    val createAt = LocalDateTime.parse(comment.createdAt)
-        .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분"))
+    val createAt = comment.createdAt?.let { createdAtRaw ->
+        runCatching {
+            OffsetDateTime.parse(createdAtRaw)
+                .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분"))
+        }.getOrElse {
+            runCatching {
+                LocalDateTime.parse(createdAtRaw)
+                    .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분"))
+            }.getOrDefault("")
+        }
+    }.orEmpty()
     val isMe = user.id == comment.userId
     Row(
         modifier = modifier
@@ -388,8 +396,8 @@ fun CommentItem(
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
             .padding(12.dp), verticalAlignment = Alignment.Top
     ) {
-        val profile = comment.rawUserMetaData?.get("avatar_url")?.jsonPrimitive?.content
-        val name = comment.rawUserMetaData?.get("name")?.jsonPrimitive?.content
+        val profile = comment.authorAvatarUrl
+        val name = if (comment.authorDeleted) "탈퇴한 사용자" else comment.authorName
         // 프로필 사진
         AsyncImage(
             model = profile ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
@@ -455,7 +463,7 @@ fun CommentItem(
             Spacer(modifier = Modifier.height(4.dp))
             // 작성 시간
             Text(
-                text = createAt ?: "",
+                text = createAt,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -534,12 +542,10 @@ fun ReportBottomSheet(
                             .height(80.dp)
                             .clickable {
                                 val blockedUserId = uiState.currentComment?.userId
-                                val rawUserMetaData =
-                                    uiState.currentComment?.rawUserMetaData ?: return@clickable
                                 blockedUserId?.let { blocked ->
                                     onEvent(
                                         CommentEvent.Block(
-                                            user.id, blocked, rawUserMetaData
+                                            user.id, blocked
                                         )
                                     )
                                 }

@@ -2,6 +2,7 @@ package kr.sjh.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kr.sjh.core.model.SessionState
+import kr.sjh.core.model.UserProfile
 
 
 interface AuthRepository {
@@ -15,5 +16,15 @@ interface AuthRepository {
 
     suspend fun deleteAccount(
         userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
+    )
+
+    suspend fun getProfile(userId: String): UserProfile?
+
+    suspend fun updateProfile(
+        userId: String,
+        displayName: String,
+        avatarUrl: String?,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
     )
 }

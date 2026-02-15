@@ -13,15 +13,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,19 +32,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.ads.AdMobBanner
 import kr.sjh.core.common.credential.AccountManager
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.CheckBoxButton
 import kr.sjh.core.designsystem.theme.LocalDarkTheme
 import kr.sjh.core.model.SessionState
+import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 
 @Composable
@@ -57,9 +66,18 @@ fun SettingRoute(
     onNavigateToBlockedUser: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val profileUiState by viewModel.profileUiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(session) {
+        if (session is SessionState.Authenticated) {
+            viewModel.loadProfile(session.user.id)
+        }
+    }
+
     SettingScreen(modifier = modifier,
         isDarkTheme = isDarkTheme,
         session = session,
+        profile = profileUiState.profile,
         onChangeDarkTheme = onChangeDarkTheme,
         onNavigateToSignIn = onNavigateToSignIn,
         onSignOut = {
@@ -80,6 +98,19 @@ fun SettingRoute(
         },
         onNavigateToBlockedUser = { id ->
             onNavigateToBlockedUser(id)
+        },
+        onUpdateProfile = { userId, displayName, avatarUrl ->
+            viewModel.updateProfile(
+                userId = userId,
+                displayName = displayName,
+                avatarUrl = avatarUrl,
+                onSuccess = {
+                    SnackBarManager.showMessage("프로필을 업데이트했어요.")
+                },
+                onFailure = {
+                    SnackBarManager.showMessage(it.message ?: "프로필 업데이트에 실패했어요.")
+                }
+            )
         })
 }
 
@@ -88,11 +119,13 @@ fun SettingScreen(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean,
     session: SessionState,
+    profile: UserProfile?,
     onChangeDarkTheme: (Boolean) -> Unit,
     onNavigateToSignIn: () -> Unit,
     onSignOut: () -> Unit,
     onDeleteAccount: (String) -> Unit,
-    onNavigateToBlockedUser: (String) -> Unit
+    onNavigateToBlockedUser: (String) -> Unit,
+    onUpdateProfile: (String, String, String?) -> Unit
 ) {
 
     var selectedTheme by remember(isDarkTheme) {
@@ -145,6 +178,12 @@ fun SettingScreen(
             item {
                 when (session) {
                     is SessionState.Authenticated -> {
+                        ProfileSection(
+                            userId = session.user.id,
+                            displayName = profile?.displayName ?: session.user.displayName,
+                            avatarUrl = profile?.avatarUrl ?: session.user.avatarUrl,
+                            onUpdateProfile = onUpdateProfile
+                        )
                         BlockedUser(onNavigateToBlockedUser = {
                             onNavigateToBlockedUser(session.user.id)
                         })
@@ -234,6 +273,106 @@ fun SettingScreen(
             }
         }
 
+    }
+}
+
+@Composable
+private fun ProfileSection(
+    userId: String,
+    displayName: String,
+    avatarUrl: String?,
+    onUpdateProfile: (String, String, String?) -> Unit
+) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        var nameInput by remember(displayName) { mutableStateOf(displayName) }
+        var avatarInput by remember(avatarUrl) { mutableStateOf(avatarUrl.orEmpty()) }
+
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("프로필 수정") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = nameInput,
+                        onValueChange = { nameInput = it },
+                        label = { Text("닉네임") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = avatarInput,
+                        onValueChange = { avatarInput = it },
+                        label = { Text("아바타 URL") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val name = nameInput.trim()
+                    if (name.isNotBlank()) {
+                        onUpdateProfile(userId, name, avatarInput.trim().ifBlank { null })
+                        showEditDialog = false
+                    }
+                }) {
+                    Text("저장", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("취소", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            }
+        )
+    }
+
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = "프로필", style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            AsyncImage(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape),
+                model = avatarUrl ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
+                contentDescription = "avatar",
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                modifier = Modifier.padding(start = 72.dp),
+                text = displayName.ifBlank { "닉네임 미설정" },
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Button(
+            onClick = { showEditDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Text(text = "프로필 수정", style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

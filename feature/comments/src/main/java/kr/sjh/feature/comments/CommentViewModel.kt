@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
 import kr.sjh.core.model.BlockUser
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.SessionState
@@ -64,8 +63,8 @@ class CommentViewModel @Inject constructor(
         getComments(arg.noticeNo, arg.userId)
     }
 
-    private fun getComments(postId: String, userId: String) {
-        commentRepository.getComments(postId, userId).onStart {
+    private fun getComments(noticeNo: String, userId: String) {
+        commentRepository.getComments(noticeNo, userId).onStart {
             _uiState.update {
                 it.copy(loading = true)
             }
@@ -110,12 +109,11 @@ class CommentViewModel @Inject constructor(
         }
     }
 
-    private fun blockUser(blockerId: String, blockedId: String, rawUserMetaData: JsonObject) {
+    private fun blockUser(blockerId: String, blockedId: String) {
         viewModelScope.launch {
             commentRepository.blockUser(BlockUser(
                 blockerUser = blockerId,
-                blockedUser = blockedId,
-                rawUserMetaData = rawUserMetaData
+                blockedUser = blockedId
             ), {}, { e -> e.printStackTrace() })
         }
     }
@@ -154,7 +152,7 @@ class CommentViewModel @Inject constructor(
             }
 
             is CommentEvent.Send -> {
-                val comment = event.comment.copy(postId = arg.noticeNo)
+                val comment = event.comment.copy(noticeNo = arg.noticeNo)
                 send(comment)
             }
 
@@ -169,7 +167,7 @@ class CommentViewModel @Inject constructor(
             }
 
             is CommentEvent.Block -> {
-                blockUser(event.blockerId, event.blockedId, event.rawUserMetaData)
+                blockUser(event.blockerId, event.blockedId)
                 hideBottomSheet()
             }
 

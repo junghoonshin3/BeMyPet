@@ -5,7 +5,7 @@ import kr.sjh.core.model.Comment
 
 interface CommentService {
 
-    fun getComments(postId: String): Flow<List<Comment>>
+    fun getComments(noticeNo: String): Flow<List<Comment>>
 
     suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
@@ -15,5 +15,5 @@ interface CommentService {
 
     suspend fun updateComment(comment: Comment)
 
-    suspend fun getCommentCount(postId: String): Int
+    suspend fun getCommentCount(noticeNo: String): Int
 }

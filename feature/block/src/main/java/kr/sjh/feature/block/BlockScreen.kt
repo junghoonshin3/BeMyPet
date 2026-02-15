@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import kotlinx.serialization.json.jsonPrimitive
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
@@ -129,9 +128,8 @@ fun BlockScreen(
 
         LazyColumn(modifier.fillMaxSize()) {
             items(uiState.blockUsers) { user ->
-                val profileImageUrl =
-                    user.rawUserMetaData["avatar_url"]?.jsonPrimitive?.content ?: ""
-                val userName = user.rawUserMetaData["full_name"]?.jsonPrimitive?.content ?: "이름없음"
+                val profileImageUrl = user.blockedAvatarUrl ?: ""
+                val userName = user.blockedName ?: "이름없음"
 
                 UserProfileCard(profileImageUrl = profileImageUrl,
                     userName = userName,
@@ -176,4 +174,3 @@ fun UserProfileCard(
         }
     }
 }
-
