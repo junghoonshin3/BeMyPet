@@ -58,16 +58,16 @@ val Typography = Typography(
         letterSpacing = 0.25.sp
     ),
     bodySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
+        letterSpacing = 0.3.sp
     ),
     labelLarge = TextStyle(
         fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.2.sp
     ),
     labelMedium = TextStyle(
         fontWeight = FontWeight.SemiBold,
@@ -84,3 +84,4 @@ val Typography = Typography(
 )
 
 val DefaultAppBarHeight = 64.dp
+val ExpandedAppBarHeight = 176.dp

@@ -1,7 +1,6 @@
 package kr.sjh.bemypet.navigation
 
 import android.os.Bundle
-import android.util.Log
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -11,22 +10,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,8 +37,9 @@ import kr.sjh.feature.favourite.screen.FavouriteRoute
 import kr.sjh.feature.navigation.Block
 import kr.sjh.feature.report.ReportRoute
 import kr.sjh.feature.report.navigation.Report
+import kr.sjh.feature.signup.OnboardingRoute
 import kr.sjh.feature.signup.SignInRoute
-import kr.sjh.feature.signup.SignInViewModel
+import kr.sjh.feature.signup.navigation.Onboarding
 import kr.sjh.feature.signup.navigation.SignUp
 import kr.sjh.setting.navigation.Setting
 import kr.sjh.setting.screen.SettingRoute
@@ -62,7 +51,9 @@ fun BeMyPetNavHost(
     appState: BeMyPetAppState,
     bottomPadding: Dp,
     session: SessionState,
+    hasSeenOnboarding: Boolean,
     onChangeDarkTheme: (Boolean) -> Unit,
+    onCompleteOnboarding: () -> Unit,
 ) {
     val context = LocalContext.current
     val accountManager = AccountManager(context)
@@ -163,15 +154,55 @@ fun BeMyPetNavHost(
                 .navigationBarsPadding(),
                 accountManager = accountManager,
                 onSignInSuccess = {
-                    appState.navController.navigate(Adoption) {
-                        popUpTo(Adoption) {
-                            inclusive = true
+                    if (hasSeenOnboarding) {
+                        appState.navController.navigate(Adoption) {
+                            popUpTo(SignUp) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        appState.navController.navigate(Onboarding) {
+                            popUpTo(SignUp) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 },
                 onBack = {
                     appState.navController.popBackStack()
                 })
+        }
+
+        composable<Onboarding> {
+            OnboardingRoute(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .navigationBarsPadding(),
+                onBack = {
+                    appState.navController.popBackStack()
+                },
+                onComplete = {
+                    onCompleteOnboarding()
+                    appState.navController.navigate(Adoption) {
+                        popUpTo(Onboarding) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                onSkip = {
+                    onCompleteOnboarding()
+                    appState.navController.navigate(Adoption) {
+                        popUpTo(Onboarding) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable<Report>(

@@ -3,7 +3,6 @@ package kr.sjh.bemypet
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.auth.Auth
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -19,11 +18,16 @@ class StartViewModel @Inject constructor(
 ) : ViewModel() {
 
     val isDarkTheme = settingRepository.getDarkTheme()
+    val hasSeenOnboarding = settingRepository.getHasSeenOnboarding()
 
     val session = authRepository.getSessionFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SessionState.Initializing)
 
     fun updateIsDarkTheme(isDarkTheme: Boolean) = viewModelScope.launch {
         settingRepository.updateIsDarkTheme(isDarkTheme)
+    }
+
+    fun completeOnboarding() = viewModelScope.launch {
+        settingRepository.updateHasSeenOnboarding(true)
     }
 }
