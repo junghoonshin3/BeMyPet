@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,6 +62,7 @@ import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.RefreshIndicator
+import kr.sjh.core.designsystem.modifier.clickableNoRipple
 import kr.sjh.core.designsystem.theme.ExpandedAppBarHeight
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
@@ -89,7 +90,6 @@ fun AdoptionRoute(
     val adoptionUiState by viewModel.adoptionUiState.collectAsStateWithLifecycle()
 
     val filterUiState by filterViewModel.filterUiState.collectAsStateWithLifecycle()
-    val latestFilterUiState by rememberUpdatedState(filterUiState)
 
     val peek = remember {
         SheetDetent("peek", calculateDetentHeight = { containerHeight, _ ->
@@ -109,19 +109,15 @@ fun AdoptionRoute(
         filterViewModel.sideEffect.collect { sideEffect ->
             when (sideEffect) {
                 SideEffect.HideBottomSheet -> {
-                    bottomSheetState.currentDetent = SheetDetent.Hidden
+                    bottomSheetState.animateTo(SheetDetent.Hidden)
                 }
 
                 SideEffect.ShowBottomSheet -> {
-                    bottomSheetState.currentDetent = peek
+                    bottomSheetState.animateTo(peek)
                 }
 
-                SideEffect.FetchPets -> {
-                    viewModel.onEvent(
-                        AdoptionEvent.Refresh(
-                            latestFilterUiState.toPetRequest()
-                        )
-                    )
+                is SideEffect.FetchPets -> {
+                    viewModel.onEvent(AdoptionEvent.Refresh(sideEffect.req))
                 }
             }
         }
@@ -217,7 +213,7 @@ private fun AdoptionScreen(
                 ),
                 itemKey = { item -> "${item.desertionNo}" },
                 loadMore = {
-                    if (!adoptionUiState.isMore) {
+                    if (!adoptionUiState.isMore && !adoptionUiState.isRefreshing) {
                         onEvent(
                             AdoptionEvent.LoadMore(
                                 filterUiState.toPetRequest()
@@ -233,6 +229,18 @@ private fun AdoptionScreen(
                             navigateToPetDetail(item)
                         },
                     pet = item
+                )
+            }
+            if (adoptionUiState.isRefreshing && adoptionUiState.pets.isNotEmpty()) {
+                FilterTransitionSkeletonOverlay(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = appBarHeight + 12.dp,
+                            bottom = 16.dp,
+                            start = 12.dp,
+                            end = 12.dp
+                        )
                 )
             }
         }
@@ -322,6 +330,74 @@ private fun AdoptionScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun FilterTransitionSkeletonOverlay(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f), RoundedCorner18)
+            .clip(RoundedCorner18)
+            .clickableNoRipple {}
+            .padding(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(3) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterSkeletonCard(modifier = Modifier.weight(1f))
+                    FilterSkeletonCard(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterSkeletonCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCorner18,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.72f)
+                    .height(16.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.88f)
+                    .height(14.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(18.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(18.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
     }
 }
 

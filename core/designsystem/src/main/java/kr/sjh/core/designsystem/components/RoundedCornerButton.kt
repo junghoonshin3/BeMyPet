@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 
@@ -25,7 +26,7 @@ fun RoundedCornerButton(
     val containerColor = if (selected) {
         MaterialTheme.colorScheme.secondaryContainer
     } else {
-        MaterialTheme.colorScheme.surface
+        MaterialTheme.colorScheme.surfaceVariant
     }
     val contentColor = if (selected) {
         MaterialTheme.colorScheme.onSecondaryContainer
@@ -40,23 +41,25 @@ fun RoundedCornerButton(
 
     Box(
         modifier = Modifier
-        .heightIn(min = 40.dp)
-        .background(containerColor, RoundedCorner12)
-        .border(
-            1.dp,
-            color = borderColor,
-            shape = RoundedCorner12
-        )
-        .clip(RoundedCorner12)
-        .clickable { onClick() }
-        .padding(horizontal = 14.dp, vertical = 10.dp)
-        .then(modifier),
+            .heightIn(min = 44.dp)
+            .background(containerColor, RoundedCorner12)
+            .border(
+                1.dp,
+                color = borderColor,
+                shape = RoundedCorner12
+            )
+            .clip(RoundedCorner12)
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .then(modifier),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelMedium,
-            color = contentColor
+            style = MaterialTheme.typography.bodyMedium,
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

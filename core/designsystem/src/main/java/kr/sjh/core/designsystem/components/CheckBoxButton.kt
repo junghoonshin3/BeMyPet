@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.theme.RoundedCorner12
@@ -55,21 +56,25 @@ fun CheckBoxButton(
                 onClick()
             }
             .heightIn(min = 44.dp)
-            .padding(vertical = 8.dp, horizontal = 14.dp)
+            .padding(vertical = 10.dp, horizontal = 14.dp)
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
-            color = contentColor
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.weight(1f))
-        Box(modifier = Modifier.size(30.dp)) {
+        Box(modifier = Modifier.size(22.dp)) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.check_circle_svgrepo_com),
                 contentDescription = "check",
-                tint = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline
+                tint = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline.copy(
+                    alpha = 0.7f
+                )
             )
         }
     }

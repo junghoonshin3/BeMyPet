@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.composables.core)
     implementation(libs.androidx.foundation.layout.android)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
