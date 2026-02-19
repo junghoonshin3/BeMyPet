@@ -3,14 +3,18 @@ package kr.sjh.bemypet.navigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import kr.sjh.core.designsystem.theme.RoundedCorner24
 
 @Composable
 fun BeMyPetBottomNavigation(
@@ -49,24 +54,44 @@ fun BeMyPetBottomNavigation(
             targetOffsetY = { it },
         )
     ) {
-        BottomAppBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            destinations.forEach { destination ->
-                val selected = currentDestination.isTopLevelDestinationInHierarchy(destination)
-                BeMyPetNavigationBarItem(icon = {
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = destination.icon),
-                        contentDescription = destination.contentDes
-                    )
-                }, onClick = {
-                    navigateToTopLevelDestination(destination)
-                }, label = {
-                    Text(text = stringResource(id = destination.title))
-                }, selected = selected
-                )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCorner24,
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
+                shadowElevation = 4.dp
+            ) {
+                NavigationBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = Color.Transparent,
+                    tonalElevation = 0.dp
+                ) {
+                    destinations.forEach { destination ->
+                        val selected =
+                            currentDestination.isTopLevelDestinationInHierarchy(destination)
+                        BeMyPetNavigationBarItem(
+                            icon = {
+                                Icon(
+                                    modifier = Modifier.size(24.dp),
+                                    painter = painterResource(id = destination.icon),
+                                    contentDescription = destination.contentDes
+                                )
+                            },
+                            onClick = {
+                                navigateToTopLevelDestination(destination)
+                            },
+                            label = {
+                                Text(text = stringResource(id = destination.title))
+                            },
+                            selected = selected
+                        )
+                    }
+                }
             }
         }
     }
@@ -80,8 +105,6 @@ fun RowScope.BeMyPetNavigationBarItem(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     label: @Composable (() -> Unit)? = null,
-    selectedContentColor: Color = Color.Red,
-    unselectedContentColor: Color = Color.Gray,
 ) {
     NavigationBarItem(
         selected = selected,
@@ -91,11 +114,11 @@ fun RowScope.BeMyPetNavigationBarItem(
         enabled = enabled,
         label = label,
         colors = NavigationBarItemDefaults.colors(
-            indicatorColor = Color.Transparent,
-            selectedIconColor = selectedContentColor,
-            selectedTextColor = selectedContentColor,
-            unselectedIconColor = unselectedContentColor,
-            unselectedTextColor = unselectedContentColor
+            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+            selectedIconColor = MaterialTheme.colorScheme.onSurface,
+            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     )
 }

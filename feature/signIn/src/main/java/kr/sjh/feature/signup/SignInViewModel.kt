@@ -33,8 +33,18 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
         viewModelScope.launch {
             if (type == "google") {
                 signInWithGoogle(idToken, nonce)
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isSignedIn = false,
+                    errorMessage = "이메일 로그인은 곧 지원 예정이에요."
+                )
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     private suspend fun signInWithGoogle(idToken: String, nonce: String) {
