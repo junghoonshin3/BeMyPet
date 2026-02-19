@@ -122,6 +122,9 @@ private fun FavouriteScreen(
     }
 }
 
+private val PetItemTitleStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = 9.sp)
+private val PetItemContentStyle = TextStyle(fontWeight = FontWeight.Light, fontSize = 9.sp)
+
 @Composable
 private fun EmptyFavouriteState(modifier: Modifier = Modifier) {
     Card(

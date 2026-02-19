@@ -431,6 +431,106 @@ private fun ProfileSection(
 }
 
 @Composable
+private fun ProfileSection(
+    userId: String,
+    displayName: String,
+    avatarUrl: String?,
+    onUpdateProfile: (String, String, String?) -> Unit
+) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        var nameInput by remember(displayName) { mutableStateOf(displayName) }
+        var avatarInput by remember(avatarUrl) { mutableStateOf(avatarUrl.orEmpty()) }
+
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("프로필 수정") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = nameInput,
+                        onValueChange = { nameInput = it },
+                        label = { Text("닉네임") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = avatarInput,
+                        onValueChange = { avatarInput = it },
+                        label = { Text("아바타 URL") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val name = nameInput.trim()
+                    if (name.isNotBlank()) {
+                        onUpdateProfile(userId, name, avatarInput.trim().ifBlank { null })
+                        showEditDialog = false
+                    }
+                }) {
+                    Text("저장", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("취소", color = MaterialTheme.colorScheme.onPrimary)
+                }
+            }
+        )
+    }
+
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = "프로필", style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            AsyncImage(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape),
+                model = avatarUrl ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
+                contentDescription = "avatar",
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                modifier = Modifier.padding(start = 72.dp),
+                text = displayName.ifBlank { "닉네임 미설정" },
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Button(
+            onClick = { showEditDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Text(text = "프로필 수정", style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
 fun DeleteUser(userId: String, onSignOut: () -> Unit, onDeleteAccount: (String) -> Unit) {
     var isDeleteUserShow by remember {
         mutableStateOf(false)

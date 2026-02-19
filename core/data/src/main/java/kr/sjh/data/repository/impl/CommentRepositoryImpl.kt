@@ -1,7 +1,6 @@
 package kr.sjh.data.repository.impl
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kr.sjh.core.model.BlockUser
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportForm
@@ -17,17 +16,8 @@ class CommentRepositoryImpl @Inject constructor(
     private val blockService: BlockService
 ) : CommentRepository {
 
-    override fun getComments(postId: String, userId: String) =
-        combine(
-            commentService.getComments(postId),
-            blockService.getBlockUsersFlow(userId)
-        ) { comments, blockUsers ->
-            val blockedList = blockUsers.map { it.blockedUser }
-            val newComments = comments.filterNot { comment ->
-                comment.userId in blockedList
-            }
-            newComments
-        }
+    override fun getComments(noticeNo: String, userId: String) =
+        commentService.getComments(noticeNo)
 
     override suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
@@ -47,8 +37,8 @@ class CommentRepositoryImpl @Inject constructor(
         commentService.updateComment(comment)
     }
 
-    override suspend fun getCommentCount(postId: String): Int {
-        return commentService.getCommentCount(postId)
+    override suspend fun getCommentCount(noticeNo: String): Int {
+        return commentService.getCommentCount(noticeNo)
     }
 
     override suspend fun reportUsers(report: ReportForm) {

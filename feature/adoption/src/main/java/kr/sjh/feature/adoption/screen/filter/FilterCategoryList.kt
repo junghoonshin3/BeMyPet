@@ -81,7 +81,7 @@ fun FilterCategoryList(
                 } else {
                     category.type.title
                 },
-                selected = category.isSelected.value,
+                selected = category.isSelected,
                 onClick = {
                     onFilterEvent(FilterEvent.SelectedCategory(category))
                 })
