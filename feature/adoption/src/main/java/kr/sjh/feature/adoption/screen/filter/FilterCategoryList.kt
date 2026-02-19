@@ -76,8 +76,8 @@ fun FilterCategoryList(
         items(categories) { category ->
             RoundedCornerButton(
                 modifier = Modifier.widthIn(max = 170.dp),
-                title = if (category.isSelected.value) {
-                    category.selectedText.value
+                title = if (category.isSelected) {
+                    category.selectedText
                 } else {
                     category.type.title
                 },
