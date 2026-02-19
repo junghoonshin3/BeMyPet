@@ -76,11 +76,10 @@ class AdoptionViewModel @Inject constructor(
     fun onEvent(event: AdoptionEvent) {
         when (event) {
             is AdoptionEvent.LoadMore -> {
+                if (_adoptionUiState.value.isRefreshing || _adoptionUiState.value.isMore) return
+                val currentReq = _petRequest.replayCache.firstOrNull() ?: return
                 viewModelScope.launch {
-                    _petRequest.emit(
-                        _petRequest.replayCache.first()
-                            .copy(pageNo = _petRequest.replayCache.first().pageNo + 1)
-                    )
+                    _petRequest.emit(currentReq.copy(pageNo = currentReq.pageNo + 1))
                 }
             }
 

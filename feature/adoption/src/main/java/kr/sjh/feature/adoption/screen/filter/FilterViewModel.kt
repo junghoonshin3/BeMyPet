@@ -66,8 +66,6 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
 
             FilterEvent.CloseBottomSheet -> {
                 hideBottomSheet()
-                // 시도 선택 후 확인을 누르지않고 바텀시트를 닫는 경우 시군구 리스트 초기화
-                clearSigungu()
             }
 
             FilterEvent.OpenBottomSheet -> {
@@ -157,6 +155,10 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
     }
 
     private fun hideBottomSheet() {
+        clearSigungu()
+        _filterUiState.update {
+            it.copy(selectedCategory = null)
+        }
         viewModelScope.launch {
             _sideEffect.send(SideEffect.HideBottomSheet)
         }
@@ -255,8 +257,9 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
     }
 
     private fun fetchPets() {
+        val req = _filterUiState.value.toPetRequest()
         viewModelScope.launch {
-            _sideEffect.send(SideEffect.FetchPets)
+            _sideEffect.send(SideEffect.FetchPets(req))
         }
     }
 }

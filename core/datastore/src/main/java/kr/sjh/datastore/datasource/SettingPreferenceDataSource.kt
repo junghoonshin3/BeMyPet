@@ -14,17 +14,25 @@ class SettingPreferenceDataSource @Inject constructor(
 ) {
     object PreferencesKey {
         val IS_DARK_THEME = booleanPreferencesKey("IS_DARK_THEME")
+        val HAS_SEEN_ONBOARDING = booleanPreferencesKey("HAS_SEEN_ONBOARDING")
     }
 
     val settingsData = dataStore.data.map { preferences ->
         SettingsData(
-            isDarkTheme = preferences[PreferencesKey.IS_DARK_THEME] ?: false
+            isDarkTheme = preferences[PreferencesKey.IS_DARK_THEME] ?: false,
+            hasSeenOnboarding = preferences[PreferencesKey.HAS_SEEN_ONBOARDING] ?: false
         )
     }
 
     suspend fun updateIsDarkTheme(isDarkTheme: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKey.IS_DARK_THEME] = isDarkTheme
+        }
+    }
+
+    suspend fun updateHasSeenOnboarding(hasSeenOnboarding: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKey.HAS_SEEN_ONBOARDING] = hasSeenOnboarding
         }
     }
 }

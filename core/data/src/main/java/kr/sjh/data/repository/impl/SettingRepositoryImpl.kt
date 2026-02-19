@@ -12,7 +12,15 @@ class SettingRepositoryImpl @Inject constructor(private val preferencesDataSourc
         it.isDarkTheme
     }
 
+    override fun getHasSeenOnboarding(): Flow<Boolean> = preferencesDataSource.settingsData.map {
+        it.hasSeenOnboarding
+    }
+
     override suspend fun updateIsDarkTheme(isDarkTheme: Boolean) {
         preferencesDataSource.updateIsDarkTheme(isDarkTheme)
+    }
+
+    override suspend fun updateHasSeenOnboarding(seen: Boolean) {
+        preferencesDataSource.updateHasSeenOnboarding(seen)
     }
 }

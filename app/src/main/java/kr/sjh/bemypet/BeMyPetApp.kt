@@ -37,6 +37,9 @@ fun BeMyPetApp(
     }
 
     val session by startViewModel.session.collectAsStateWithLifecycle()
+    val hasSeenOnboarding by startViewModel.hasSeenOnboarding.collectAsStateWithLifecycle(
+        initialValue = false
+    )
 
     Scaffold(modifier = modifier, snackbarHost = {
         SnackbarHost(hostState = appState.snackBarHostState,
@@ -57,10 +60,12 @@ fun BeMyPetApp(
         BeMyPetNavHost(
             appState = appState,
             session = session,
+            hasSeenOnboarding = hasSeenOnboarding,
             modifier = Modifier
                 .fillMaxSize(),
             bottomPadding = bottomPadding,
-            onChangeDarkTheme = onChangeDarkTheme
+            onChangeDarkTheme = onChangeDarkTheme,
+            onCompleteOnboarding = startViewModel::completeOnboarding
         )
     }
 }

@@ -1,5 +1,9 @@
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
 import com.composables.core.ModalBottomSheet
 import com.composables.core.ModalBottomSheetState
 import com.composables.core.Scrim
@@ -28,14 +32,19 @@ fun FilterComponent(
     }) {
         Scrim()
         Sheet(
-            modifier = modifier, enabled = false
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            enabled = false
         ) {
             when (filterUiState.selectedCategory.type) {
                 CategoryType.DATE_RANGE -> {
                     val startDate =
                         LocalDate.parse(filterUiState.selectedStartDate, dateRangeFormater)
                     val endDate = LocalDate.parse(filterUiState.selectedEndDate, dateRangeFormater)
-                    CalendarContent(selectedStartDate = startDate,
+                    CalendarContent(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        selectedStartDate = startDate,
                         selectedEndDate = endDate,
                         close = {
                             onFilterEvent(FilterEvent.CloseBottomSheet)
@@ -50,7 +59,8 @@ fun FilterComponent(
                 }
 
                 CategoryType.NEUTER -> {
-                    NeuterContent(title = filterUiState.selectedCategory.type.title,
+                    NeuterContent(
+                        title = filterUiState.selectedCategory.type.title,
                         selectedNeuter = filterUiState.selectedNeuter,
                         confirm = { neuter ->
                             onFilterEvent(FilterEvent.ConfirmNeuter(neuter))
@@ -73,7 +83,8 @@ fun FilterComponent(
                 }
 
                 CategoryType.UP_KIND -> {
-                    UpKindContent(title = filterUiState.selectedCategory.type.title,
+                    UpKindContent(
+                        title = filterUiState.selectedCategory.type.title,
                         selectedUpKind = filterUiState.selectedUpKind,
                         confirm = { upKind ->
                             onFilterEvent(FilterEvent.ConfirmUpKind(upKind))

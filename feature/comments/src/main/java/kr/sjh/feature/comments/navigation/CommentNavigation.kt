@@ -9,14 +9,24 @@ import kr.sjh.core.model.User
 @Serializable
 data class Comments(val noticeNo: String, val userId: String)
 
+enum class CommentAction {
+    Edit,
+    Delete,
+    ReportComment,
+    ReportUser,
+    BlockUser,
+}
+
 sealed class CommentEvent {
+    data class OpenActionSheet(val comment: Comment) : CommentEvent()
+    data object CloseActionSheet : CommentEvent()
+    data class SelectAction(val action: CommentAction, val user: User) : CommentEvent()
     data class StartEditing(val comment: Comment) : CommentEvent()
     data class ShowDeleteDialog(val comment: Comment) : CommentEvent()
     data object DismissDeleteDialog : CommentEvent()
     data object Delete : CommentEvent()
     data class Send(val comment: Comment) : CommentEvent()
     data class Edit(val comment: Comment) : CommentEvent()
-    data class Report(val comment: Comment, val user: User) : CommentEvent()
     data class OnChangeText(val textField: TextFieldValue) : CommentEvent()
     data object OnClearText : CommentEvent()
     data class Block(val blockerId: String, val blockedId: String) : CommentEvent()

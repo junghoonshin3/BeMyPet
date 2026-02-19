@@ -2,7 +2,9 @@ package kr.sjh.feature.report
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -26,13 +31,12 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -47,6 +51,9 @@ import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.Title
+import kr.sjh.core.designsystem.theme.RoundedCorner12
+import kr.sjh.core.designsystem.theme.RoundedCorner18
+import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.model.ReportForm
 import kr.sjh.core.model.ReportType
 import kr.sjh.feature.report.navigation.Report
@@ -58,23 +65,18 @@ fun ReportRoute(
     onSuccess: () -> Unit,
     onBack: () -> Unit
 ) {
-
     Log.d("sjh", "$report")
     val reportReasons = when (report.type) {
-        ReportType.Comment -> {
-            listOf("스팸", "괴롭힘", "혐오 발언", "기타")
-        }
-
-        ReportType.User -> {
-            listOf("프로필 사진 신고", "사용자 닉네임 신고", "비매너 사용자", "기타")
-        }
+        ReportType.Comment -> listOf("스팸", "괴롭힘", "혐오 발언", "기타")
+        ReportType.User -> listOf("프로필 사진 신고", "사용자 닉네임 신고", "비매너 사용자", "기타")
     }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ReportScreen(
         uiState = uiState,
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.background)
             .imePadding(),
         onReportSubmit = { reason, description ->
             viewModel.report(
@@ -92,7 +94,6 @@ fun ReportRoute(
         onBack = onBack,
         onSuccess = onSuccess
     )
-
 }
 
 @Composable
@@ -104,8 +105,9 @@ fun ReportScreen(
     onBack: () -> Unit,
     onSuccess: () -> Unit
 ) {
-    var selectedReason by remember { mutableStateOf(reportReasons.first()) }
+    var selectedReason by remember(reportReasons) { mutableStateOf(reportReasons.first()) }
     var description by remember { mutableStateOf("") }
+    var reasonExpanded by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -116,20 +118,24 @@ fun ReportScreen(
         }
     }
 
-    Column(modifier = modifier.pointerInput(Unit) {
-        detectTapGestures(onTap = {
-            focusManager.clearFocus()
-            keyboardController?.hide()
-        })
-    }) {
-        BeMyPetTopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary),
+    Column(
+        modifier = modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+            })
+        }
+    ) {
+        BeMyPetTopAppBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24),
             title = {
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
                         contentDescription = "back",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Title(
@@ -137,56 +143,125 @@ fun ReportScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     title = "신고",
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
-            })
-        Spacer(modifier = Modifier.height(16.dp))
+            }
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "신고 사유 선택", style = MaterialTheme.typography.titleMedium)
-            DropdownMenuBox(options = reportReasons,
-                selected = selectedReason,
-                onOptionSelected = { selectedReason = it })
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCorner18,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "신고 사유 선택",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
 
-            Text(text = "추가 설명", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-            Box(
-                modifier = Modifier
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color.LightGray)
-                    .padding(start = 5.dp, end = 5.dp),
-            ) {
-                if (!uiState.loading) {
-                    TextField(
-                        value = description,
-                        onValueChange = {
-                            description = it
-                        },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Default),
-                        placeholder = { Text("추가 설명를 입력하세요.") },
-                        colors = TextFieldDefaults.colors(
-                            cursorColor = Color.Black,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            selectionColors = TextSelectionColors(Color.Black, Color.Black)
-                        ),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(end = 8.dp)
-                    )
-                } else {
-                    LoadingComponent()
+                        Box {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { reasonExpanded = true },
+                                shape = RoundedCorner12,
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                                    text = selectedReason,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = reasonExpanded,
+                                onDismissRequest = { reasonExpanded = false }
+                            ) {
+                                reportReasons.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            selectedReason = option
+                                            reasonExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCorner18,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "추가 설명",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCorner12
+                                )
+                                .padding(horizontal = 6.dp)
+                        ) {
+                            if (!uiState.loading) {
+                                TextField(
+                                    value = description,
+                                    onValueChange = { description = it },
+                                    keyboardOptions = KeyboardOptions.Default.copy(
+                                        imeAction = ImeAction.Default
+                                    ),
+                                    placeholder = { Text("추가 설명을 입력하세요.") },
+                                    colors = TextFieldDefaults.colors(
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        selectionColors = TextSelectionColors(Color.Black, Color.Black)
+                                    ),
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                LoadingComponent()
+                            }
+                        }
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 enabled = !uiState.loading,
@@ -195,30 +270,18 @@ fun ReportScreen(
                     keyboardController?.hide()
                     onReportSubmit(selectedReason, description)
                 },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
-                )
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text(text = "신고 제출", style = MaterialTheme.typography.titleMedium)
-            }
-        }
-    }
-}
-
-@Composable
-fun DropdownMenuBox(options: List<String>, selected: String, onOptionSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        Button(onClick = { expanded = true }) {
-            Text(selected)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(text = { Text(option) }, onClick = {
-                    onOptionSelected(option)
-                    expanded = false
-                })
             }
         }
     }
