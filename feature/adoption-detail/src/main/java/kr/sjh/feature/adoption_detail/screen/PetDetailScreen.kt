@@ -251,7 +251,7 @@ private fun PetDetailScreen(
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                             .clip(RoundedCornerBottom24),
-                        title = "입양 상세",
+                        title = "동물 상세",
                         isFavorite = isFavorite,
                         onBack = onBack,
                         onShare = { onShare(uiState.pet) },
@@ -352,7 +352,7 @@ private fun PetDetailLoadingSkeleton(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                 .clip(RoundedCornerBottom24),
-            title = "입양 상세",
+            title = "동물 상세",
             isFavorite = false,
             onBack = onBack,
             onShare = {},
