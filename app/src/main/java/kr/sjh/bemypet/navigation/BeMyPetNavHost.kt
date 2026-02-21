@@ -37,6 +37,9 @@ import kr.sjh.feature.adoption_detail.screen.PetDetailRoute
 import kr.sjh.feature.block.BlockRoute
 import kr.sjh.feature.comments.CommentRoute
 import kr.sjh.feature.comments.navigation.Comments
+import kr.sjh.feature.comments.navigation.MyComments
+import kr.sjh.feature.comments.navigation.navigateToMyComments
+import kr.sjh.feature.comments.MyCommentsRoute
 import kr.sjh.feature.favourite.navigation.Favourite
 import kr.sjh.feature.favourite.screen.FavouriteRoute
 import kr.sjh.feature.navigation.Block
@@ -139,6 +142,9 @@ fun BeMyPetNavHost(
                 },
                 onNavigateToBlockedUser = { uid ->
                     appState.navController.navigate(Block(uid))
+                },
+                onNavigateToMyComments = { userId ->
+                    appState.navController.navigateToMyComments(userId)
                 })
         }
 
@@ -151,6 +157,9 @@ fun BeMyPetNavHost(
                 onBack = {
                     appState.navController.popBackStack()
                 },
+                onNavigateToMyComments = { userId ->
+                    appState.navController.navigateToMyComments(userId)
+                },
                 navigateToReport = { type, comment, user ->
                     appState.navController.navigate(
                         Report(
@@ -161,6 +170,24 @@ fun BeMyPetNavHost(
                         )
                     )
                 })
+        }
+
+        composable<MyComments> {
+            MyCommentsRoute(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .navigationBarsPadding(),
+                onBack = {
+                    appState.navController.popBackStack()
+                },
+                onNavigateToAdoption = {
+                    appState.navController.navigate(Adoption)
+                },
+                onNavigateToComments = { noticeNo, userId ->
+                    appState.navController.navigate(Comments(noticeNo, userId))
+                }
+            )
         }
 
         composable<SignUp>(enterTransition = {
