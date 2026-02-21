@@ -184,3 +184,4 @@ release
 
 # End of https://www.toptal.com/developers/gitignore/api/android,androidstudio,firebase
 app/upload_certificate.pem
+.agents/
