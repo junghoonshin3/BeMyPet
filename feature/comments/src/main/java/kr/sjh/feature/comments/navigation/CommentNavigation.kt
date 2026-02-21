@@ -1,6 +1,8 @@
 package kr.sjh.feature.comments.navigation
 
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import kotlinx.serialization.Serializable
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportType
@@ -8,6 +10,9 @@ import kr.sjh.core.model.User
 
 @Serializable
 data class Comments(val noticeNo: String, val userId: String)
+
+@Serializable
+data class MyComments(val userId: String)
 
 enum class CommentAction {
     Edit,
@@ -24,7 +29,7 @@ sealed class CommentEvent {
     data class StartEditing(val comment: Comment) : CommentEvent()
     data class ShowDeleteDialog(val comment: Comment) : CommentEvent()
     data object DismissDeleteDialog : CommentEvent()
-    data object Delete : CommentEvent()
+    data class Delete(val commentId: String) : CommentEvent()
     data class Send(val comment: Comment) : CommentEvent()
     data class Edit(val comment: Comment) : CommentEvent()
     data class OnChangeText(val textField: TextFieldValue) : CommentEvent()
@@ -48,4 +53,8 @@ sealed class CommentSideEffect {
     data class NavigateToReport(val reportType: ReportType, val comment: Comment, val user: User) :
         CommentSideEffect()
 
+}
+
+fun NavController.navigateToMyComments(userId: String, navOptions: NavOptions? = null) {
+    navigate(MyComments(userId), navOptions)
 }
