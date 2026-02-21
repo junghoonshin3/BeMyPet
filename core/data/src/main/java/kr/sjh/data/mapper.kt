@@ -1,6 +1,9 @@
 package kr.sjh.data
 
 import PetItem
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kr.sjh.core.ktor.model.response.SigunguItem
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.database.entity.FavouriteEntity
@@ -84,14 +87,14 @@ fun Pet.toFavouriteEntity(): FavouriteEntity =
         desertionNo = desertionNo,
         happenDt = happenDate,
         happenPlace = happenPlace,
-        kindCd = kindCode,
+        kindCd = toFavouriteKindLabel(),
         colorCd = color,
         age = age,
         weight = weight,
         noticeNo = noticeNo,
         noticeSdt = noticeStartDate,
         noticeEdt = noticeEndDate,
-        popfile = thumbnailImageUrl.orEmpty(),
+        popfile = normalizedImageUrls().firstOrNull(),
         processState = processState,
         sexCd = sex,
         neuterYn = neutered,
@@ -102,7 +105,8 @@ fun Pet.toFavouriteEntity(): FavouriteEntity =
         orgNm = organizationName,
         chargeNm = careName,
         officetel = careTel,
-        noticeComment = ""
+        noticeComment = runCatching { Json.encodeToString(normalizedImageUrls()) }
+            .getOrDefault("")
     )
 
 /* =========================
@@ -121,8 +125,8 @@ fun FavouriteEntity.toPet(): Pet =
         upKindCode = null,
         upKindName = null,
         kindCode = kindCd,
-        kindName = null,
-        kindFullName = null,
+        kindName = kindCd.toKindLabel(),
+        kindFullName = kindCd.toKindLabel(),
 
         color = colorCd,
         age = age,
@@ -133,8 +137,8 @@ fun FavouriteEntity.toPet(): Pet =
         processState = processState,
         specialMark = specialMark,
 
-        thumbnailImageUrl = popfile,
-        imageUrls = listOfNotNull(popfile),
+        thumbnailImageUrl = restoredImageUrls().firstOrNull(),
+        imageUrls = restoredImageUrls(),
 
         careName = careNm,
         careTel = careTel,
@@ -142,3 +146,37 @@ fun FavouriteEntity.toPet(): Pet =
         organizationName = orgNm,
         updatedAt = null
     )
+
+private fun Pet.normalizedImageUrls(): List<String> =
+    imageUrls
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .distinct()
+        .ifEmpty {
+            listOfNotNull(thumbnailImageUrl?.trim()?.takeIf { it.isNotBlank() })
+        }
+
+private fun Pet.toFavouriteKindLabel(): String? =
+    listOf(kindFullName, kindName, kindCode)
+        .mapNotNull { it.toKindLabel() }
+        .firstOrNull()
+
+private fun String?.toKindLabel(): String? {
+    val value = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
+    if (value.startsWith("[") && value.contains("]")) {
+        return value.substringAfter("]").trim().ifBlank { value }
+    }
+    return value
+}
+
+private fun FavouriteEntity.restoredImageUrls(): List<String> {
+    val fromJson = runCatching { Json.decodeFromString<List<String>>(noticeComment.orEmpty()) }
+        .getOrDefault(emptyList())
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .distinct()
+
+    if (fromJson.isNotEmpty()) return fromJson
+
+    return listOfNotNull(popfile?.trim()?.takeIf { it.isNotBlank() })
+}

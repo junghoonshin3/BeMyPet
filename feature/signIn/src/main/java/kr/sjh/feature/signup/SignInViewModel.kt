@@ -53,8 +53,15 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
             _uiState.value =
                 _uiState.value.copy(isSignedIn = true, isLoading = false, errorMessage = "")
         }, { e ->
+            val safeMessage =
+                e.message?.takeIf { it.isNotBlank() }
+                    ?: "Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."
             _uiState.value =
-                _uiState.value.copy(isSignedIn = false, isLoading = false, errorMessage = e.message)
+                _uiState.value.copy(
+                    isSignedIn = false,
+                    isLoading = false,
+                    errorMessage = safeMessage
+                )
         })
     }
 }
