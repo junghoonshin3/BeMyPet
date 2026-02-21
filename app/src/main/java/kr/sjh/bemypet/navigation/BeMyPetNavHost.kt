@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -27,7 +29,10 @@ import kr.sjh.core.model.SessionState
 import kr.sjh.feature.adoption.navigation.Adoption
 import kr.sjh.feature.adoption.screen.AdoptionRoute
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
+import kr.sjh.feature.adoption_detail.navigation.CompareBoard
+import kr.sjh.feature.adoption_detail.navigation.navigateToCompareBoard
 import kr.sjh.feature.adoption_detail.navigation.navigateToPetDetail
+import kr.sjh.feature.adoption_detail.screen.CompareBoardRoute
 import kr.sjh.feature.adoption_detail.screen.PetDetailRoute
 import kr.sjh.feature.block.BlockRoute
 import kr.sjh.feature.comments.CommentRoute
@@ -73,7 +78,10 @@ fun BeMyPetNavHost(
                 .padding(bottom = bottomPadding)
                 .background(MaterialTheme.colorScheme.background),
                 navigateToPetDetail = { pet ->
-                    appState.navController.navigateToPetDetail(pet)
+                    appState.navController.navigateToPetDetail(
+                        pet = pet,
+                        fromFavourite = false
+                    )
                 })
         }
 
@@ -87,16 +95,32 @@ fun BeMyPetNavHost(
                 if (appState.navController.canGoBack()) {
                     appState.navController.popBackStack()
                 }
-            }, onNavigateToComments = { noticeNo, userId ->
+            }, session = session, onNavigateToComments = { noticeNo, userId ->
                 appState.navController.navigate(Comments(noticeNo, userId))
             }, onNavigateToSignUp = {
                 appState.navController.navigate(SignUp)
+            }, onNavigateToCompareBoard = {
+                appState.navController.navigateToCompareBoard()
             })
+        }
+
+        composable<CompareBoard> {
+            CompareBoardRoute(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                onBack = {
+                    appState.navController.popBackStack()
+                }
+            )
         }
 
         composable<Favourite> {
             FavouriteRoute(navigateToPetDetail = { pet ->
-                appState.navController.navigateToPetDetail(pet)
+                appState.navController.navigateToPetDetail(
+                    pet = pet,
+                    fromFavourite = true
+                )
             })
         }
         composable<Setting> {
@@ -139,14 +163,26 @@ fun BeMyPetNavHost(
                 })
         }
 
-        composable<SignUp>(enterTransition = {  // 아래에서 위로 올라오는 애니메이션
-            slideInVertically(initialOffsetY = { 1000 }, animationSpec = tween(700))
-        }, exitTransition = { // 뒤로 갈 때 아래로 내려가는 애니메이션
-            slideOutVertically(targetOffsetY = { -1000 }, animationSpec = tween(700))
+        composable<SignUp>(enterTransition = {
+            slideInVertically(
+                initialOffsetY = { it / 6 },
+                animationSpec = tween(260)
+            ) + fadeIn(animationSpec = tween(220))
+        }, exitTransition = {
+            slideOutVertically(
+                targetOffsetY = { -it / 12 },
+                animationSpec = tween(220)
+            ) + fadeOut(animationSpec = tween(180))
         }, popEnterTransition = {
-            slideInVertically(initialOffsetY = { -1000 }, animationSpec = tween(700))
+            slideInVertically(
+                initialOffsetY = { -it / 12 },
+                animationSpec = tween(240)
+            ) + fadeIn(animationSpec = tween(200))
         }, popExitTransition = {
-            slideOutVertically(targetOffsetY = { 1000 }, animationSpec = tween(700))
+            slideOutVertically(
+                targetOffsetY = { it / 6 },
+                animationSpec = tween(220)
+            ) + fadeOut(animationSpec = tween(180))
         }) {
             SignInRoute(modifier = Modifier
                 .fillMaxSize()

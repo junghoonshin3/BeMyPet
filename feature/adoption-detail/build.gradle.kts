@@ -14,4 +14,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.airbnb.lottie)
     implementation(libs.maps.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 }
