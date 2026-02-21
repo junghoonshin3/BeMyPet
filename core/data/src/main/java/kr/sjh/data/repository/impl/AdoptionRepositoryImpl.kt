@@ -14,7 +14,6 @@ import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
 import kr.sjh.data.toEntities
 import kr.sjh.data.toPets
-import kr.sjh.database.dao.FavouriteDao
 import kr.sjh.database.dao.LocationDao
 import kr.sjh.database.entity.SidoEntity
 import kr.sjh.database.entity.SigunguEntity

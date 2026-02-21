@@ -73,7 +73,6 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
             }
 
             is FilterEvent.ConfirmLocation -> {
-                //TODO 동물 입양 fetch 필요
                 confirmLocation(event.sido, event.sigungu)
                 hideBottomSheet()
             }

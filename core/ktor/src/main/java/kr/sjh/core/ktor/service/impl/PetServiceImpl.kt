@@ -1,7 +1,6 @@
 package kr.sjh.core.ktor.service.impl
 
 import PetItem
-import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -14,7 +13,6 @@ import kr.sjh.core.ktor.service.PetService
 import javax.inject.Inject
 
 class PetServiceImpl @Inject constructor(private val client: HttpClient) : PetService {
-
     override suspend fun getSigungu(sigunguRequest: SigunguRequest): BaseResponse<SigunguItem> {
         val res = client.get("sigungu_v2?") {
             parameter("serviceKey", sigunguRequest.serviceKey)
@@ -28,6 +26,8 @@ class PetServiceImpl @Inject constructor(private val client: HttpClient) : PetSe
         val res = client.get("abandonmentPublic_v2?") {
             parameter("bgnde", petReq.bgnde)
             parameter("endde", petReq.endde)
+            parameter("noticeNo", petReq.noticeNo?.ifBlank { null })
+            parameter("desertionNo", petReq.desertionNo?.ifBlank { null })
             parameter("upkind", petReq.upkind?.ifBlank { null })
             parameter("upr_cd", petReq.upr_cd?.ifBlank { null })
             parameter("org_cd", petReq.org_cd?.ifBlank { null })

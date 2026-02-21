@@ -1,12 +1,9 @@
 package kr.sjh.core.designsystem.components
 
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,7 +16,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kr.sjh.core.designsystem.theme.DefaultAppBarHeight
+import kotlin.math.max
 
 @Composable
 fun PinchZoomComponent(
@@ -27,71 +24,72 @@ fun PinchZoomComponent(
     imageRequest: ImageRequest,
     onTap: () -> Unit
 ) {
-    // 확대 축소 비율
-    var scale by remember {
-        mutableStateOf(1f)
-    }
-
-    // 현재 이미지 위치
-    var offset by remember {
-        mutableStateOf(Offset.Zero)
-    }
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
 
     BoxWithConstraints(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        val state = rememberTransformableState { zoomChange, panChange, _ ->
-            // 이미지의 확대/축소 비율을 나타냅니다.
-            scale = (scale * zoomChange).coerceIn(1f, 5f)
-
-            // 이미지 확대/축소 했을때 확대한 너비를 제외한 나머지 너비
-            val extraWidth = (scale - 1) * constraints.maxWidth
-
-            // 이미지 확대/축소 했을때  확대한 높이 제외한 나머지 높이
-            val extraHeight = (scale - 1) * constraints.maxHeight
-
-            // 이동 할 수 있는 최대 너비
-            val maxX = extraWidth / 2
-
-            // 이동 할 수 있는 최대 높이
-            val maxY = extraHeight / 2
-
-            // panChange은 이동량을 Offset 객체로 알려준다.
-            // 현재 Offset + 이동 Offset을 하면 이미지가 이동한다.
-            // But, 실제 이동량은 Scale을 곱한 만큼 이동하므로 반드시 곱해줘야한다. (하지않으면 느리게 이동)
-            offset = Offset(
-                x = (offset.x + scale * panChange.x).coerceIn(-maxX, maxX),
-                y = (offset.y + scale * panChange.y).coerceIn(-maxY, maxY)
+        fun clampOffset(current: Offset, currentScale: Float): Offset {
+            val extraWidth = (currentScale - 1f) * constraints.maxWidth
+            val extraHeight = (currentScale - 1f) * constraints.maxHeight
+            val maxX = max(0f, extraWidth / 2f)
+            val maxY = max(0f, extraHeight / 2f)
+            return Offset(
+                x = current.x.coerceIn(-maxX, maxX),
+                y = current.y.coerceIn(-maxY, maxY)
             )
         }
-        AsyncImage(modifier = Modifier
-            .aspectRatio(constraints.maxWidth.toFloat() / constraints.maxHeight.toFloat())
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            }
-            .pointerInput(Unit) {
-                // 더블 탭 시 원본 이미지 or 2배 확대
-                detectTapGestures(onDoubleTap = {
-                    scale = if (scale == 1f) {
-                        //확대 2배
-                        2f
-                    } else {
-                        //원본
-                        1f
+
+        AsyncImage(
+            modifier = Modifier
+                .aspectRatio(constraints.maxWidth.toFloat() / constraints.maxHeight.toFloat())
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = { tapOffset ->
+                            if (scale == 1f) {
+                                val targetScale = 2f
+                                val center = Offset(size.width / 2f, size.height / 2f)
+                                scale = targetScale
+                                offset = clampOffset(
+                                    current = (center - tapOffset) * (targetScale - 1f),
+                                    currentScale = scale
+                                )
+                            } else {
+                                scale = 1f
+                                offset = Offset.Zero
+                            }
+                        },
+                        onTap = { onTap() }
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTransformGestures { centroid, pan, zoom, _ ->
+                        val oldScale = scale
+                        val newScale = (oldScale * zoom).coerceIn(1f, 5f)
+                        val scaleFactor = newScale / oldScale
+                        val contentCenter = Offset(size.width / 2f, size.height / 2f)
+
+                        val moved = offset + pan
+                        val pinchFocusedOffset =
+                            moved + (centroid - contentCenter) * (1f - scaleFactor)
+
+                        scale = newScale
+                        offset = clampOffset(
+                            current = pinchFocusedOffset,
+                            currentScale = scale
+                        )
                     }
-                    offset = if (scale == 1f) {
-                        Offset.Zero
-                    } else offset
-                }, onTap = {
-                    onTap()
-                })
-            }
-            .transformable(state),
+                },
             model = imageRequest,
-            contentDescription = "pinchZoomImage")
+            contentDescription = "pinchZoomImage"
+        )
     }
 }

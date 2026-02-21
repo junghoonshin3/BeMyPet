@@ -4,12 +4,12 @@
     <style name="Theme.BeMyPet" parent="android:Theme.Material.Light.NoActionBar"/>
 
     <style name="Theme.Splash.BeMyPet" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#e5e2d8</item>
+        <item name="windowSplashScreenBackground">#EAF2FF</item>
         <item name="windowSplashScreenAnimatedIcon">
             @mipmap/ic_launcher
         </item>
         <item name="windowSplashScreenIconBackgroundColor">
-            @color/beige
+            #EAF2FF
         </item>
         <item name="postSplashScreenTheme" tools:targetApi="S">@style/Theme.BeMyPet</item>
     </style>

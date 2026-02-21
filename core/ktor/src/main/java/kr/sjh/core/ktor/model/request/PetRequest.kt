@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 data class PetRequest(
     val bgnde: String? = null, // 유기 시작일 (YYYYMMDD)
     val endde: String? = null, // 유기 종료일 (YYYYMMDD)
+    val noticeNo: String? = null, // 공고 번호 (optional)
+    val desertionNo: String? = null, // 구조 번호 (optional)
     val upkind: String? = null, // 축종 코드 (optional)
     val kind: String? = null, // 품종 코드 (optional)
     val upr_cd: String? = null, // 시도 코드 (optional)

@@ -57,14 +57,14 @@ fun BeMyPetBottomNavigation(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCorner24,
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
-                shadowElevation = 4.dp
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+                shadowElevation = 2.dp
             ) {
                 NavigationBar(
                     modifier = Modifier.fillMaxWidth(),
@@ -115,8 +115,8 @@ fun RowScope.BeMyPetNavigationBarItem(
         label = label,
         colors = NavigationBarItemDefaults.colors(
             indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-            selectedIconColor = MaterialTheme.colorScheme.onSurface,
-            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+            selectedIconColor = MaterialTheme.colorScheme.secondary,
+            selectedTextColor = MaterialTheme.colorScheme.secondary,
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
