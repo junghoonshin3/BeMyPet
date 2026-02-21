@@ -16,7 +16,8 @@ import kotlin.reflect.typeOf
 
 @Serializable
 data class PetDetail(
-    val pet: Pet
+    val pet: Pet,
+    val fromFavourite: Boolean = false
 ) : Screen {
     companion object {
         val typeMap = mapOf(
@@ -24,6 +25,9 @@ data class PetDetail(
         )
     }
 }
+
+@Serializable
+data object CompareBoard : Screen
 
 val PetType = object : NavType<Pet>(isNullableAllowed = false) {
     override fun get(bundle: Bundle, key: String): Pet? {
@@ -52,6 +56,14 @@ val PetType = object : NavType<Pet>(isNullableAllowed = false) {
     }
 }
 
-fun NavController.navigateToPetDetail(pet: Pet, navOptions: NavOptions? = null) {
-    navigate(PetDetail(pet), navOptions)
+fun NavController.navigateToPetDetail(
+    pet: Pet,
+    fromFavourite: Boolean = false,
+    navOptions: NavOptions? = null
+) {
+    navigate(PetDetail(pet = pet, fromFavourite = fromFavourite), navOptions)
+}
+
+fun NavController.navigateToCompareBoard(navOptions: NavOptions? = null) {
+    navigate(CompareBoard, navOptions)
 }
