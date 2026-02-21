@@ -13,6 +13,7 @@ import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.ktor.client.engine.cio.CIO
 import kr.sjh.core.supabase.BuildConfig
 import javax.inject.Singleton
 
@@ -26,6 +27,7 @@ object SupabaseModule {
         return createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL, supabaseKey = BuildConfig.SUPABASE_ANON_KEY
         ) {
+            httpEngine = CIO.create()
             install(Postgrest)
             install(Auth) {
                 flowType = FlowType.PKCE

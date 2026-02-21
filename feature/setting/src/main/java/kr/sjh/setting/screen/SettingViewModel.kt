@@ -3,6 +3,7 @@ package kr.sjh.setting.screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,9 +23,12 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
 
     private val _profileUiState = MutableStateFlow(ProfileUiState())
     val profileUiState = _profileUiState.asStateFlow()
+    private var lastLoadedUserId: String? = null
+    private var loadProfileJob: Job? = null
 
     fun signOut() {
         viewModelScope.launch {
+            clearProfileCache()
             authRepository.signOut()
         }
     }
@@ -35,12 +39,28 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
         }
     }
 
-    fun loadProfile(userId: String) {
-        viewModelScope.launch {
+    fun loadProfile(userId: String, force: Boolean = false) {
+        if (userId.isBlank()) return
+
+        if (!force) {
+            val hasCachedProfile = _profileUiState.value.profile != null
+            if (lastLoadedUserId == userId && hasCachedProfile) return
+            if (loadProfileJob?.isActive == true) return
+        }
+
+        loadProfileJob?.cancel()
+        loadProfileJob = viewModelScope.launch {
             _profileUiState.update { it.copy(loading = true) }
-            val profile = authRepository.getProfile(userId)
+            runCatching { authRepository.getProfile(userId) }
+                .onSuccess { profile ->
+                    lastLoadedUserId = userId
+                    _profileUiState.update { it.copy(profile = profile) }
+                }
+                .onFailure {
+                    // Keep previous profile on transient failure to avoid UI flicker.
+                }
             _profileUiState.update {
-                it.copy(loading = false, profile = profile)
+                it.copy(loading = false)
             }
         }
     }
@@ -58,12 +78,19 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
                 displayName = displayName,
                 avatarUrl = avatarUrl,
                 onSuccess = {
-                    loadProfile(userId)
+                    loadProfile(userId = userId, force = true)
                     onSuccess()
                 },
                 onFailure = onFailure
             )
         }
+    }
+
+    private fun clearProfileCache() {
+        lastLoadedUserId = null
+        loadProfileJob?.cancel()
+        loadProfileJob = null
+        _profileUiState.value = ProfileUiState()
     }
 
 }

@@ -16,16 +16,25 @@ plugins {
     id("kotlin-parcelize")
 }
 
-// properties 파일 로드
-val secretsProps = Properties().apply {
-    load(FileInputStream(rootProject.file("secrets.properties")))
+fun loadSecrets(fileName: String): Properties = Properties().apply {
+    val file = rootProject.file(fileName)
+    check(file.exists()) { "Missing secrets file: $fileName" }
+    file.inputStream().use { load(it) }
 }
+
+fun Properties.requireKey(name: String): String =
+    getProperty(name)
+        ?.trim()
+        ?.trim('"')
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("Missing key '$name'")
+
+val devSecrets = loadSecrets("secrets.dev.properties")
+val prodSecrets = loadSecrets("secrets.prod.properties")
 
 val versionProps = Properties().apply {
     load(FileInputStream(rootProject.file("version.properties")))
 }
-
-val appName = "BeMyPet"
 
 android {
     namespace = "kr.sjh.bemypet"
@@ -62,11 +71,6 @@ android {
             dimension = "env"
             // suffix 없음 → 스토어용
             manifestPlaceholders["APP_NAME"] = "@string/app_name"
-            buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"https://api.bemypet.com\""
-            )
         }
     }
 
@@ -78,15 +82,14 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        manifestPlaceholders["MAPS_API_KEY"] = secretsProps["MAPS_API_KEY"].toString()
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file(secretsProps["STORE_FILE"].toString())
-            keyAlias = secretsProps["KEY_ALIAS"].toString()
-            keyPassword = secretsProps["KEY_PASSWORD"].toString()
-            storePassword = secretsProps["STORE_PASSWORD"].toString()
+            storeFile = file(prodSecrets.requireKey("STORE_FILE"))
+            keyAlias = prodSecrets.requireKey("KEY_ALIAS")
+            keyPassword = prodSecrets.requireKey("KEY_PASSWORD")
+            storePassword = prodSecrets.requireKey("STORE_PASSWORD")
         }
     }
 
@@ -94,7 +97,8 @@ android {
         debug {
 
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
-            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
+            manifestPlaceholders["MAPS_API_KEY"] = devSecrets.requireKey("MAPS_API_KEY")
+            manifestPlaceholders["AD_ID"] = devSecrets.requireKey("AD_ID")
         }
 
         release {
@@ -106,7 +110,8 @@ android {
             signingConfig = signingConfigs.getByName("release")
 
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
-            manifestPlaceholders["AD_ID"] = secretsProps["AD_ID"].toString()
+            manifestPlaceholders["MAPS_API_KEY"] = prodSecrets.requireKey("MAPS_API_KEY")
+            manifestPlaceholders["AD_ID"] = prodSecrets.requireKey("AD_ID")
         }
     }
 
@@ -131,6 +136,15 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().all()) { variant ->
+        val env = variant.productFlavors.firstOrNull { it.first == "env" }?.second
+        variant.enable =
+            (env == "dev" && variant.buildType == "debug") ||
+                (env == "prod" && variant.buildType == "release")
     }
 }
 

@@ -9,6 +9,10 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 secrets.properties
+secrets.dev.properties
+secrets.prod.properties
+!secrets.dev.properties.example
+!secrets.prod.properties.example
 version.properties
 *.keystore
 *.jks
