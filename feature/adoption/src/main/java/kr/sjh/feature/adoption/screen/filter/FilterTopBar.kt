@@ -1,7 +1,6 @@
 package kr.sjh.feature.adoption.screen.filter
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +27,6 @@ fun FilterTopBar(title: String, close: () -> Unit, confirm: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
     ) {
         Box(
             modifier = Modifier
@@ -75,12 +73,5 @@ fun FilterTopBar(title: String, close: () -> Unit, confirm: () -> Unit) {
                 )
             }
         }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-        )
     }
 }

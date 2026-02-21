@@ -1,6 +1,7 @@
 package kr.sjh.feature.signup
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,10 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,29 +31,30 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.theme.RoundedCorner18
+import kr.sjh.core.designsystem.components.PrimaryActionButton
+import kr.sjh.core.designsystem.theme.RoundedCorner16
 
 private data class OnboardingPage(
-    @DrawableRes val iconRes: Int,
+    @DrawableRes val imageRes: Int,
     val title: String,
     val description: String,
 )
 
-private val OnboardingPages = listOf(
+private val onboardingPages = listOf(
     OnboardingPage(
-        iconRes = R.drawable.baseline_pets_24,
-        title = "빠른 입양 탐색",
-        description = "필터로 지역과 조건을 빠르게 좁혀 관심 있는 공고를 먼저 확인해요."
+        imageRes = R.drawable.fg_ic_image_placeholder,
+        title = "몇 분 만에 입양 탐색을 시작해요",
+        description = "필터와 카드 목록으로 필요한 조건을 빠르게 좁혀보세요."
     ),
     OnboardingPage(
-        iconRes = R.drawable.like,
-        title = "관심 친구 저장",
-        description = "나중에 다시 보고 싶은 친구는 저장해두고 변화 상태를 쉽게 추적해요."
+        imageRes = R.drawable.fg_ic_star_filled,
+        title = "마음에 드는 친구를 저장해요",
+        description = "관심 목록에 담고 상태 변화를 다시 확인할 수 있어요."
     ),
     OnboardingPage(
-        iconRes = R.drawable.setting_5_svgrepo_com,
-        title = "안전한 커뮤니티",
-        description = "댓글/신고/차단 기능으로 믿고 사용할 수 있는 커뮤니티를 함께 만들어요."
+        imageRes = R.drawable.baseline_pets_24,
+        title = "신뢰할 수 있는 커뮤니티를 만들어요",
+        description = "댓글과 신고, 차단 기능으로 안전한 환경을 함께 유지해요."
     )
 )
 
@@ -68,13 +66,13 @@ fun OnboardingRoute(
     onSkip: () -> Unit,
 ) {
     var pageIndex by remember { mutableIntStateOf(0) }
-    val page = OnboardingPages[pageIndex]
+    val page = onboardingPages[pageIndex]
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
@@ -103,100 +101,94 @@ fun OnboardingRoute(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.Center
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCorner18,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCorner16),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                        .size(88.dp)
+                        .background(MaterialTheme.colorScheme.surface, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(page.iconRes),
-                            contentDescription = page.title,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-
-                    Text(
-                        text = page.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = page.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                    Image(
+                        imageVector = ImageVector.vectorResource(id = page.imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface, RoundedCorner16)
+                    .padding(horizontal = 18.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                OnboardingPages.forEachIndexed { index, _ ->
-                    Box(
-                        modifier = Modifier
-                            .size(if (index == pageIndex) 10.dp else 8.dp)
-                            .background(
-                                color = if (index == pageIndex) {
-                                    MaterialTheme.colorScheme.secondary
-                                } else {
-                                    MaterialTheme.colorScheme.outline
-                                },
-                                shape = CircleShape
-                            )
-                    )
-                }
+                DotsIndicator(currentPage = pageIndex, pageCount = onboardingPages.size)
+
+                Text(
+                    text = page.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = page.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Start
+                )
             }
         }
 
-        Button(
+        PrimaryActionButton(
+            text = if (pageIndex == onboardingPages.lastIndex) "시작하기" else "다음",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
             onClick = {
-                if (pageIndex == OnboardingPages.lastIndex) {
+                if (pageIndex == onboardingPages.lastIndex) {
                     onComplete()
                 } else {
                     pageIndex += 1
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
-            )
-        ) {
-            Text(
-                text = if (pageIndex == OnboardingPages.lastIndex) "시작하기" else "다음",
-                style = MaterialTheme.typography.titleMedium
+            }
+        )
+    }
+}
+
+@Composable
+private fun DotsIndicator(currentPage: Int, pageCount: Int) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(pageCount) { index ->
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(
+                        color = if (index == currentPage) {
+                            MaterialTheme.colorScheme.secondary
+                        } else {
+                            MaterialTheme.colorScheme.outline
+                        },
+                        shape = CircleShape
+                    )
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "${currentPage + 1}/$pageCount",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

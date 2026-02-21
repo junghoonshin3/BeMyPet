@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -17,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kr.sjh.bemypet.navigation.BeMyPetBottomNavigation
 import kr.sjh.bemypet.navigation.BeMyPetNavHost
+import kr.sjh.core.designsystem.components.BeMyPetSnackbar
 
 @Composable
 fun BeMyPetApp(
@@ -41,13 +41,22 @@ fun BeMyPetApp(
         initialValue = false
     )
 
-    Scaffold(modifier = modifier, snackbarHost = {
-        SnackbarHost(hostState = appState.snackBarHostState,
-            modifier = Modifier.padding(4.dp),
-            snackbar = { snackBarData ->
-                Snackbar(snackBarData)
-            })
-    }, bottomBar = {
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = {
+            SnackbarHost(
+                hostState = appState.snackBarHostState,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                snackbar = { snackBarData ->
+                    BeMyPetSnackbar(
+                        snackbarData = snackBarData,
+                    )
+                }
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        bottomBar = {
         BeMyPetBottomNavigation(
             modifier = Modifier.fillMaxWidth(),
             destinations = appState.bottomNavItems,

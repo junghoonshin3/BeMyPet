@@ -8,4 +8,5 @@ interface FavouriteRepository {
     suspend fun addPet(pet: Pet)
     suspend fun removePet(desertionNo: String)
     fun getFavouritePets(): Flow<List<Pet>>
+    suspend fun backfillFavouriteImagesIfNeeded()
 }

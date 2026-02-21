@@ -1,6 +1,12 @@
 package kr.sjh.feature.adoption.screen
 
 import FilterComponent
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +22,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
@@ -31,19 +40,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,13 +75,13 @@ import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.EndlessLazyGridColumn
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.RefreshIndicator
-import kr.sjh.core.designsystem.modifier.clickableNoRipple
 import kr.sjh.core.designsystem.theme.ExpandedAppBarHeight
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
 import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.designsystem.theme.RoundedCornerTop24
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.core.model.adoption.displayBreedName
 import kr.sjh.feature.adoption.screen.filter.FilterCategoryList
 import kr.sjh.feature.adoption.screen.filter.FilterViewModel
 import kr.sjh.feature.adoption.state.AdoptionEvent
@@ -151,6 +164,12 @@ private fun AdoptionScreen(
     val appBarHeight = ExpandedAppBarHeight
     val scrollableHeightPx = with(density) { AppBarScrollableHeight.roundToPx().toFloat() }
     var appbarOffsetHeightPx by rememberSaveable { mutableFloatStateOf(0f) }
+    var measuredAppBarHeightPx by remember { mutableIntStateOf(0) }
+    val effectiveAppBarHeight = if (measuredAppBarHeightPx > 0) {
+        with(density) { measuredAppBarHeightPx.toDp() }
+    } else {
+        appBarHeight
+    }
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -169,6 +188,12 @@ private fun AdoptionScreen(
 
     val state = rememberPullToRefreshState()
     val coroutineScope = rememberCoroutineScope()
+    val listContentPadding = PaddingValues(
+        top = effectiveAppBarHeight + 12.dp,
+        bottom = 20.dp,
+        start = 16.dp,
+        end = 16.dp
+    )
 
     Box(
         modifier = modifier.then(Modifier.nestedScroll(nestedScrollConnection))
@@ -185,69 +210,66 @@ private fun AdoptionScreen(
                 RefreshIndicator(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = appBarHeight - 24.dp)
+                        .padding(top = effectiveAppBarHeight + 8.dp)
                         .size(50.dp),
                     state = state,
                     isRefreshing = adoptionUiState.isRefreshing
                 )
             }
         ) {
-            if (!adoptionUiState.isRefreshing && adoptionUiState.pets.isEmpty()) {
-                EmptyAdoptionState(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 28.dp)
-                )
-            }
-            EndlessLazyGridColumn(
-                modifier = Modifier.fillMaxSize(),
-                gridState = gridState,
-                userScrollEnabled = !adoptionUiState.isRefreshing,
-                items = adoptionUiState.pets,
-                isLoadMore = adoptionUiState.isMore,
-                contentPadding = PaddingValues(
-                    top = appBarHeight + 12.dp,
-                    bottom = 16.dp,
-                    start = 12.dp,
-                    end = 12.dp
-                ),
-                itemKey = { item -> "${item.desertionNo}" },
-                loadMore = {
-                    if (!adoptionUiState.isMore && !adoptionUiState.isRefreshing) {
-                        onEvent(
-                            AdoptionEvent.LoadMore(
-                                filterUiState.toPetRequest()
-                            )
+            when {
+                adoptionUiState.isRefreshing -> {
+                    FilterTransitionSkeletonGrid(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = listContentPadding
+                    )
+                }
+
+                adoptionUiState.pets.isEmpty() -> {
+                    EmptyAdoptionState(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(horizontal = 28.dp)
+                    )
+                }
+
+                else -> {
+                    EndlessLazyGridColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        gridState = gridState,
+                        userScrollEnabled = true,
+                        items = adoptionUiState.pets,
+                        isLoadMore = adoptionUiState.isMore,
+                        loadMoreBottomSpacer = 96.dp,
+                        contentPadding = listContentPadding,
+                        itemKey = { item -> "${item.desertionNo}" },
+                        loadMore = {
+                            if (!adoptionUiState.isMore && !adoptionUiState.isRefreshing) {
+                                onEvent(
+                                    AdoptionEvent.LoadMore(
+                                        filterUiState.toPetRequest()
+                                    )
+                                )
+                            }
+                        },
+                    ) { item ->
+                        PetCard(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(enabled = !adoptionUiState.isRefreshing) {
+                                    navigateToPetDetail(item)
+                                },
+                            pet = item
                         )
                     }
-                },
-            ) { item ->
-                PetCard(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(enabled = !adoptionUiState.isRefreshing) {
-                            navigateToPetDetail(item)
-                        },
-                    pet = item
-                )
-            }
-            if (adoptionUiState.isRefreshing && adoptionUiState.pets.isNotEmpty()) {
-                FilterTransitionSkeletonOverlay(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            top = appBarHeight + 12.dp,
-                            bottom = 16.dp,
-                            start = 12.dp,
-                            end = 12.dp
-                        )
-                )
+                }
             }
         }
 
         BeMyPetTopAppBar(
             modifier = Modifier
                 .fillMaxWidth()
+                .onSizeChanged { measuredAppBarHeightPx = it.height }
                 .offset {
                     IntOffset(
                         x = 0,
@@ -256,7 +278,6 @@ private fun AdoptionScreen(
                             .roundToInt()
                     )
                 }
-                .shadow(4.dp, RoundedCornerBottom24)
                 .background(
                     MaterialTheme.colorScheme.primary,
                     RoundedCornerBottom24
@@ -270,7 +291,7 @@ private fun AdoptionScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "동네 보호소 소식",
+                        text = "입양 탐색",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -280,7 +301,7 @@ private fun AdoptionScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = "필터로 조건을 빠르게 좁혀보세요",
+                        text = "조건을 선택해 빠르게 탐색해보세요",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -334,66 +355,87 @@ private fun AdoptionScreen(
 }
 
 @Composable
-private fun FilterTransitionSkeletonOverlay(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f), RoundedCorner18)
-            .clip(RoundedCorner18)
-            .clickableNoRipple {}
-            .padding(12.dp)
+private fun FilterTransitionSkeletonGrid(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
+) {
+    LazyVerticalGrid(
+        modifier = modifier,
+        columns = GridCells.Fixed(2),
+        userScrollEnabled = false,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(3) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterSkeletonCard(modifier = Modifier.weight(1f))
-                    FilterSkeletonCard(modifier = Modifier.weight(1f))
-                }
-            }
+        items(8) {
+            FilterSkeletonCard(modifier = Modifier.fillMaxWidth())
         }
     }
 }
 
 @Composable
+private fun rememberSkeletonShimmerBrush(): Brush {
+    val transition = rememberInfiniteTransition(label = "skeleton_shimmer")
+    val translate by transition.animateFloat(
+        initialValue = -400f,
+        targetValue = 1200f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1100, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "skeleton_shimmer_translate"
+    )
+
+    val base = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f)
+    val highlight = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
+    return Brush.linearGradient(
+        colors = listOf(base, highlight, base),
+        start = Offset(translate - 260f, translate - 260f),
+        end = Offset(translate, translate)
+    )
+}
+
+@Composable
 private fun FilterSkeletonCard(modifier: Modifier = Modifier) {
+    val shimmerBrush = rememberSkeletonShimmerBrush()
     Card(
         modifier = modifier,
         shape = RoundedCorner18,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(130.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                    .alpha(0.95f)
+                    .background(shimmerBrush, RoundedCornerShape(12.dp))
             )
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.72f)
                     .height(16.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                    .background(shimmerBrush, RoundedCorner12)
             )
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.88f)
                     .height(14.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                    .background(shimmerBrush, RoundedCorner12)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(18.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                        .background(shimmerBrush, RoundedCorner12)
                 )
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(18.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+                        .background(shimmerBrush, RoundedCorner12)
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -409,7 +451,7 @@ private fun EmptyAdoptionState(modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -438,14 +480,14 @@ private fun PetCard(modifier: Modifier = Modifier, pet: Pet) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(168.dp)
                     .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
             ) {
                 SubcomposeAsyncImage(
@@ -470,10 +512,10 @@ private fun PetCard(modifier: Modifier = Modifier, pet: Pet) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = pet.kindName?.ifBlank { "품종 정보 없음" } ?: "품종 정보 없음",
+                    text = pet.displayBreedName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(

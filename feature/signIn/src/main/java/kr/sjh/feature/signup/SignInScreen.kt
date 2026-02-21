@@ -1,5 +1,10 @@
 package kr.sjh.feature.signup
 
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,25 +14,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,14 +41,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -56,14 +57,10 @@ import kr.sjh.core.common.credential.AccountManager
 import kr.sjh.core.common.credential.SignInResult
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.LoadingComponent
+import kr.sjh.core.designsystem.components.BeMyPetDialogActionButton
+import kr.sjh.core.designsystem.components.BeMyPetDialogActionStyle
+import kr.sjh.core.designsystem.components.BeMyPetDialogContainer
 import kr.sjh.core.designsystem.theme.RoundedCorner12
-import kr.sjh.core.designsystem.theme.RoundedCorner18
-
-private enum class SignInTab {
-    GOOGLE,
-    EMAIL,
-}
 
 @Composable
 fun SignInRoute(
@@ -108,266 +105,339 @@ private fun SignInScreen(
     accountManager: AccountManager,
     onBack: () -> Unit
 ) {
-    val googleLoginImage = ImageVector.vectorResource(R.drawable.android_light_rd_ctn)
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var showNoCredentialsDialog by remember { mutableStateOf(false) }
 
-    var selectedTab by remember { mutableStateOf(SignInTab.GOOGLE) }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val tryGoogleSignIn: () -> Unit = {
+        coroutineScope.launch {
+            fun handleSuccess(result: SignInResult.Success) {
+                onSignIn(SignUpModel(result.idToken, result.nonce, "google"))
+            }
 
+            when (val result = accountManager.signIn()) {
+                SignInResult.Cancelled -> {
+                    SnackBarManager.showMessage("로그인이 취소되었어요. 다시 시도해 주세요.")
+                }
+
+                is SignInResult.Failure -> {
+                    Log.w(SIGN_IN_TAG, "Google sign-in failed.", result.e)
+                    SnackBarManager.showMessage(mapGoogleFailureMessage(result.e))
+                }
+
+                is SignInResult.Success -> {
+                    handleSuccess(result)
+                }
+
+                SignInResult.NoCredentials -> {
+                    showNoCredentialsDialog = true
+                }
+            }
+        }
+    }
+
+    if (showNoCredentialsDialog) {
+        NoCredentialsDialog(
+            onRetry = tryGoogleSignIn,
+            onOpenSettings = {
+                showNoCredentialsDialog = false
+                openGoogleSettings(context)
+            },
+            onDismiss = { showNoCredentialsDialog = false }
+        )
+    }
+
+    BackHandler(onBack = onBack)
+
+    SignInReferenceLayout(
+        modifier = modifier,
+        uiState = uiState,
+        onGoogleSignInClick = tryGoogleSignIn,
+        onKakaoClick = {
+            SnackBarManager.showMessage("카카오 로그인은 준비 중이에요.")
+        }
+    )
+}
+
+@Composable
+private fun SignInReferenceLayout(
+    modifier: Modifier = Modifier,
+    uiState: SignInUiState,
+    onGoogleSignInClick: () -> Unit,
+    onKakaoClick: () -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .imePadding()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "닫기",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.size(48.dp))
-        }
+        SignInHeroSection(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.42f)
+        )
+        SignInFormSection(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.58f),
+            uiState = uiState,
+            onGoogleSignInClick = onGoogleSignInClick,
+            onKakaoClick = onKakaoClick
+        )
+    }
+}
 
-        Spacer(modifier = Modifier.height(12.dp))
+@Composable
+private fun SignInHeroSection(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.size(140.dp)
+        )
+    }
+}
 
+@Composable
+private fun SignInFormSection(
+    modifier: Modifier = Modifier,
+    uiState: SignInUiState,
+    onGoogleSignInClick: () -> Unit,
+    onKakaoClick: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = "로그인",
+            text = "반가워요!",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center
+            color = MaterialTheme.colorScheme.onSurface
         )
-
-        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = "따뜻한 입양 커뮤니티를 시작해보세요",
+            text = "소셜 계정으로 빠르게 시작해요.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        TabRow(
-            selectedTabIndex = selectedTab.ordinal,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SignInTab.entries.forEachIndexed { index, tab ->
-                Tab(
-                    selected = selectedTab.ordinal == index,
-                    onClick = { selectedTab = tab },
-                    text = {
-                        Text(
-                            text = if (tab == SignInTab.GOOGLE) "Google" else "Email",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                )
-            }
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
+            Text(
+                text = "소셜 로그인",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        SocialLoginButtons(
+            uiState = uiState,
+            onGoogleSignInClick = onGoogleSignInClick,
+            onKakaoClick = onKakaoClick
+        )
+    }
+}
 
-        when (selectedTab) {
-            SignInTab.GOOGLE -> {
+@Composable
+private fun SocialLoginButtons(
+    uiState: SignInUiState,
+    onGoogleSignInClick: () -> Unit,
+    onKakaoClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Button(
+            onClick = onGoogleSignInClick,
+            enabled = !uiState.isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCorner12,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(76.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = RoundedCornerShape(38.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                modifier = Modifier.size(34.dp),
-                                imageVector = ImageVector.vectorResource(
-                                    R.drawable.animal_carnivore_cartoon_3_svgrepo_com
-                                ),
-                                contentDescription = "logo"
-                            )
-                        }
-
-                        Text(
-                            text = "간편 로그인으로 빠르게 시작",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "기존 Google 계정으로 안전하게 로그인할 수 있어요.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (uiState.isLoading) {
-                        LoadingComponent()
-                    } else {
-                        SocialLoginButton(
-                            modifier = Modifier
-                                .width(300.dp)
-                                .height(60.dp),
-                            imageVector = googleLoginImage,
-                            onClick = {
-                                coroutineScope.launch {
-                                    when (val result = accountManager.signIn(false)) {
-                                        SignInResult.Cancelled -> Unit
-                                        is SignInResult.Failure -> {
-                                            SnackBarManager.showMessage(
-                                                result.e.message ?: "Google 로그인에 실패했어요."
-                                            )
-                                        }
-
-                                        SignInResult.NoCredentials -> {
-                                            accountManager.signIn(false)
-                                        }
-
-                                        is SignInResult.Success -> {
-                                            onSignIn(
-                                                SignUpModel(
-                                                    result.idToken,
-                                                    result.nonce,
-                                                    "google"
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        )
-                    }
+                    Text(
+                        text = "G",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
                 }
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Google로 계속하기",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
+        }
 
-            SignInTab.EMAIL -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .clip(RoundedCorner18)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f),
-                            shape = RoundedCorner18
-                        )
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Email 로그인",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+        Button(
+            onClick = onKakaoClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCorner12),
+            shape = RoundedCorner12,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.kakaotalk_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = Color.Unspecified
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "카카오로 계속하기",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("이메일") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("비밀번호") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        visualTransformation = PasswordVisualTransformation()
-                    )
-
-                    Text(
-                        text = "Email/Password 로그인은 곧 지원될 예정이에요.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Button(
-                        enabled = false,
-                        onClick = {
-                            onSignIn(SignUpModel("", "", "email"))
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCorner12,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = "준비중",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+        if (uiState.isLoading) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Google 로그인 중...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SocialLoginButton(
-    modifier: Modifier = Modifier,
-    imageVector: ImageVector,
-    onClick: () -> Unit,
+private fun NoCredentialsDialog(
+    onRetry: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Box(modifier = modifier.clickable(onClick = onClick)) {
-        Image(
-            imageVector = imageVector,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(10.dp)),
-            contentDescription = "",
-        )
+    BeMyPetDialogContainer(
+        onDismissRequest = onDismiss,
+        title = "Google 로그인 정보를 불러오지 못했어요",
+        message = "다시 시도하거나 설정에서 Google 계정 동기화를 확인해 주세요.",
+        actions = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                BeMyPetDialogActionButton(
+                    text = "다시 시도",
+                    onClick = onRetry,
+                    modifier = Modifier.weight(1f),
+                    style = BeMyPetDialogActionStyle.Primary
+                )
+                BeMyPetDialogActionButton(
+                    text = "설정 열기",
+                    onClick = onOpenSettings,
+                    modifier = Modifier.weight(1f),
+                    style = BeMyPetDialogActionStyle.Secondary
+                )
+            }
+            BeMyPetDialogActionButton(
+                text = "취소",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = BeMyPetDialogActionStyle.Secondary
+            )
+        }
+    )
+}
+
+private fun mapGoogleFailureMessage(exception: Exception): String {
+    val loweredMessage = exception.message?.lowercase().orEmpty()
+    return when {
+        "developer_error" in loweredMessage ||
+            "invalid_audience" in loweredMessage ||
+            "audience" in loweredMessage && "client" in loweredMessage ||
+            "10:" in loweredMessage -> {
+            "로그인 설정이 맞지 않아 관리자 확인이 필요해요."
+        }
+
+        else -> "Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."
     }
 }
+
+private fun openGoogleSettings(context: Context) {
+    val syncSettingsIntent = Intent(Settings.ACTION_SYNC_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    val fallbackSettingsIntent = Intent(Settings.ACTION_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    runCatching {
+        context.startActivity(syncSettingsIntent)
+    }.onFailure { syncError ->
+        Log.w(SIGN_IN_TAG, "Failed to open sync settings. Trying fallback settings.", syncError)
+        runCatching {
+            context.startActivity(fallbackSettingsIntent)
+        }.onFailure { fallbackError ->
+            Log.e(SIGN_IN_TAG, "Failed to open settings for Google credential recovery.", fallbackError)
+            SnackBarManager.showMessage("설정 화면을 열 수 없어요.")
+        }
+    }
+}
+
+private const val SIGN_IN_TAG = "SignInScreen"

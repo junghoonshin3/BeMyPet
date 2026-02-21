@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -44,9 +41,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetConfirmDialog
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.Title
+import kr.sjh.core.designsystem.components.BeMyPetDialogActionStyle
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
 import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
@@ -76,23 +75,18 @@ fun BlockScreen(
     var isDeleteUser by remember { mutableStateOf(false) }
 
     if (isDeleteUser) {
-        AlertDialog(
+        BeMyPetConfirmDialog(
             onDismissRequest = { isDeleteUser = false },
-            title = { Text("차단 해제") },
-            text = { Text("선택한 사용자의 차단을 해제하시겠습니까?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onEvent(BlockEvent.DeleteBlockUser)
-                    isDeleteUser = false
-                }) {
-                    Text("해제", color = MaterialTheme.colorScheme.error)
-                }
+            title = "차단 해제",
+            message = "선택한 사용자의 차단을 해제하시겠습니까?",
+            confirmText = "해제",
+            dismissText = "취소",
+            confirmActionStyle = BeMyPetDialogActionStyle.Destructive,
+            onConfirm = {
+                onEvent(BlockEvent.DeleteBlockUser)
+                isDeleteUser = false
             },
-            dismissButton = {
-                TextButton(onClick = { isDeleteUser = false }) {
-                    Text("취소", color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
+            onDismiss = { isDeleteUser = false }
         )
     }
 
@@ -100,7 +94,6 @@ fun BlockScreen(
         BeMyPetTopAppBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerBottom24)
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                 .clip(RoundedCornerBottom24),
             title = {
@@ -178,7 +171,7 @@ private fun EmptyBlockState(modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "댓글 화면에서 문제가 되는 사용자를 차단할 수 있어요.",
+                    text = "댓글 화면에서 사용자 메뉴를 열어 차단할 수 있어요.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -197,8 +190,8 @@ private fun BlockUserCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCorner18,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
@@ -229,8 +222,8 @@ private fun BlockUserCard(
                 onClick = onUnblockClick,
                 shape = RoundedCorner12,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
                 Text(

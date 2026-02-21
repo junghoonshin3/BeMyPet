@@ -37,6 +37,7 @@ fun UpKindContent(
                 CheckBoxButton(modifier = Modifier.fillMaxWidth(),
                     title = item.title,
                     selected = newUpKind == item,
+                    showBorder = false,
                     onClick = {
                         newUpKind = item
                     })
