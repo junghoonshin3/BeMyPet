@@ -32,14 +32,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -59,7 +57,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -75,7 +72,10 @@ import com.composables.core.Scrim
 import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.rememberModalBottomSheetState
+import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetConfirmDialog
+import kr.sjh.core.designsystem.components.BeMyPetDialogActionStyle
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.Title
@@ -95,16 +95,17 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-private val CommentInputShape = RoundedCornerShape(20.dp)
-private val CommentItemShape = RoundedCornerShape(16.dp)
-private val CommentInputTextStyle = TextStyle(color = Color.Black)
+private val CommentInputShape = RoundedCornerShape(12.dp)
+private val CommentItemShape = RoundedCornerShape(12.dp)
 private val CommentDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
+private val CommentBanUntilFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
 
 @Composable
 fun CommentRoute(
     modifier: Modifier = Modifier,
     session: SessionState,
     onBack: () -> Unit,
+    onNavigateToMyComments: (String) -> Unit,
     navigateToReport: (ReportType, Comment, User) -> Unit,
     commentViewModel: CommentViewModel = hiltViewModel()
 ) {
@@ -153,21 +154,38 @@ fun CommentRoute(
     when (session) {
         is SessionState.Authenticated -> {
             val user = session.user
-            CommentScreen(
-                modifier = modifier
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                            keyboardController?.hide()
-                        })
-                    }
-                    .imePadding(),
-                uiState = uiState,
-                bottomSheetState = bottomSheetState,
-                user = user,
-                onBack = onBack,
-                onEvent = commentViewModel::onEvent,
-            )
+            if (user.isBanned) {
+                val message = "${formatCommentBannedUntil(user.bannedUntil)}까지 댓글 기능이 제한되어 있어요."
+                LaunchedEffect(user.id, user.bannedUntil) {
+                    SnackBarManager.showMessage(message)
+                    onBack()
+                }
+            } else {
+                CommentScreen(
+                    modifier = modifier
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            })
+                        }
+                        .imePadding(),
+                    uiState = uiState,
+                    bottomSheetState = bottomSheetState,
+                    user = user,
+                    onBack = onBack,
+                    onNavigateToMyComments = { onNavigateToMyComments(user.id) },
+                    onEvent = commentViewModel::onEvent,
+                )
+            }
+        }
+
+        is SessionState.Banned -> {
+            val message = "${formatCommentBannedUntil(session.bannedUntil)}까지 댓글 기능이 제한되어 있어요."
+            LaunchedEffect(session.bannedUntil) {
+                SnackBarManager.showMessage(message)
+                onBack()
+            }
         }
 
         else -> Unit
@@ -181,6 +199,7 @@ fun CommentScreen(
     bottomSheetState: ModalBottomSheetState,
     user: User,
     onEvent: (CommentEvent) -> Unit,
+    onNavigateToMyComments: () -> Unit,
     onBack: () -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -199,38 +218,34 @@ fun CommentScreen(
     }
 
     if (uiState.isEditDialogVisible) {
-        AlertDialog(
+        BeMyPetConfirmDialog(
             onDismissRequest = { },
-            title = { Text("편집 중단") },
-            text = { Text("편집을 중단하시겠어요?") },
-            confirmButton = {
-                TextButton(onClick = { onEvent(CommentEvent.CancelEditing) }) {
-                    Text("예", color = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { onEvent(CommentEvent.StayEditing) }) {
-                    Text("아니오", color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
+            title = "편집 중단",
+            message = "편집을 중단하시겠어요?",
+            confirmText = "예",
+            dismissText = "아니오",
+            onConfirm = { onEvent(CommentEvent.CancelEditing) },
+            onDismiss = { onEvent(CommentEvent.StayEditing) }
         )
     }
 
     if (uiState.isDeleteDialogVisible) {
-        AlertDialog(
+        BeMyPetConfirmDialog(
             onDismissRequest = { },
-            title = { Text("삭제") },
-            text = { Text("정말로 삭제하시겠어요?") },
-            confirmButton = {
-                TextButton(onClick = { onEvent(CommentEvent.Delete) }) {
-                    Text("예", color = MaterialTheme.colorScheme.onPrimary)
+            title = "삭제",
+            message = "정말로 삭제하시겠어요?",
+            confirmText = "예",
+            dismissText = "아니오",
+            confirmActionStyle = BeMyPetDialogActionStyle.Destructive,
+            onConfirm = {
+                val commentId = uiState.currentComment?.id
+                if (commentId.isNullOrBlank()) {
+                    onEvent(CommentEvent.DismissDeleteDialog)
+                } else {
+                    onEvent(CommentEvent.Delete(commentId))
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { onEvent(CommentEvent.DismissDeleteDialog) }) {
-                    Text("아니오", color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
+            onDismiss = { onEvent(CommentEvent.DismissDeleteDialog) }
         )
     }
 
@@ -245,7 +260,6 @@ fun CommentScreen(
         BeMyPetTopAppBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerBottom24)
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                 .clip(RoundedCornerBottom24),
             title = {
@@ -258,14 +272,24 @@ fun CommentScreen(
                 }
                 Title(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(16.dp),
                     title = "댓글",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 )
-            }
+            },
+            iconButton = {
+                TextButton(
+                    onClick = onNavigateToMyComments
+                ) {
+                    Text(
+                        text = "내 댓글",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            },
         )
 
         if (uiState.loading) {
@@ -309,7 +333,8 @@ fun CommentScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 10.dp, end = 10.dp, bottom = 8.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CommentInputShape)
+                .background(MaterialTheme.colorScheme.surface, CommentInputShape)
+                .border(1.dp, MaterialTheme.colorScheme.outline, CommentInputShape)
                 .padding(horizontal = 12.dp, vertical = 5.dp),
             isEdit = uiState.isStartEditing,
             textField = uiState.textFieldValue,
@@ -350,16 +375,28 @@ fun CommentInput(
                 onTextChange(it.copy(selection = TextRange(it.text.length)))
             },
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Default),
-            placeholder = { Text("댓글을 입력하세요.") },
+            placeholder = {
+                Text(
+                    text = "댓글을 입력하세요.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             colors = TextFieldDefaults.colors(
-                cursorColor = Color.Black,
+                cursorColor = MaterialTheme.colorScheme.secondary,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                errorTextColor = MaterialTheme.colorScheme.error,
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
-                selectionColors = TextSelectionColors(Color.Black, Color.Black)
+                selectionColors = TextSelectionColors(
+                    MaterialTheme.colorScheme.secondary,
+                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
+                )
             ),
-            textStyle = CommentInputTextStyle,
+            textStyle = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
                 .weight(1f)
                 .heightIn(max = 130.dp)
@@ -387,9 +424,9 @@ fun CommentInput(
                 imageVector = Icons.Default.Send,
                 contentDescription = "Send",
                 tint = if (textField.text.isNotBlank()) {
-                    MaterialTheme.colorScheme.onBackground
+                    MaterialTheme.colorScheme.secondary
                 } else {
-                    Color.Gray
+                    MaterialTheme.colorScheme.outline
                 }
             )
         }
@@ -421,10 +458,10 @@ fun CommentItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 7.dp)
-            .background(MaterialTheme.colorScheme.surface, CommentItemShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant, CommentItemShape)
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.outline,
                 shape = CommentItemShape
             )
             .padding(12.dp),
@@ -570,13 +607,17 @@ private fun ActionRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCorner12)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner12)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCorner12)
+            .height(52.dp)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.bodyMedium,
             color = color
         )
     }
@@ -601,4 +642,14 @@ private fun actionTitle(action: CommentAction): String {
         CommentAction.ReportUser -> "사용자 신고"
         CommentAction.BlockUser -> "이 사용자 차단"
     }
+}
+
+private fun formatCommentBannedUntil(raw: String?): String {
+    if (raw.isNullOrBlank()) return "알 수 없는 시각"
+
+    return runCatching {
+        OffsetDateTime.parse(raw).toLocalDateTime().format(CommentBanUntilFormatter)
+    }.recoverCatching {
+        LocalDateTime.parse(raw).format(CommentBanUntilFormatter)
+    }.getOrDefault(raw)
 }
