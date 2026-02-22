@@ -28,3 +28,9 @@ If those functions exist, update them to be compatible with soft-delete (`profil
 
 For notification retention rollout, deploy:
 - `new_notice_dispatch`
+- `notification_token_cleanup`
+
+Smoke tests:
+- `python3 supabase/scripts/notification_rls_smoke_test.py`
+- `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
+- `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`
