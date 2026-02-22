@@ -92,6 +92,7 @@ fun CommentRoute(
     modifier: Modifier = Modifier,
     session: SessionState,
     onBack: () -> Unit,
+    onNavigateToMyComments: (String) -> Unit,
     navigateToReport: (ReportType, Comment, User) -> Unit,
     commentViewModel: CommentViewModel = hiltViewModel()
 ) {
@@ -150,6 +151,7 @@ fun CommentRoute(
                 bottomSheetState = bottomSheetState,
                 user = user,
                 onBack = onBack,
+                onNavigateToMyComments = { onNavigateToMyComments(user.id) },
                 onEvent = commentViewModel::onEvent,
             )
         }
@@ -166,7 +168,8 @@ fun CommentScreen(
     bottomSheetState: ModalBottomSheetState,
     user: User,
     onEvent: (CommentEvent) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToMyComments: () -> Unit
 ) {
     val listState = rememberLazyListState()
 
