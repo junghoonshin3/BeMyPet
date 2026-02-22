@@ -244,6 +244,7 @@ fun BeMyPetNavHost(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .navigationBarsPadding(),
+                session = session,
                 onBack = {
                     appState.navController.popBackStack()
                 },

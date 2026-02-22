@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,9 +32,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.PrimaryActionButton
 import kr.sjh.core.designsystem.theme.RoundedCorner16
+import kr.sjh.core.model.SessionState
 
 private data class OnboardingPage(
     @DrawableRes val imageRes: Int,
@@ -53,20 +58,34 @@ private val onboardingPages = listOf(
     ),
     OnboardingPage(
         imageRes = R.drawable.baseline_pets_24,
-        title = "신뢰할 수 있는 커뮤니티를 만들어요",
-        description = "댓글과 신고, 차단 기능으로 안전한 환경을 함께 유지해요."
+        title = "새 공고 알림으로 다시 만나요",
+        description = "관심 동물/지역을 선택하면 새 공고를 빠르게 알려드려요."
     )
+)
+
+private val regionOptions = listOf(
+    "6110000" to "서울",
+    "6410000" to "경기",
+    "6260000" to "부산",
+)
+
+private val speciesOptions = listOf(
+    "dog" to "강아지",
+    "cat" to "고양이",
 )
 
 @Composable
 fun OnboardingRoute(
     modifier: Modifier = Modifier,
+    session: SessionState,
+    viewModel: OnboardingViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onComplete: () -> Unit,
     onSkip: () -> Unit,
 ) {
     var pageIndex by remember { mutableIntStateOf(0) }
     val page = onboardingPages[pageIndex]
+    val preferenceState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -88,7 +107,10 @@ fun OnboardingRoute(
                 )
             }
 
-            TextButton(onClick = onSkip) {
+            TextButton(onClick = {
+                viewModel.submit(session)
+                onSkip()
+            }) {
                 Text(
                     text = "건너뛰기",
                     style = MaterialTheme.typography.labelLarge,
@@ -145,6 +167,15 @@ fun OnboardingRoute(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Start
                 )
+
+                if (pageIndex == onboardingPages.lastIndex) {
+                    OnboardingPreferenceSection(
+                        state = preferenceState,
+                        onToggleRegion = viewModel::toggleRegion,
+                        onToggleSpecies = viewModel::toggleSpecies,
+                        onPushToggle = viewModel::setPushOptIn,
+                    )
+                }
             }
         }
 
@@ -155,11 +186,74 @@ fun OnboardingRoute(
                 .padding(top = 12.dp),
             onClick = {
                 if (pageIndex == onboardingPages.lastIndex) {
+                    viewModel.submit(session)
                     onComplete()
                 } else {
                     pageIndex += 1
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun OnboardingPreferenceSection(
+    state: OnboardingPreferenceUiState,
+    onToggleRegion: (String) -> Unit,
+    onToggleSpecies: (String) -> Unit,
+    onPushToggle: (Boolean) -> Unit,
+) {
+    Text(
+        text = "관심 지역",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        regionOptions.forEach { (code, label) ->
+            FilterChip(
+                selected = state.regions.contains(code),
+                onClick = { onToggleRegion(code) },
+                label = { Text(label) }
+            )
+        }
+    }
+
+    Text(
+        text = "관심 동물",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        speciesOptions.forEach { (code, label) ->
+            FilterChip(
+                selected = state.species.contains(code),
+                onClick = { onToggleSpecies(code) },
+                label = { Text(label) }
+            )
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "새 공고 푸시 알림 받기",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Switch(
+            checked = state.pushOptIn,
+            onCheckedChange = onPushToggle,
         )
     }
 }
