@@ -20,10 +20,28 @@ This migration introduces:
 
 Smoke test:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
-## Edge Function follow-up
 
-`banned_until` and `delete_user` are currently called as Supabase Edge Functions from Android.
+## Edge Functions
+
+Android currently calls these Supabase Edge Functions:
+
+- `banned_until`
+- `delete_user`
+
 If those functions exist, update them to be compatible with soft-delete (`profiles.is_deleted`, `profiles.deleted_at`).
+
+Before releasing account-related features, deploy both functions to the linked project:
+
+```bash
+supabase functions deploy banned_until
+supabase functions deploy delete_user
+```
+
+`delete_user`는 `verify_jwt=true`를 기본 정책으로 유지해야 합니다.
+
+- 재배포 시 `--no-verify-jwt`를 사용하지 않습니다.
+- 클라이언트 호출(`supabase.functions.invoke("delete_user", ...)`)은 로그인 세션 JWT가 있을 때만 유효합니다.
+- body 필드는 예시이며, 성공/실패를 가르는 핵심은 Authorization Bearer에 사용자 세션 토큰이 포함되는지입니다.
 
 For notification retention rollout, deploy:
 - `new_notice_dispatch`

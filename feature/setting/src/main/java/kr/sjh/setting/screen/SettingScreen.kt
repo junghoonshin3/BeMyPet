@@ -2,7 +2,6 @@ package kr.sjh.setting.screen
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -53,6 +52,8 @@ import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 
+private const val DELETE_ACCOUNT_SESSION_EXPIRED_MESSAGE = "로그인 상태가 만료되었어요. 다시 로그인 후 시도해 주세요."
+
 @Composable
 fun SettingRoute(
     modifier: Modifier = Modifier,
@@ -88,14 +89,29 @@ fun SettingRoute(
             }
         },
         onDeleteAccount = { userId ->
-            viewModel.deleteAccount(userId, {
-                Log.d("sjh", "삭제 완료")
-                coroutineScope.launch {
-                    viewModel.signOut()
-                    accountManager.signOut()
-                    onNavigateToAdoption()
+            viewModel.deleteAccount(
+                userId = userId,
+                onSuccess = {
+                    coroutineScope.launch {
+                        viewModel.signOut()
+                        accountManager.signOut()
+                        onNavigateToAdoption()
+                    }
+                },
+                onFailure = {
+                    val message = it.message ?: "회원탈퇴에 실패했어요."
+                    if (isSessionExpiredDeleteError(it)) {
+                        coroutineScope.launch {
+                            viewModel.signOut()
+                            accountManager.signOut()
+                            SnackBarManager.showMessage(message)
+                            onNavigateToSignIn()
+                        }
+                    } else {
+                        SnackBarManager.showMessage(message)
+                    }
                 }
-            }, {})
+            )
         },
         onNavigateToBlockedUser = { id ->
             onNavigateToBlockedUser(id)
@@ -474,4 +490,9 @@ fun BlockedUser(onNavigateToBlockedUser: () -> Unit) {
         }
     }
 
+}
+
+private fun isSessionExpiredDeleteError(error: Exception): Boolean {
+    val message = error.message.orEmpty()
+    return message.contains(DELETE_ACCOUNT_SESSION_EXPIRED_MESSAGE)
 }
