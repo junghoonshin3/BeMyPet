@@ -247,19 +247,43 @@ class AuthServiceImpl @Inject constructor(
         )
     }
 
+    private suspend fun invokeBannedUntil(userId: String): BanStatus {
+        val bannedObj = client.functions.invoke("banned_until") {
+            setBody("{\"user_id\": \"$userId\"}")
+        }.body<JsonObject>()
+        return BanStatus(
+            isBanned = bannedObj["isBanned"]?.jsonPrimitive?.booleanOrNull ?: false,
+            bannedUntil = bannedObj["bannedUntil"]?.jsonPrimitive?.contentOrNull ?: "알수없음"
+        )
+    }
+
+    private fun isUnauthorizedRestError(throwable: Throwable?): Boolean {
+        val rest = throwable as? RestException ?: return false
+        return rest.statusCode == 401
+    }
+
     private suspend fun fetchBanStatus(userId: String): BanStatus {
-        return runCatching {
-            val bannedObj = client.functions.invoke("banned_until") {
-                setBody("{\"user_id\": \"$userId\"}")
-            }.body<JsonObject>()
-            BanStatus(
-                isBanned = bannedObj["isBanned"]?.jsonPrimitive?.booleanOrNull ?: false,
-                bannedUntil = bannedObj["bannedUntil"]?.jsonPrimitive?.contentOrNull ?: "알수없음"
-            )
-        }.getOrElse { throwable ->
-            Log.w(TAG, "banned_until call failed, treating user as not banned.", throwable)
-            BanStatus()
+        val firstAttempt = runCatching { invokeBannedUntil(userId) }
+        firstAttempt.getOrNull()?.let { return it }
+
+        val firstError = firstAttempt.exceptionOrNull()
+        if (isUnauthorizedRestError(firstError)) {
+            val refreshSucceeded = runCatching { auth.refreshCurrentSession() }.isSuccess
+            if (refreshSucceeded) {
+                val retryAttempt = runCatching { invokeBannedUntil(userId) }
+                retryAttempt.getOrNull()?.let { return it }
+                Log.w(
+                    TAG,
+                    "banned_until retry after session refresh failed; fallback not banned."
+                )
+            } else {
+                Log.w(TAG, "banned_until unauthorized and session refresh failed; fallback not banned.")
+            }
+            return BanStatus()
         }
+
+        Log.w(TAG, "banned_until call failed; fallback not banned.", firstError)
+        return BanStatus()
     }
 
     override fun getSessionFlow() = auth.sessionStatus.map { result ->
