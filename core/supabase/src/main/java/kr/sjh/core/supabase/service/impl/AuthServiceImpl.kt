@@ -223,28 +223,61 @@ class AuthServiceImpl @Inject constructor(
         }.getOrNull()?.trim()?.takeIf { it.isNotBlank() }
     }
 
+    private suspend fun resolveProfileSafely(userInfo: UserInfo?, userId: String): UserProfile {
+        return runCatching {
+            ensureProfile(userInfo)
+        }.getOrElse { throwable ->
+            Log.w(TAG, "ensureProfile failed, fallback profile is used.", throwable)
+            fallbackProfile(userInfo = userInfo, userId = userId)
+        }
+    }
+
+    private fun fallbackProfile(userInfo: UserInfo?, userId: String): UserProfile {
+        val meta = userInfo?.userMetadata ?: JsonObject(emptyMap())
+        val fallbackName = buildFallbackDisplayName(
+            userId = userId,
+            preferred = meta["name"]?.jsonPrimitive?.contentOrNull
+                ?: meta["full_name"]?.jsonPrimitive?.contentOrNull
+        )
+        val fallbackAvatar = meta["avatar_url"]?.jsonPrimitive?.contentOrNull
+        return UserProfile(
+            userId = userId,
+            displayName = fallbackName,
+            avatarUrl = fallbackAvatar
+        )
+    }
+
+    private suspend fun fetchBanStatus(userId: String): BanStatus {
+        return runCatching {
+            val bannedObj = client.functions.invoke("banned_until") {
+                setBody("{\"user_id\": \"$userId\"}")
+            }.body<JsonObject>()
+            BanStatus(
+                isBanned = bannedObj["isBanned"]?.jsonPrimitive?.booleanOrNull ?: false,
+                bannedUntil = bannedObj["bannedUntil"]?.jsonPrimitive?.contentOrNull ?: "알수없음"
+            )
+        }.getOrElse { throwable ->
+            Log.w(TAG, "banned_until call failed, treating user as not banned.", throwable)
+            BanStatus()
+        }
+    }
+
     override fun getSessionFlow() = auth.sessionStatus.map { result ->
         when (result) {
             is SessionStatus.Authenticated -> {
                 val userInfo = result.session.user
-                val id = userInfo?.id.toString()
+                val id = userInfo?.id?.toString().orEmpty()
+                if (id.isBlank()) {
+                    Log.w(TAG, "Authenticated session has blank user id.")
+                    return@map SessionState.NoAuthenticated(isSignOut = false)
+                }
                 val rawUserMetaData = userInfo?.userMetadata ?: JsonObject(emptyMap())
-                val profile = ensureProfile(userInfo)
-                val bannedObj = client.functions.invoke("banned_until") {
-                    setBody(
-                        "{\"user_id\": \"$id\"}"
-                    )
-                }.body<JsonObject>()
+                val profile = resolveProfileSafely(userInfo = userInfo, userId = id)
+                val banStatus = fetchBanStatus(userId = id)
 
-                val isBanned = bannedObj["isBanned"]?.jsonPrimitive?.booleanOrNull ?: false
-                Log.d("sjh", "isBanned : ${isBanned}")
-
-                val bannedUntil = bannedObj["bannedUntil"]?.jsonPrimitive?.content ?: "알수없음"
-                Log.d("sjh", "bannedUntil : $bannedUntil")
-
-                if (isBanned) {
+                if (banStatus.isBanned) {
                     auth.sessionManager.deleteSession()
-                    return@map SessionState.Banned(bannedUntil)
+                    return@map SessionState.Banned(banStatus.bannedUntil)
                 }
 
                 val role = getRole(id)
@@ -256,8 +289,8 @@ class AuthServiceImpl @Inject constructor(
                         avatarUrl = profile.avatarUrl,
                         rawUserMetaData = rawUserMetaData,
                         role = role,
-                        bannedUntil = bannedUntil,
-                        isBanned = isBanned
+                        bannedUntil = banStatus.bannedUntil,
+                        isBanned = banStatus.isBanned
                     )
                 )
             }
@@ -285,7 +318,13 @@ class AuthServiceImpl @Inject constructor(
         val serverCode: String? = null,
     )
 
+    private data class BanStatus(
+        val isBanned: Boolean = false,
+        val bannedUntil: String = "알수없음",
+    )
+
     companion object {
+        private const val TAG = "AuthServiceImpl"
         private const val DELETE_USER_FUNCTION_NAME = "delete_user"
         private const val SERVER_CODE_UNAUTHORIZED = "UNAUTHORIZED"
         private const val SERVER_CODE_FORBIDDEN = "FORBIDDEN"
