@@ -1,0 +1,21 @@
+name: notification-token-cleanup
+
+on:
+  schedule:
+    - cron: "0 16 * * *" # 01:00 KST
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke stale token cleanup (30 days)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sS -X POST "${SUPABASE_URL}/functions/v1/notification_token_cleanup" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            --data '{"mode":"stale","stale_before_days":30,"dry_run":false}'
