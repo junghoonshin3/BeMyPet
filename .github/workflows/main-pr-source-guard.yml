@@ -1,0 +1,28 @@
+name: main-pr-source-guard
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-develop-head:
+    name: enforce-develop-head
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR source branch
+        run: |
+          echo "base_ref=${{ github.base_ref }}"
+          echo "head_ref=${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "::error::main 브랜치 PR은 develop 브랜치에서만 생성할 수 있습니다."
+            exit 1
+          fi
