@@ -7,10 +7,12 @@ import dagger.hilt.components.SingletonComponent
 import kr.sjh.core.supabase.service.AuthService
 import kr.sjh.core.supabase.service.BlockService
 import kr.sjh.core.supabase.service.CommentService
+import kr.sjh.core.supabase.service.NotificationService
 import kr.sjh.core.supabase.service.ReportService
 import kr.sjh.core.supabase.service.impl.AuthServiceImpl
 import kr.sjh.core.supabase.service.impl.BlockServiceImpl
 import kr.sjh.core.supabase.service.impl.CommentServiceImpl
+import kr.sjh.core.supabase.service.impl.NotificationServiceImpl
 import kr.sjh.core.supabase.service.impl.ReportServiceImpl
 import javax.inject.Singleton
 
@@ -32,4 +34,8 @@ abstract class SupaServiceModule {
     @Binds
     @Singleton
     abstract fun bindBlockService(impl: BlockServiceImpl): BlockService
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationService(impl: NotificationServiceImpl): NotificationService
 }

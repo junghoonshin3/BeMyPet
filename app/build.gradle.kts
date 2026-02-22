@@ -152,6 +152,7 @@ dependencies {
     implementation(libs.core.splashscreen)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     implementation(libs.coil.compose)
     implementation(libs.play.services.ads)

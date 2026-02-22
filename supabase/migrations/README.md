@@ -3,6 +3,7 @@
 Apply migrations in timestamp order.
 
 1. `20260216_profiles_comments_auth_refactor.sql`
+2. `20260224_add_notification_retention_tables.sql`
 
 This migration introduces:
 - `profiles` table as app profile source
@@ -11,7 +12,24 @@ This migration introduces:
 - RLS policies for profiles/comments/blocks/reports
 - profile-image storage bucket and policies
 
+`20260224_add_notification_retention_tables.sql` introduces:
+- `user_interest_profiles` table (new user preference targeting)
+- `notification_subscriptions` table (device token + opt-in + delivery throttle state)
+- `notification_delivery_logs` table (dedupe + delivery/open audit)
+- RLS policies for self-scoped read/write where appropriate
+
+Smoke test:
+- `python3 supabase/scripts/notification_rls_smoke_test.py`
 ## Edge Function follow-up
 
 `banned_until` and `delete_user` are currently called as Supabase Edge Functions from Android.
 If those functions exist, update them to be compatible with soft-delete (`profiles.is_deleted`, `profiles.deleted_at`).
+
+For notification retention rollout, deploy:
+- `new_notice_dispatch`
+- `notification_token_cleanup`
+
+Smoke tests:
+- `python3 supabase/scripts/notification_rls_smoke_test.py`
+- `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
+- `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`

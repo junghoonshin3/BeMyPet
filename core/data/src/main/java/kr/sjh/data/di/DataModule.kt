@@ -11,6 +11,7 @@ import kr.sjh.data.repository.CommentRepository
 import kr.sjh.data.repository.CompareRepository
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
+import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.repository.impl.AdoptionRepositoryImpl
 import kr.sjh.data.repository.impl.AuthRepositoryImpl
@@ -19,6 +20,7 @@ import kr.sjh.data.repository.impl.CommentRepositoryImpl
 import kr.sjh.data.repository.impl.CompareRepositoryImpl
 import kr.sjh.data.repository.impl.FavouriteRepositoryImpl
 import kr.sjh.data.repository.impl.GeoLocationRepositoryImpl
+import kr.sjh.data.repository.impl.NotificationRepositoryImpl
 import kr.sjh.data.repository.impl.SettingRepositoryImpl
 import javax.inject.Singleton
 
@@ -56,5 +58,9 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun provideBlockRepository(impl: BlockRepositoryImpl): BlockRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
 
 }

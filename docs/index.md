@@ -12,3 +12,4 @@ BeMyPet 프로젝트 문서 모음입니다.
 
 - [Recomposition Optimization](./recomposition-optimization.md)
 - [Supabase Auth Comment Roadmap](./supabase-auth-comment-roadmap.md)
+- [Notification Token Cleanup Runbook](./notification-token-cleanup-runbook.md)

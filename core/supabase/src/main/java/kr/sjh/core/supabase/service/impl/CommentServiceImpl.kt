@@ -1,11 +1,16 @@
 package kr.sjh.core.supabase.service.impl
 
 import android.util.Log
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import io.github.jan.supabase.realtime.selectAsFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kr.sjh.core.model.Comment
 import kr.sjh.core.supabase.service.CommentService
 import java.time.OffsetDateTime
-import java.util.UUID
 import javax.inject.Inject
 
 class CommentServiceImpl @Inject constructor(
@@ -15,42 +20,28 @@ class CommentServiceImpl @Inject constructor(
     private val commentTable = postgrest.from("comments")
     private val commentFeedView = postgrest.from("comment_feed")
 
-    override suspend fun getComments(noticeNo: String): List<Comment> {
-        return commentFeedView.select {
-            filter {
-                eq("notice_no", noticeNo)
-            }
-        }.decodeList<Comment>().sortedByDescending { it.createdAt }
-    }
-
-    override suspend fun getCommentsByUser(userId: String): List<Comment> {
-        val normalizedUserId = userId.trim()
-        if (normalizedUserId.isBlank()) return emptyList()
-
-        return commentFeedView.select {
-            filter {
-                eq("user_id", normalizedUserId)
-            }
-        }.decodeList<Comment>().sortedByDescending { it.createdAt }
+    @OptIn(SupabaseExperimental::class)
+    override fun getComments(noticeNo: String): Flow<List<Comment>> {
+        return commentFeedView.selectAsFlow(
+            Comment::id,
+            filter = FilterOperation("notice_no", FilterOperator.EQ, noticeNo),
+        ).map { list ->
+            list.sortedByDescending { it.createdAt }
+        }
     }
 
 
     override suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
     ) {
-        val normalizedId = commentId.trim()
-        if (!isValidCommentId(normalizedId)) {
-            onFailure(IllegalArgumentException("Invalid comment id for delete"))
-            return
-        }
         try {
             commentTable.update(
                 mapOf("deleted_at" to OffsetDateTime.now().toString())
             ) {
-                Log.d("CommentServiceImpl", "deleteComment id=$normalizedId")
-                filter { eq("id", normalizedId) }
+                Log.d("sjh", "commentId : ${commentId}")
+                filter { eq("id", commentId) }
             }
-            onSuccess(normalizedId)
+            onSuccess(commentId)
         } catch (e: Exception) {
             onFailure(e)
         }
@@ -75,11 +66,6 @@ class CommentServiceImpl @Inject constructor(
     }
 
     override suspend fun updateComment(comment: Comment) {
-        val normalizedId = comment.id.trim()
-        if (!isValidCommentId(normalizedId)) {
-            Log.w("CommentServiceImpl", "skip updateComment: invalid id")
-            return
-        }
         try {
             commentTable.update(
                 mapOf(
@@ -88,7 +74,7 @@ class CommentServiceImpl @Inject constructor(
                 )
             ) {
                 filter {
-                    eq("id", normalizedId)
+                    eq("id", comment.id)
                 }
             }
         } catch (e: Exception) {
@@ -103,14 +89,5 @@ class CommentServiceImpl @Inject constructor(
             }
         }.decodeList<Comment>().size
         return count
-    }
-
-    private fun isValidCommentId(commentId: String): Boolean {
-        if (commentId.isBlank()) return false
-        if (commentId.equals("null", ignoreCase = true)) return false
-        return runCatching {
-            UUID.fromString(commentId)
-            true
-        }.getOrElse { false }
     }
 }
