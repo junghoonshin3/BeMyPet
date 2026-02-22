@@ -30,6 +30,16 @@ class CommentServiceImpl @Inject constructor(
         }
     }
 
+    override suspend fun getCommentsByUser(userId: String): List<Comment> {
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return emptyList()
+        return commentFeedView.select {
+            filter {
+                eq("user_id", normalizedUserId)
+            }
+        }.decodeList<Comment>().sortedByDescending { it.createdAt }
+    }
+
 
     override suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit

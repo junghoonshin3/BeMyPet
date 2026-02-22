@@ -63,7 +63,8 @@ fun SettingRoute(
     onChangeDarkTheme: (Boolean) -> Unit,
     onNavigateToSignIn: () -> Unit,
     onNavigateToAdoption: () -> Unit,
-    onNavigateToBlockedUser: (String) -> Unit
+    onNavigateToBlockedUser: (String) -> Unit,
+    onNavigateToMyComments: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val profileUiState by viewModel.profileUiState.collectAsStateWithLifecycle()
