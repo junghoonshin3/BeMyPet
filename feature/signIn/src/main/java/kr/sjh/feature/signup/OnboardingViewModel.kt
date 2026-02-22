@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.model.SessionState
@@ -79,14 +78,6 @@ class OnboardingViewModel @Inject constructor(
                 sexes = emptyList(),
                 sizes = emptyList(),
                 pushEnabled = payload.pushOptIn,
-            )
-
-            val pushOptIn = settingRepository.getPushOptIn().first()
-            notificationRepository.upsertSubscription(
-                userId = userId,
-                token = "",
-                pushOptIn = pushOptIn,
-                timezone = "Asia/Seoul",
             )
         }
     }

@@ -14,11 +14,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.gms.ads.MobileAds
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kr.sjh.core.model.SessionState
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
+
+private const val PUSH_PREF_NAME = "bemypet_push_sync"
+private const val KEY_CURRENT_USER_ID = "current_user_id"
 
 @AndroidEntryPoint
 class StartActivity : ComponentActivity() {
@@ -40,6 +45,27 @@ class StartActivity : ComponentActivity() {
                 startViewModel.isDarkTheme.collect { isDark ->
                     isThemeLoaded = true
                     isTheme = isDark
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                startViewModel.session.collect { session ->
+                    if (session is SessionState.Authenticated) {
+                        val userId = session.user.id
+                        getSharedPreferences(PUSH_PREF_NAME, MODE_PRIVATE)
+                            .edit()
+                            .putString(KEY_CURRENT_USER_ID, userId)
+                            .apply()
+
+                        startViewModel.touchLastActive(userId)
+
+                        FirebaseMessaging.getInstance().token
+                            .addOnSuccessListener { token ->
+                                startViewModel.syncPushSubscription(userId, token)
+                            }
+                    }
                 }
             }
         }
