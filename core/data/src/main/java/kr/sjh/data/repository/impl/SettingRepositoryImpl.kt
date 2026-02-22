@@ -16,11 +16,19 @@ class SettingRepositoryImpl @Inject constructor(private val preferencesDataSourc
         it.hasSeenOnboarding
     }
 
+    override fun getPushOptIn(): Flow<Boolean> = preferencesDataSource.settingsData.map {
+        it.pushOptIn
+    }
+
     override suspend fun updateIsDarkTheme(isDarkTheme: Boolean) {
         preferencesDataSource.updateIsDarkTheme(isDarkTheme)
     }
 
     override suspend fun updateHasSeenOnboarding(seen: Boolean) {
         preferencesDataSource.updateHasSeenOnboarding(seen)
+    }
+
+    override suspend fun updatePushOptIn(enabled: Boolean) {
+        preferencesDataSource.updatePushOptIn(enabled)
     }
 }
