@@ -72,6 +72,7 @@ class AuthServiceImpl @Inject constructor(
 
         try {
             invokeDeleteUser(normalizedUserId)
+            clearSessionAfterDeleteAccount()
             onSuccess()
             return
         } catch (e: Exception) {
@@ -83,6 +84,7 @@ class AuthServiceImpl @Inject constructor(
                     runCatching {
                         invokeDeleteUser(normalizedUserId)
                     }.onSuccess {
+                        clearSessionAfterDeleteAccount()
                         onSuccess()
                         return
                     }.onFailure { retryError ->
@@ -97,6 +99,12 @@ class AuthServiceImpl @Inject constructor(
             }
 
             onFailure(Exception(mapDeleteAccountErrorMessage(initialErrorMeta)))
+        }
+    }
+
+    private suspend fun clearSessionAfterDeleteAccount() {
+        runCatching { auth.clearSession() }.onFailure { throwable ->
+            Log.w(TAG, "Failed to clear local session after delete_account.", throwable)
         }
     }
 
@@ -262,22 +270,36 @@ class AuthServiceImpl @Inject constructor(
         return rest.statusCode == 401
     }
 
+    private fun restErrorSummary(throwable: Throwable?): String {
+        val rest = throwable as? RestException
+        return if (rest == null) {
+            throwable?.message ?: "unknown"
+        } else {
+            "status=${rest.statusCode}, error=${rest.error}"
+        }
+    }
+
     private suspend fun fetchBanStatus(userId: String): BanStatus {
         val firstAttempt = runCatching { invokeBannedUntil(userId) }
         firstAttempt.getOrNull()?.let { return it }
 
         val firstError = firstAttempt.exceptionOrNull()
         if (isUnauthorizedRestError(firstError)) {
-            val refreshSucceeded = runCatching { auth.refreshCurrentSession() }.isSuccess
-            if (refreshSucceeded) {
+            val refreshAttempt = runCatching { auth.refreshCurrentSession() }
+            if (refreshAttempt.isSuccess) {
                 val retryAttempt = runCatching { invokeBannedUntil(userId) }
                 retryAttempt.getOrNull()?.let { return it }
                 Log.w(
                     TAG,
-                    "banned_until retry after session refresh failed; fallback not banned."
+                    "banned_until retry after refresh failed; fallback not banned. " +
+                        "first=${restErrorSummary(firstError)}, retry=${restErrorSummary(retryAttempt.exceptionOrNull())}"
                 )
             } else {
-                Log.w(TAG, "banned_until unauthorized and session refresh failed; fallback not banned.")
+                Log.w(
+                    TAG,
+                    "banned_until unauthorized and session refresh failed; fallback not banned. " +
+                        "first=${restErrorSummary(firstError)}, refresh=${restErrorSummary(refreshAttempt.exceptionOrNull())}"
+                )
             }
             return BanStatus()
         }
@@ -290,7 +312,7 @@ class AuthServiceImpl @Inject constructor(
         when (result) {
             is SessionStatus.Authenticated -> {
                 val userInfo = result.session.user
-                val id = userInfo?.id?.toString().orEmpty()
+                val id = userInfo?.id.orEmpty()
                 if (id.isBlank()) {
                     Log.w(TAG, "Authenticated session has blank user id.")
                     return@map SessionState.NoAuthenticated(isSignOut = false)
