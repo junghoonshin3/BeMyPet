@@ -19,6 +19,9 @@ class CommentRepositoryImpl @Inject constructor(
     override fun getComments(noticeNo: String, userId: String) =
         commentService.getComments(noticeNo)
 
+    override suspend fun getMyComments(userId: String): List<Comment> =
+        commentService.getCommentsByUser(userId)
+
     override suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
     ) {
