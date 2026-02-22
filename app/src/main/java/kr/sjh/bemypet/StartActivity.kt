@@ -1,8 +1,12 @@
 package kr.sjh.bemypet
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -31,6 +35,13 @@ class StartActivity : ComponentActivity() {
     private val startViewModel: StartViewModel by viewModels()
     private var isThemeLoaded by mutableStateOf(false)
     private var isTheme by mutableStateOf(false)
+    private var hasCheckedNotificationPermission = false
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            Log.d("StartActivity", "POST_NOTIFICATIONS granted=$granted")
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
@@ -87,5 +98,35 @@ class StartActivity : ComponentActivity() {
                     })
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        ensureNotificationPermissionIfNeeded()
+    }
+
+    private fun ensureNotificationPermissionIfNeeded() {
+        if (hasCheckedNotificationPermission) {
+            Log.d("StartActivity", "skip notification permission: already checked")
+            return
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            hasCheckedNotificationPermission = true
+            Log.d("StartActivity", "skip notification permission: sdk=${Build.VERSION.SDK_INT}")
+            return
+        }
+
+        val hasPermission = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            hasCheckedNotificationPermission = true
+            Log.d("StartActivity", "skip notification permission: already granted")
+            return
+        }
+
+        hasCheckedNotificationPermission = true
+        Log.d("StartActivity", "requesting POST_NOTIFICATIONS permission")
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }

@@ -2,6 +2,8 @@ package kr.sjh.core.supabase.service.impl
 
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kr.sjh.core.model.notification.UserInterestProfile
 import kr.sjh.core.supabase.service.NotificationService
 import java.time.OffsetDateTime
@@ -27,10 +29,13 @@ class NotificationServiceImpl @Inject constructor(
         val payload = buildSubscriptionPayloadForTest(
             userId = userId,
             fcmToken = fcmToken,
+            pushOptIn = pushOptIn,
             timezone = timezone,
-        ) + mapOf("push_opt_in" to pushOptIn)
+        )
 
-        subscriptionTable.upsert(payload)
+        subscriptionTable.upsert(payload) {
+            onConflict = "fcm_token"
+        }
     }
 
     override suspend fun touchLastActive(userId: String) {
@@ -50,13 +55,23 @@ class NotificationServiceImpl @Inject constructor(
         fun buildSubscriptionPayloadForTest(
             userId: String,
             fcmToken: String,
+            pushOptIn: Boolean,
             timezone: String,
-        ): Map<String, Any> {
-            return mapOf(
-                "user_id" to userId.trim(),
-                "fcm_token" to fcmToken.trim(),
-                "timezone" to timezone.trim().ifBlank { "Asia/Seoul" },
+        ): NotificationSubscriptionUpsertPayload {
+            return NotificationSubscriptionUpsertPayload(
+                userId = userId.trim(),
+                fcmToken = fcmToken.trim(),
+                pushOptIn = pushOptIn,
+                timezone = timezone.trim().ifBlank { "Asia/Seoul" },
             )
         }
     }
 }
+
+@Serializable
+internal data class NotificationSubscriptionUpsertPayload(
+    @SerialName("user_id") val userId: String,
+    @SerialName("fcm_token") val fcmToken: String,
+    @SerialName("push_opt_in") val pushOptIn: Boolean,
+    @SerialName("timezone") val timezone: String,
+)
