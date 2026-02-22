@@ -20,7 +20,6 @@ This migration introduces:
 
 Smoke test:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
-
 ## Edge Function follow-up
 
 `banned_until` and `delete_user` are currently called as Supabase Edge Functions from Android.

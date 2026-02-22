@@ -10,15 +10,21 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.model.BlockUser
 import kr.sjh.core.model.Comment
-import kr.sjh.core.model.ReportType
+import kr.sjh.core.model.SessionState
+import kr.sjh.data.repository.AuthRepository
 import kr.sjh.data.repository.CommentRepository
-import kr.sjh.feature.comments.navigation.CommentAction
 import kr.sjh.feature.comments.navigation.CommentEvent
 import kr.sjh.feature.comments.navigation.CommentSideEffect
 import kr.sjh.feature.comments.navigation.Comments
@@ -38,6 +44,7 @@ data class CommentUiState(
 @HiltViewModel
 class CommentViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -49,39 +56,40 @@ class CommentViewModel @Inject constructor(
     private val _sideEffect = Channel<CommentSideEffect>()
     val sideEffect = _sideEffect.receiveAsFlow()
 
+    val session = authRepository.getSessionFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), SessionState.Initializing)
+
     init {
-        loadComments(arg.noticeNo, arg.userId)
+        getComments(arg.noticeNo, arg.userId)
     }
 
-    private fun loadComments(noticeNo: String = arg.noticeNo, userId: String = arg.userId) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(loading = true) }
-            runCatching {
-                commentRepository.getComments(noticeNo, userId)
-            }.onSuccess { result ->
-                _uiState.update {
-                    it.copy(comments = result, loading = false)
-                }
-            }.onFailure { e ->
-                e.printStackTrace()
-                _uiState.update { state ->
-                    state.copy(loading = false)
-                }
+    private fun getComments(noticeNo: String, userId: String) {
+        commentRepository.getComments(noticeNo, userId).onStart {
+            _uiState.update {
+                it.copy(loading = true)
             }
-        }
+        }.onEach { result ->
+            _uiState.update {
+                it.copy(
+                    comments = result, loading = false
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
-    private fun delete(id: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+    private fun delete(
+        id: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             commentRepository.deleteComment(id, onSuccess = onSuccess, onFailure = onFailure)
         }
     }
 
+
     private fun send(comment: Comment) {
-        if (comment.content.isBlank()) return
+        if (comment.content.isBlank()) return  // 빈 댓글 방지
         viewModelScope.launch {
             commentRepository.insertComment(comment = comment)
-            loadComments()
         }
         _uiState.update {
             it.copy(textFieldValue = TextFieldValue(), currentComment = null)
@@ -91,7 +99,6 @@ class CommentViewModel @Inject constructor(
     private fun edit(comment: Comment) {
         viewModelScope.launch {
             commentRepository.updateComment(comment = comment)
-            loadComments()
             _uiState.update {
                 it.copy(
                     textFieldValue = TextFieldValue(),
@@ -104,32 +111,20 @@ class CommentViewModel @Inject constructor(
 
     private fun blockUser(blockerId: String, blockedId: String) {
         viewModelScope.launch {
-            commentRepository.blockUser(
-                BlockUser(blockerUser = blockerId, blockedUser = blockedId),
-                {},
-                { e -> e.printStackTrace() }
-            )
+            commentRepository.blockUser(BlockUser(
+                blockerUser = blockerId,
+                blockedUser = blockedId
+            ), {}, { e -> e.printStackTrace() })
         }
     }
 
     fun onEvent(event: CommentEvent) {
         when (event) {
-            is CommentEvent.OpenActionSheet -> {
-                _uiState.update { it.copy(currentComment = event.comment) }
-                showBottomSheet()
-            }
-
-            CommentEvent.CloseActionSheet -> {
-                hideBottomSheet(clearCurrentComment = shouldClearCurrentCommentOnSheetClose())
-            }
-
-            is CommentEvent.SelectAction -> {
-                handleAction(event.action, event.user)
-            }
-
             is CommentEvent.ShowDeleteDialog -> {
                 _uiState.update {
-                    it.copy(currentComment = event.comment, isDeleteDialogVisible = true)
+                    it.copy(
+                        currentComment = event.comment, isDeleteDialogVisible = true
+                    )
                 }
             }
 
@@ -149,6 +144,13 @@ class CommentViewModel @Inject constructor(
                 }
             }
 
+            is CommentEvent.Report -> {
+                _uiState.update {
+                    it.copy(currentComment = event.comment)
+                }
+                showBottomSheet()
+            }
+
             is CommentEvent.Send -> {
                 val comment = event.comment.copy(noticeNo = arg.noticeNo)
                 send(comment)
@@ -158,9 +160,7 @@ class CommentViewModel @Inject constructor(
                 viewModelScope.launch {
                     _sideEffect.send(
                         CommentSideEffect.NavigateToReport(
-                            event.reportType,
-                            event.comment,
-                            event.user
+                            event.reportType, event.comment, event.user
                         )
                     )
                 }
@@ -186,7 +186,9 @@ class CommentViewModel @Inject constructor(
 
             CommentEvent.OnKeyboardClosedDuringEdit -> {
                 _uiState.update {
-                    it.copy(isEditDialogVisible = true)
+                    it.copy(
+                        isEditDialogVisible = true
+                    )
                 }
             }
 
@@ -203,7 +205,9 @@ class CommentViewModel @Inject constructor(
 
             CommentEvent.StayEditing -> {
                 _uiState.update {
-                    it.copy(isEditDialogVisible = false)
+                    it.copy(
+                        isEditDialogVisible = false
+                    )
                 }
             }
 
@@ -212,8 +216,14 @@ class CommentViewModel @Inject constructor(
             }
 
             is CommentEvent.Delete -> {
-                delete(event.commentId, { _ ->
-                    loadComments()
+                delete(uiState.value.currentComment?.id.toString(), { id ->
+                    _uiState.update {
+                        it.copy(comments = it.comments.toMutableList().apply {
+                            removeIf {
+                                it.id == id
+                            }
+                        })
+                    }
                     dismissDeleteDialog()
                 }, { e -> e.printStackTrace() })
             }
@@ -224,61 +234,12 @@ class CommentViewModel @Inject constructor(
         }
     }
 
-    private fun handleAction(action: CommentAction, user: kr.sjh.core.model.User) {
-        val comment = _uiState.value.currentComment ?: return
-        when (action) {
-            CommentAction.Edit -> {
-                hideBottomSheet(clearCurrentComment = false)
-                onEvent(CommentEvent.StartEditing(comment))
-            }
-
-            CommentAction.Delete -> {
-                _uiState.update {
-                    it.copy(isDeleteDialogVisible = true)
-                }
-                hideBottomSheet(clearCurrentComment = false)
-            }
-
-            CommentAction.ReportComment -> {
-                viewModelScope.launch {
-                    _sideEffect.send(
-                        CommentSideEffect.NavigateToReport(
-                            ReportType.Comment,
-                            comment,
-                            user
-                        )
-                    )
-                }
-            }
-
-            CommentAction.ReportUser -> {
-                viewModelScope.launch {
-                    _sideEffect.send(
-                        CommentSideEffect.NavigateToReport(
-                            ReportType.User,
-                            comment,
-                            user
-                        )
-                    )
-                }
-            }
-
-            CommentAction.BlockUser -> {
-                blockUser(user.id, comment.userId)
-                hideBottomSheet()
-            }
-        }
-    }
-
     private fun dismissDeleteDialog() {
         _uiState.update {
-            it.copy(isDeleteDialogVisible = false, currentComment = null)
+            it.copy(
+                isDeleteDialogVisible = false, currentComment = null
+            )
         }
-    }
-
-    private fun shouldClearCurrentCommentOnSheetClose(): Boolean {
-        val state = _uiState.value
-        return !state.isStartEditing && !state.isDeleteDialogVisible
     }
 
     private fun onTextChange(textFieldValue: TextFieldValue) {
@@ -293,18 +254,20 @@ class CommentViewModel @Inject constructor(
 
     private fun showBottomSheet() {
         viewModelScope.launch {
-            _sideEffect.send(CommentSideEffect.ShowBottomSheet)
+            _sideEffect.send(
+                CommentSideEffect.ShowBottomSheet
+            )
         }
     }
 
-    private fun hideBottomSheet(clearCurrentComment: Boolean = true) {
+    private fun hideBottomSheet() {
         viewModelScope.launch {
-            _sideEffect.send(CommentSideEffect.HideBottomSheet)
+            _sideEffect.send(
+                CommentSideEffect.HideBottomSheet
+            )
         }
-        if (clearCurrentComment) {
-            _uiState.update {
-                it.copy(currentComment = null)
-            }
+        _uiState.update {
+            it.copy(currentComment = null)
         }
     }
 }

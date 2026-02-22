@@ -6,8 +6,7 @@ import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportForm
 
 interface CommentRepository {
-    suspend fun getComments(noticeNo: String, userId: String): List<Comment>
-    suspend fun getMyComments(userId: String): List<Comment>
+    fun getComments(noticeNo: String, userId: String): Flow<List<Comment>>
     suspend fun deleteComment(
         commentId: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit
     )
