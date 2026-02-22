@@ -1,12 +1,13 @@
 package kr.sjh.core.common.credential
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kr.sjh.core.common.BuildConfig
 import java.security.MessageDigest
@@ -16,51 +17,82 @@ class AccountManager(private val context: Context) {
 
     private val credentialManager = androidx.credentials.CredentialManager.create(context)
 
-    suspend fun signIn(filterByAuthorizedAccounts: Boolean): SignInResult {
-        return try {
-            // Generate a nonce and hash it with sha-256
-            // Providing a nonce is optional but recommended
-            val rawNonce = UUID.randomUUID()
-                .toString() // Generate a random String. UUID should be sufficient, but can also be any other random string.
-            val bytes = rawNonce.toByteArray()
-            val md = MessageDigest.getInstance("SHA-256")
-            val digest = md.digest(bytes)
-            val hashedNonce =
-                digest.fold("") { str, it -> str + "%02x".format(it) } // Hashed nonce to be passed to Google sign-in
+    suspend fun signIn(): SignInResult {
+        val rawNonce = UUID.randomUUID().toString()
+        val hashedNonce = hashNonce(rawNonce)
+        val maskedClientId = maskClientId(BuildConfig.WEB_CLIENT_ID)
 
-            val googleIdOption: GetGoogleIdOption =
-                GetGoogleIdOption.Builder().setServerClientId(BuildConfig.WEB_CLIENT_ID)
-                    .setFilterByAuthorizedAccounts(filterByAuthorizedAccounts)
-                    .setAutoSelectEnabled(true)
-                    .setNonce(hashedNonce) // Provide the nonce if you have one
-                    .build()
+        Log.d(TAG, "Starting Google sign-in. clientIdSuffix=$maskedClientId")
 
-            val request: GetCredentialRequest =
-                GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
-
-            val result = credentialManager.getCredential(
-                request = request,
-                context = context,
-            )
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-            SignInResult.Success(googleIdTokenCredential.idToken, rawNonce)
-        } catch (e: GetCredentialCancellationException) {
-            e.printStackTrace()
-            SignInResult.Cancelled
-        } catch (e: NoCredentialException) {
-            e.printStackTrace()
-            SignInResult.NoCredentials
-        } catch (e: GetCredentialException) {
-            e.printStackTrace()
-            SignInResult.Failure(e)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            SignInResult.Failure(e)
-        }
+        val request = buildSignInRequest(hashedNonce)
+        return attemptSignIn(request = request, rawNonce = rawNonce, retryAttempted = false)
     }
 
     suspend fun signOut() {
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+
+    private fun buildSignInRequest(hashedNonce: String): GetCredentialRequest {
+        val signInOption = GetSignInWithGoogleOption.Builder(
+            BuildConfig.WEB_CLIENT_ID
+        ).setNonce(hashedNonce).build()
+
+        return GetCredentialRequest.Builder()
+            .addCredentialOption(signInOption)
+            .build()
+    }
+
+    private suspend fun attemptSignIn(
+        request: GetCredentialRequest,
+        rawNonce: String,
+        retryAttempted: Boolean
+    ): SignInResult {
+        return try {
+            val result = credentialManager.getCredential(
+                request = request,
+                context = context,
+            )
+            Log.d(TAG, "Credential response received. type=${result.credential.type}")
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+            Log.d(TAG, "GoogleIdTokenCredential parsed successfully")
+            Log.d(TAG, "Google sign-in success")
+            SignInResult.Success(googleIdTokenCredential.idToken, rawNonce)
+        } catch (e: GetCredentialCancellationException) {
+            Log.d(TAG, "Google sign-in cancelled by user")
+            SignInResult.Cancelled
+        } catch (e: NoCredentialException) {
+            if (!retryAttempted) {
+                Log.d(TAG, "NoCredentialException. Clearing credential state and retrying once.")
+                runCatching {
+                    credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                }.onFailure { clearError ->
+                    Log.w(TAG, "Failed to clear credential state before retry.", clearError)
+                }
+                return attemptSignIn(request = request, rawNonce = rawNonce, retryAttempted = true)
+            }
+            Log.w(TAG, "NoCredentialException after retry.")
+            SignInResult.NoCredentials
+        } catch (e: GetCredentialException) {
+            Log.w(TAG, "CredentialManager sign-in failure.", e)
+            SignInResult.Failure(e)
+        } catch (e: Exception) {
+            Log.w(TAG, "Unexpected Google sign-in failure.", e)
+            SignInResult.Failure(e)
+        }
+    }
+
+    private fun hashNonce(rawNonce: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(rawNonce.toByteArray())
+        return digest.fold("") { acc, byte -> acc + "%02x".format(byte) }
+    }
+
+    private fun maskClientId(clientId: String): String {
+        if (clientId.isBlank()) return "(empty)"
+        return "***${clientId.takeLast(10)}"
+    }
+
+    companion object {
+        private const val TAG = "AccountManager"
     }
 }
 

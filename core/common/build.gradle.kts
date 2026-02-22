@@ -8,10 +8,21 @@ plugins {
     alias(libs.plugins.bemypet.android.feature)
 }
 
-// properties 파일 로드
-val secretsProps = Properties().apply {
-    load(FileInputStream(rootProject.file("secrets.properties")))
+fun loadSecrets(fileName: String): Properties = Properties().apply {
+    val file = rootProject.file(fileName)
+    check(file.exists()) { "Missing secrets file: $fileName" }
+    file.inputStream().use { load(it) }
 }
+
+fun Properties.requireKey(name: String): String =
+    getProperty(name)
+        ?.trim()
+        ?.trim('"')
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("Missing key '$name'")
+
+val devSecrets = loadSecrets("secrets.dev.properties")
+val prodSecrets = loadSecrets("secrets.prod.properties")
 
 android {
     namespace = "kr.sjh.core.common"
@@ -21,16 +32,22 @@ android {
                 "String", "AD_MOB_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\""
             )
             buildConfigField(
-                "String", "WEB_CLIENT_ID", secretsProps.getProperty("WEB_CLIENT_ID")
+                "String",
+                "WEB_CLIENT_ID",
+                "\"${devSecrets.requireKey("WEB_CLIENT_ID")}\""
             )
         }
 
         release {
             buildConfigField(
-                "String", "AD_MOB_BANNER_ID", "\"${secretsProps.getProperty("AD_MOB_BANNER_ID")}\""
+                "String",
+                "AD_MOB_BANNER_ID",
+                "\"${prodSecrets.requireKey("AD_MOB_BANNER_ID")}\""
             )
             buildConfigField(
-                "String", "WEB_CLIENT_ID", secretsProps.getProperty("WEB_CLIENT_ID")
+                "String",
+                "WEB_CLIENT_ID",
+                "\"${prodSecrets.requireKey("WEB_CLIENT_ID")}\""
             )
         }
     }

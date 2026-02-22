@@ -15,12 +15,14 @@ class SettingPreferenceDataSource @Inject constructor(
     object PreferencesKey {
         val IS_DARK_THEME = booleanPreferencesKey("IS_DARK_THEME")
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("HAS_SEEN_ONBOARDING")
+        val PUSH_OPT_IN = booleanPreferencesKey("PUSH_OPT_IN")
     }
 
     val settingsData = dataStore.data.map { preferences ->
         SettingsData(
             isDarkTheme = preferences[PreferencesKey.IS_DARK_THEME] ?: false,
-            hasSeenOnboarding = preferences[PreferencesKey.HAS_SEEN_ONBOARDING] ?: false
+            hasSeenOnboarding = preferences[PreferencesKey.HAS_SEEN_ONBOARDING] ?: false,
+            pushOptIn = preferences[PreferencesKey.PUSH_OPT_IN] ?: true
         )
     }
 
@@ -33,6 +35,12 @@ class SettingPreferenceDataSource @Inject constructor(
     suspend fun updateHasSeenOnboarding(hasSeenOnboarding: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKey.HAS_SEEN_ONBOARDING] = hasSeenOnboarding
+        }
+    }
+
+    suspend fun updatePushOptIn(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKey.PUSH_OPT_IN] = enabled
         }
     }
 }

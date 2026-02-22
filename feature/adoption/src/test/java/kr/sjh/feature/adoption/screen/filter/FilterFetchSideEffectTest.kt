@@ -102,6 +102,23 @@ class FilterFetchSideEffectTest {
     }
 
     @Test
+    fun confirmLocation_nationwide_emits_fetch_with_empty_location_codes() = runTest {
+        val viewModel = FilterViewModel(FakeAdoptionRepository())
+        drainInitialFetch(viewModel)
+
+        viewModel.onEvent(
+            FilterEvent.ConfirmLocation(
+                sido = Sido(orgCd = "", orgdownNm = "전국"),
+                sigungu = Sigungu(uprCd = "", orgCd = "", orgdownNm = "")
+            )
+        )
+
+        val req = awaitFetchRequest(viewModel)
+        assertEquals("", req.upr_cd)
+        assertEquals("", req.org_cd)
+    }
+
+    @Test
     fun reset_emits_fetch_with_default_filter_request() = runTest {
         val viewModel = FilterViewModel(FakeAdoptionRepository())
         drainInitialFetch(viewModel)

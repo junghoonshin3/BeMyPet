@@ -5,8 +5,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,14 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.zIndex
 import coil.request.ImageRequest
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.PinchZoomComponent
 import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 
@@ -49,16 +57,37 @@ private fun PetPinedZoomScreen(
     var topBarShow by remember { mutableStateOf(true) }
 
     Box(modifier = modifier) {
-        AnimatedVisibility(
+        Column(
             modifier = Modifier
-                .zIndex(1f),
-            visible = topBarShow,
-            enter = fadeIn(),
-            exit = fadeOut()
+                .fillMaxWidth()
+                .zIndex(2f)
         ) {
-            BeMyPetTopAppBar(
-                title = {
-                    IconButton(onClick = close) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+            }
+
+            AnimatedVisibility(
+                visible = topBarShow,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
+                        .clip(RoundedCornerBottom24)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        modifier = Modifier.size(40.dp),
+                        onClick = close
+                    ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
                             contentDescription = "back",
@@ -67,16 +96,14 @@ private fun PetPinedZoomScreen(
                     }
                     Text(
                         text = "사진 확대",
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(4.dp, RoundedCornerBottom24)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
-                    .clip(RoundedCornerBottom24)
-            )
+                }
+            }
         }
 
         PinchZoomComponent(

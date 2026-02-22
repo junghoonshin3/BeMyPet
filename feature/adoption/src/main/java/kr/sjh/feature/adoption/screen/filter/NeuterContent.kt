@@ -38,6 +38,7 @@ fun NeuterContent(
                 CheckBoxButton(modifier = Modifier.fillMaxWidth(),
                     title = item.title,
                     selected = newNeuter == item,
+                    showBorder = false,
                     onClick = {
                         newNeuter = item
                     })

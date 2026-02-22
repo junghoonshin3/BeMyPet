@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -50,6 +48,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.core.designsystem.R
 import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
+import kr.sjh.core.designsystem.components.PrimaryActionButton
+import kr.sjh.core.designsystem.components.SelectableListItem
 import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
@@ -175,22 +175,13 @@ fun ReportScreen(
                         )
 
                         Box {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { reasonExpanded = true },
-                                shape = RoundedCorner12,
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
-                                Text(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-                                    text = selectedReason,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                            SelectableListItem(
+                                title = selectedReason,
+                                modifier = Modifier.fillMaxWidth(),
+                                selected = true,
+                                showCheckIcon = false,
+                                onClick = { reasonExpanded = true }
+                            )
 
                             DropdownMenu(
                                 expanded = reasonExpanded,
@@ -246,12 +237,15 @@ fun ReportScreen(
                                     ),
                                     placeholder = { Text("추가 설명을 입력하세요.") },
                                     colors = TextFieldDefaults.colors(
-                                        cursorColor = Color.Black,
+                                        cursorColor = MaterialTheme.colorScheme.secondary,
                                         unfocusedContainerColor = Color.Transparent,
                                         focusedContainerColor = Color.Transparent,
                                         unfocusedIndicatorColor = Color.Transparent,
                                         focusedIndicatorColor = Color.Transparent,
-                                        selectionColors = TextSelectionColors(Color.Black, Color.Black)
+                                        selectionColors = TextSelectionColors(
+                                            MaterialTheme.colorScheme.secondary,
+                                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)
+                                        )
                                     ),
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -263,26 +257,16 @@ fun ReportScreen(
                 }
             }
 
-            Button(
+            PrimaryActionButton(
+                text = "신고 제출",
                 enabled = !uiState.loading,
+                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     focusManager.clearFocus()
                     keyboardController?.hide()
                     onReportSubmit(selectedReason, description)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Text(text = "신고 제출", style = MaterialTheme.typography.titleMedium)
-            }
+                }
+            )
         }
     }
 }

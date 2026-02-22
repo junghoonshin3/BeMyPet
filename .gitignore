@@ -9,6 +9,10 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 secrets.properties
+secrets.dev.properties
+secrets.prod.properties
+!secrets.dev.properties.example
+!secrets.prod.properties.example
 version.properties
 *.keystore
 *.jks
@@ -180,3 +184,5 @@ release
 
 # End of https://www.toptal.com/developers/gitignore/api/android,androidstudio,firebase
 app/upload_certificate.pem
+.agents/
+.worktrees/

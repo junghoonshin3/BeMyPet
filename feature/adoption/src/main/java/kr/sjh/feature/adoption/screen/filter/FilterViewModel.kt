@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.snackbar.SnackBarManager
-import kr.sjh.core.model.Response
 import kr.sjh.core.model.adoption.filter.Sido
 import kr.sjh.core.model.adoption.filter.Sigungu
 import kr.sjh.data.repository.AdoptionRepository
@@ -74,7 +73,6 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
             }
 
             is FilterEvent.ConfirmLocation -> {
-                //TODO 동물 입양 fetch 필요
                 confirmLocation(event.sido, event.sigungu)
                 hideBottomSheet()
             }
@@ -175,16 +173,15 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
 
     private fun confirmLocation(sido: Sido, sigungu: Sigungu) {
         _filterUiState.update {
-            if (sido.orgCd.isBlank()) {
-                it.selectedCategory?.isSelected?.value = true
-                it.selectedCategory?.selectedText?.value = sido.orgdownNm
+            val text = if (sido.orgCd.isBlank()) sido.orgdownNm
+            else "${sido.orgdownNm} ${sigungu.orgdownNm}"
+            val base = if (sido.orgCd.isBlank()) {
                 it.copy(selectedSido = Sido(), selectedSigungu = Sigungu())
             } else {
-                it.selectedCategory?.isSelected?.value = true
-                it.selectedCategory?.selectedText?.value = "${sido.orgdownNm} ${sigungu.orgdownNm}"
-                it.copy(
-                    selectedSido = sido, selectedSigungu = sigungu
-                )
+                it.copy(selectedSido = sido, selectedSigungu = sigungu)
+            }
+            base.withUpdatedCategory { cat ->
+                cat.copy(isSelected = true, selectedText = text)
             }
         }
         fetchPets()
@@ -192,20 +189,18 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
 
     private fun confirmNeuter(neuter: Neuter) {
         _filterUiState.update {
-            it.copy(selectedNeuter = neuter, selectedCategory = it.selectedCategory?.apply {
-                isSelected.value = true
-                selectedText.value = neuter.title
-            })
+            it.copy(selectedNeuter = neuter).withUpdatedCategory { cat ->
+                cat.copy(isSelected = true, selectedText = neuter.title)
+            }
         }
         fetchPets()
     }
 
     private fun confirmUpKind(upKind: UpKind) {
         _filterUiState.update {
-            it.copy(selectedUpKind = upKind, selectedCategory = it.selectedCategory?.apply {
-                isSelected.value = true
-                selectedText.value = upKind.title
-            })
+            it.copy(selectedUpKind = upKind).withUpdatedCategory { cat ->
+                cat.copy(isSelected = true, selectedText = upKind.title)
+            }
         }
         fetchPets()
     }
@@ -226,7 +221,7 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
             it.copy(
                 selectedStartDate = LocalDate.now().minusDays(7).format(dateRangeFormater),
                 selectedEndDate = LocalDate.now().format(dateRangeFormater),
-                categoryList = it.categoryList.onEach { it.reset() },
+                categoryList = it.categoryList.map { cat -> Category(type = cat.type) },
                 selectedCategory = null,
                 selectedSido = Sido(),
                 selectedSigungu = Sigungu(),
@@ -240,13 +235,24 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
     private fun confirmDateRange(start: String, end: String) {
         _filterUiState.update {
             it.copy(
-                selectedCategory = it.selectedCategory?.apply {
-                    isSelected.value = true
-                    selectedText.value = "$start ~ $end"
-                }, selectedStartDate = start, selectedEndDate = end
-            )
+                selectedStartDate = start, selectedEndDate = end
+            ).withUpdatedCategory { cat ->
+                cat.copy(isSelected = true, selectedText = "$start ~ $end")
+            }
         }
         fetchPets()
+    }
+
+    private fun FilterUiState.withUpdatedCategory(
+        transform: (Category) -> Category
+    ): FilterUiState {
+        val updated = selectedCategory?.let(transform)
+        return copy(
+            selectedCategory = updated,
+            categoryList = if (updated != null) {
+                categoryList.map { if (it.type == updated.type) updated else it }
+            } else categoryList
+        )
     }
 
     private fun fetchPets() {

@@ -1,7 +1,6 @@
 package kr.sjh.feature.adoption.screen.filter
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,11 +57,11 @@ fun LocationContent(
     val sidoIndex = sidoList.indexOf(selectedSido).coerceAtLeast(0)
     val sigunguIndex = sigunguList.indexOf(selectedSigungu).coerceAtLeast(0)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(sidoIndex) {
         sidoState.scrollToItem(sidoIndex) // 선택한 아이템으로 스크롤
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(sigunguIndex) {
         sigunguState.scrollToItem(sigunguIndex)
     }
 
@@ -89,11 +88,6 @@ fun LocationContent(
                     .weight(0.4f)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner18)
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                        RoundedCorner18
-                    )
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
@@ -108,6 +102,7 @@ fun LocationContent(
                             modifier = Modifier.fillMaxWidth(),
                             title = sido.orgdownNm,
                             selected = updateSido.orgCd == sido.orgCd,
+                            showBorder = false,
                             onClick = {
                                 if (updateSido.orgCd != sido.orgCd) {
                                     updateSido = sido
@@ -124,11 +119,6 @@ fun LocationContent(
                     .weight(0.6f)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCorner18)
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                        RoundedCorner18
-                    )
             ) {
                 if (isLoading) {
                     Box(
@@ -153,6 +143,7 @@ fun LocationContent(
                             modifier = Modifier.fillMaxWidth(),
                             title = sigungu.orgdownNm,
                             selected = updateSigungu.orgCd == sigungu.orgCd,
+                            showBorder = false,
                             onClick = {
                                 if (updateSigungu.orgCd != sigungu.orgCd) {
                                     updateSigungu = sigungu

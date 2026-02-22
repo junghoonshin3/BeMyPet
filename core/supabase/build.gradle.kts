@@ -1,5 +1,20 @@
-import org.jetbrains.kotlin.konan.properties.Properties
-import java.io.FileInputStream
+import java.util.Properties
+
+fun loadSecrets(fileName: String): Properties = Properties().apply {
+    val file = rootProject.file(fileName)
+    check(file.exists()) { "Missing secrets file: $fileName" }
+    file.inputStream().use { load(it) }
+}
+
+fun Properties.requireKey(name: String): String =
+    getProperty(name)
+        ?.trim()
+        ?.trim('"')
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("Missing key '$name'")
+
+val devSecrets = loadSecrets("secrets.dev.properties")
+val prodSecrets = loadSecrets("secrets.prod.properties")
 
 plugins {
     alias(libs.plugins.bemypet.android.library)
@@ -9,17 +24,36 @@ plugins {
 
 android {
     namespace = "kr.sjh.core.supabase"
-    defaultConfig {
-        val properties = Properties()
-        properties.load(FileInputStream(rootProject.file("secrets.properties")))
-        buildConfigField(
-            "String", "SUPABASE_ANON_KEY", "\"${properties.getProperty("SUPABASE_ANON_KEY")}\""
-        )
-        buildConfigField("String", "SUPABASE_URL", "\"${properties.getProperty("SUPABASE_URL")}\"")
-    }
 
     buildFeatures {
         buildConfig = true
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "SUPABASE_ANON_KEY",
+                "\"${devSecrets.requireKey("SUPABASE_ANON_KEY")}\""
+            )
+            buildConfigField(
+                "String",
+                "SUPABASE_URL",
+                "\"${devSecrets.requireKey("SUPABASE_URL")}\""
+            )
+        }
+        release {
+            buildConfigField(
+                "String",
+                "SUPABASE_ANON_KEY",
+                "\"${prodSecrets.requireKey("SUPABASE_ANON_KEY")}\""
+            )
+            buildConfigField(
+                "String",
+                "SUPABASE_URL",
+                "\"${prodSecrets.requireKey("SUPABASE_URL")}\""
+            )
+        }
     }
 }
 
@@ -30,5 +64,6 @@ dependencies {
     implementation(libs.supabase.realtime.kt)
     implementation(libs.supabase.postgrest.kt)
     implementation(libs.supabase.functions.kt)
+    implementation(libs.ktor.client.cio)
     implementation(project(":core:ktor"))
 }
