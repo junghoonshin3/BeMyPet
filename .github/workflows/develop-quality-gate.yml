@@ -24,6 +24,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare CI-only config files
         run: |
+          cat > version.properties <<'EOF'
+          VERSION_CODE=1
+          VERSION_MAJOR=0
+          VERSION_MINOR=0
+          VERSION_PATCH=0
+          EOF
+
           cat > secrets.dev.properties <<'EOF'
           MAPS_API_KEY=dummy-maps-key
           AD_ID=dummy-ad-id
