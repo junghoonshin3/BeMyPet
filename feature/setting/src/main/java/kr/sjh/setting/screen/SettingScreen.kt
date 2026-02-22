@@ -2,6 +2,9 @@ package kr.sjh.setting.screen
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,8 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -134,11 +136,12 @@ fun SettingRoute(
         },
         onNavigateToBlockedUser = onNavigateToBlockedUser,
         onNavigateToMyComments = onNavigateToMyComments,
-        onUpdateProfile = { userId, displayName, avatarUrl ->
-            viewModel.updateProfile(
+        onUpdateProfile = { userId, displayName, avatarBytes, currentAvatarUrl ->
+            viewModel.updateProfileWithAvatar(
                 userId = userId,
                 displayName = displayName,
-                avatarUrl = avatarUrl,
+                avatarBytes = avatarBytes,
+                currentAvatarUrl = currentAvatarUrl,
                 onSuccess = {
                     SnackBarManager.showMessage("프로필을 업데이트했어요.")
                 },
@@ -162,23 +165,42 @@ fun SettingScreen(
     onDeleteAccount: (String) -> Unit,
     onNavigateToBlockedUser: (String) -> Unit,
     onNavigateToMyComments: (String) -> Unit,
-    onUpdateProfile: (String, String, String?) -> Unit
+    onUpdateProfile: (String, String, ByteArray?, String?) -> Unit
 ) {
     var selectedTheme by remember(isDarkTheme) {
         mutableStateOf(if (isDarkTheme) SettingType.DARK_THEME else SettingType.LIGHT_THEME)
     }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val avatarFieldFocusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
     var showProfileEditDialog by rememberSaveable { mutableStateOf(false) }
     var editingUserId by rememberSaveable { mutableStateOf<String?>(null) }
     var nameInput by rememberSaveable { mutableStateOf("") }
-    var avatarInput by rememberSaveable { mutableStateOf("") }
+    var selectedAvatarPreview by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedAvatarBytes by remember { mutableStateOf<ByteArray?>(null) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            AvatarImageCompressor.compress(
+                contentResolver = context.contentResolver,
+                uri = uri
+            )
+        }.onSuccess { bytes ->
+            selectedAvatarPreview = uri.toString()
+            selectedAvatarBytes = bytes
+        }.onFailure { throwable ->
+            SnackBarManager.showMessage(throwable.message ?: "이미지를 처리할 수 없어요.")
+        }
+    }
 
     LaunchedEffect(session is SessionState.Authenticated) {
         if (session !is SessionState.Authenticated) {
             showProfileEditDialog = false
             editingUserId = null
+            selectedAvatarPreview = null
+            selectedAvatarBytes = null
         }
     }
 
@@ -186,13 +208,18 @@ fun SettingScreen(
         ProfileEditDialog(
             nameInput = nameInput,
             onNameInputChange = { nameInput = it },
-            avatarInput = avatarInput,
-            onAvatarInputChange = { avatarInput = it },
-            avatarFieldFocusRequester = avatarFieldFocusRequester,
+            avatarPreviewModel = selectedAvatarPreview,
+            onPickAvatar = {
+                imagePickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
             onDismiss = {
                 focusManager.clearFocus(force = true)
                 keyboardController?.hide()
                 showProfileEditDialog = false
+                selectedAvatarBytes = null
+                selectedAvatarPreview = null
             },
             onSave = {
                 val userId = editingUserId ?: return@ProfileEditDialog
@@ -201,11 +228,14 @@ fun SettingScreen(
                     onUpdateProfile(
                         userId,
                         trimmedName,
-                        avatarInput.trim().ifBlank { null }
+                        selectedAvatarBytes,
+                        selectedAvatarPreview,
                     )
                     focusManager.clearFocus(force = true)
                     keyboardController?.hide()
                     showProfileEditDialog = false
+                    selectedAvatarBytes = null
+                    selectedAvatarPreview = null
                 }
             }
         )
@@ -274,7 +304,9 @@ fun SettingScreen(
                             onEditClick = {
                                 editingUserId = session.user.id
                                 nameInput = profile?.displayName ?: session.user.displayName
-                                avatarInput = profile?.avatarUrl ?: session.user.avatarUrl.orEmpty()
+                                selectedAvatarPreview =
+                                    profile?.avatarUrl ?: session.user.avatarUrl
+                                selectedAvatarBytes = null
                                 showProfileEditDialog = true
                             }
                         )
@@ -416,9 +448,8 @@ private fun ProfileSection(
 private fun ProfileEditDialog(
     nameInput: String,
     onNameInputChange: (String) -> Unit,
-    avatarInput: String,
-    onAvatarInputChange: (String) -> Unit,
-    avatarFieldFocusRequester: FocusRequester,
+    avatarPreviewModel: String?,
+    onPickAvatar: () -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -430,26 +461,34 @@ private fun ProfileEditDialog(
         title = "프로필 수정",
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape),
+                        model = avatarPreviewModel ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
+                        contentDescription = "profile_preview",
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                OutlinedButton(
+                    onClick = onPickAvatar,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCorner12
+                ) {
+                    Text("이미지 선택")
+                }
                 OutlinedTextField(
                     value = nameInput,
                     onValueChange = onNameInputChange,
                     label = { Text("닉네임") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCorner12,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(
-                        onNext = { avatarFieldFocusRequester.requestFocus() }
-                    )
-                )
-                OutlinedTextField(
-                    value = avatarInput,
-                    onValueChange = onAvatarInputChange,
-                    label = { Text("아바타 URL") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(avatarFieldFocusRequester),
                     shape = RoundedCorner12,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(

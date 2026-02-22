@@ -66,4 +66,41 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
         }
     }
 
+    fun updateProfileWithAvatar(
+        userId: String,
+        displayName: String,
+        avatarBytes: ByteArray?,
+        currentAvatarUrl: String?,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val avatarUrl = runCatching {
+                if (avatarBytes != null) {
+                    authRepository.uploadProfileAvatar(
+                        userId = userId,
+                        bytes = avatarBytes,
+                        contentType = "image/jpeg",
+                    )
+                } else {
+                    currentAvatarUrl ?: profileUiState.value.profile?.avatarUrl
+                }
+            }.getOrElse { throwable ->
+                onFailure(throwable as? Exception ?: Exception(throwable))
+                return@launch
+            }
+
+            authRepository.updateProfile(
+                userId = userId,
+                displayName = displayName,
+                avatarUrl = avatarUrl,
+                onSuccess = {
+                    loadProfile(userId)
+                    onSuccess()
+                },
+                onFailure = onFailure
+            )
+        }
+    }
+
 }
