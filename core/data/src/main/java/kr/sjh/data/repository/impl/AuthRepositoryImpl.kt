@@ -43,4 +43,12 @@ class AuthRepositoryImpl @Inject constructor(
         authService.updateProfile(userId, displayName, avatarUrl, onSuccess, onFailure)
     }
 
+    override suspend fun uploadProfileAvatar(
+        userId: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): String {
+        return authService.uploadProfileAvatar(userId, bytes, contentType)
+    }
+
 }

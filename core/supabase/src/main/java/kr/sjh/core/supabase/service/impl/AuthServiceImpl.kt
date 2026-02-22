@@ -164,6 +164,14 @@ class AuthServiceImpl @Inject constructor(
         }
     }
 
+    override suspend fun uploadProfileAvatar(
+        userId: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): String {
+        throw UnsupportedOperationException("uploadProfileAvatar is not implemented yet.")
+    }
+
     private suspend fun ensureProfile(user: UserInfo?): UserProfile {
         val userId = user?.id?.toString().orEmpty()
         val meta = user?.userMetadata ?: JsonObject(emptyMap())

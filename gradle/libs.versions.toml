@@ -143,6 +143,7 @@ supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt"
 supabase-realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-functions-kt = { module = "io.github.jan-tennert.supabase:functions-kt" }
+supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt" }
 
 
 #lottie
