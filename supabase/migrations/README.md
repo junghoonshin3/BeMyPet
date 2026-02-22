@@ -25,3 +25,6 @@ Smoke test:
 
 `banned_until` and `delete_user` are currently called as Supabase Edge Functions from Android.
 If those functions exist, update them to be compatible with soft-delete (`profiles.is_deleted`, `profiles.deleted_at`).
+
+For notification retention rollout, deploy:
+- `new_notice_dispatch`
