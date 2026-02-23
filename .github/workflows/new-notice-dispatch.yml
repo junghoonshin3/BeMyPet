@@ -3,10 +3,25 @@ name: new-notice-dispatch
 on:
   schedule:
     - cron: "0 */6 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Target GitHub environment"
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - development
+      dry_run:
+        description: "Run without sending push"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
-  dispatch:
+  dispatch-scheduled:
+    if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -15,8 +30,27 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          curl -sS -X POST "${SUPABASE_URL}/functions/v1/new_notice_dispatch" \
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body -X POST "${SUPABASE_URL}/functions/v1/new_notice_dispatch" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
             --data '{"dry_run":false}'
+
+  dispatch-manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
+    steps:
+      - name: Invoke new_notice_dispatch
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body -X POST "${SUPABASE_URL}/functions/v1/new_notice_dispatch" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            --data "{\"dry_run\":${DRY_RUN}}"
