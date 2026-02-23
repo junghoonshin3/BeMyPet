@@ -23,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.designsystem.theme.BeMyPetTheme
 
@@ -63,12 +64,10 @@ class StartActivity : ComponentActivity() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 startViewModel.session.collect { session ->
+                    val pushSyncPrefs = getSharedPreferences(PUSH_PREF_NAME, MODE_PRIVATE)
                     if (session is SessionState.Authenticated) {
                         val userId = session.user.id
-                        getSharedPreferences(PUSH_PREF_NAME, MODE_PRIVATE)
-                            .edit()
-                            .putString(KEY_CURRENT_USER_ID, userId)
-                            .apply()
+                        pushSyncPrefs.edit { putString(KEY_CURRENT_USER_ID, userId) }
 
                         startViewModel.touchLastActive(userId)
 
@@ -76,6 +75,8 @@ class StartActivity : ComponentActivity() {
                             .addOnSuccessListener { token ->
                                 startViewModel.syncPushSubscription(userId, token)
                             }
+                    } else {
+                        pushSyncPrefs.edit { remove(KEY_CURRENT_USER_ID) }
                     }
                 }
             }
