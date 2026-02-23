@@ -52,10 +52,16 @@ class AuthServiceImpl @Inject constructor(
         } catch (e: Exception) {
             when (e) {
                 is AuthRestException -> {
-                    onFailure(Exception(e.errorDescription))
+                    val message = e.errorDescription
+                        .takeIf { it.isNotBlank() }
+                        ?: e.message
+                        ?: "Google 로그인에 실패했어요."
+                    Log.e(TAG, "Supabase Google sign-in failed. message=$message", e)
+                    onFailure(Exception(message))
                 }
 
                 else -> {
+                    Log.e(TAG, "Unexpected Google sign-in failure.", e)
                     onFailure(e)
                 }
             }

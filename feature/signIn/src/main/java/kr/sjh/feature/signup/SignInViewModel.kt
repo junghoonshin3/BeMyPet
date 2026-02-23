@@ -53,9 +53,7 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
             _uiState.value =
                 _uiState.value.copy(isSignedIn = true, isLoading = false, errorMessage = "")
         }, { e ->
-            val safeMessage =
-                e.message?.takeIf { it.isNotBlank() }
-                    ?: "Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."
+            val safeMessage = mapSignInFailureMessage(e)
             _uiState.value =
                 _uiState.value.copy(
                     isSignedIn = false,
@@ -63,5 +61,22 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
                     errorMessage = safeMessage
                 )
         })
+    }
+
+    private fun mapSignInFailureMessage(exception: Exception): String {
+        val raw = exception.message?.trim().orEmpty()
+        val lowered = raw.lowercase()
+
+        return when {
+            lowered.contains("developer_error") ||
+                lowered.contains("invalid_audience") ||
+                (lowered.contains("audience") && lowered.contains("client")) ||
+                lowered.contains("invalid login credentials") -> {
+                "Google 로그인 설정이 맞지 않아 관리자 확인이 필요해요."
+            }
+
+            raw.isNotBlank() -> raw
+            else -> "Google 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."
+        }
     }
 }
