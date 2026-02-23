@@ -22,7 +22,7 @@ class SettingPreferenceDataSource @Inject constructor(
         SettingsData(
             isDarkTheme = preferences[PreferencesKey.IS_DARK_THEME] ?: false,
             hasSeenOnboarding = preferences[PreferencesKey.HAS_SEEN_ONBOARDING] ?: false,
-            pushOptIn = preferences[PreferencesKey.PUSH_OPT_IN] ?: true
+            pushOptIn = preferences[PreferencesKey.PUSH_OPT_IN] ?: false
         )
     }
 

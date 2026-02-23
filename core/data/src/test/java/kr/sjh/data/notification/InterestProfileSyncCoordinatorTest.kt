@@ -104,6 +104,11 @@ private class FakeNotificationRepository(
 
     override suspend fun getInterestProfile(userId: String): UserInterestProfile? = existing
 
+    override suspend fun upsertInterestPushEnabled(
+        userId: String,
+        pushEnabled: Boolean,
+    ) = Unit
+
     override suspend fun upsertSubscription(
         userId: String,
         token: String,

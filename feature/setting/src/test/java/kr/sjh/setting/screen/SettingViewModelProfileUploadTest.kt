@@ -11,8 +11,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.UserProfile
+import kr.sjh.core.model.notification.UserInterestProfile
 import kr.sjh.core.model.setting.SettingType
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,8 +33,9 @@ class SettingViewModelProfileUploadTest {
     @Test
     fun updateProfileWithAvatar_uploadsFirst_thenUpdatesProfile() = runTest {
         val fakeRepository = FakeAuthRepository()
+        val notificationRepository = FakeNotificationRepository()
         val settingRepository = FakeSettingRepository()
-        val viewModel = SettingViewModel(fakeRepository, settingRepository)
+        val viewModel = SettingViewModel(fakeRepository, notificationRepository, settingRepository)
 
         viewModel.updateProfileWithAvatar(
             userId = "user-id",
@@ -47,7 +50,11 @@ class SettingViewModelProfileUploadTest {
 
     @Test
     fun startProfileEdit_andDismiss_keepsStateInViewModel() {
-        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository())
+        val viewModel = SettingViewModel(
+            FakeAuthRepository(),
+            FakeNotificationRepository(),
+            FakeSettingRepository()
+        )
 
         viewModel.startProfileEdit(
             userId = "user-id",
@@ -65,7 +72,11 @@ class SettingViewModelProfileUploadTest {
 
     @Test
     fun selectTheme_updatesUiStateTheme() {
-        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository())
+        val viewModel = SettingViewModel(
+            FakeAuthRepository(),
+            FakeNotificationRepository(),
+            FakeSettingRepository()
+        )
 
         viewModel.selectTheme(SettingType.DARK_THEME)
 
@@ -74,11 +85,31 @@ class SettingViewModelProfileUploadTest {
 
     @Test
     fun setPushOptIn_updatesUiStateImmediately() {
-        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository(initialPushOptIn = true))
+        val viewModel = SettingViewModel(
+            FakeAuthRepository(),
+            FakeNotificationRepository(),
+            FakeSettingRepository(initialPushOptIn = true)
+        )
 
-        viewModel.setPushOptIn(false)
+        viewModel.setPushOptIn(enabled = false, userId = "user-id")
 
         assertFalse(viewModel.profileUiState.value.pushOptIn)
+    }
+
+    @Test
+    fun setPushOptIn_withAuthenticatedUser_syncsInterestProfile() = runTest {
+        val fakeNotificationRepository = FakeNotificationRepository()
+        val viewModel = SettingViewModel(
+            FakeAuthRepository(),
+            fakeNotificationRepository,
+            FakeSettingRepository(initialPushOptIn = false)
+        )
+
+        viewModel.setPushOptIn(enabled = true, userId = " user-id ")
+        advanceUntilIdle()
+
+        assertEquals("user-id", fakeNotificationRepository.lastUserId)
+        assertEquals(true, fakeNotificationRepository.lastPushEnabled)
     }
 }
 
@@ -143,6 +174,39 @@ private class FakeSettingRepository(initialPushOptIn: Boolean = true) : SettingR
         lastUpdatedPushOptIn = enabled
         pushOptIn.value = enabled
     }
+}
+
+private class FakeNotificationRepository : NotificationRepository {
+    var lastUserId: String? = null
+    var lastPushEnabled: Boolean? = null
+
+    override suspend fun upsertInterestProfile(
+        userId: String,
+        regions: List<String>,
+        species: List<String>,
+        sexes: List<String>,
+        sizes: List<String>,
+        pushEnabled: Boolean,
+    ) {
+        lastUserId = userId
+        lastPushEnabled = pushEnabled
+    }
+
+    override suspend fun upsertInterestPushEnabled(userId: String, pushEnabled: Boolean) {
+        lastUserId = userId
+        lastPushEnabled = pushEnabled
+    }
+
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? = null
+
+    override suspend fun upsertSubscription(
+        userId: String,
+        token: String,
+        pushOptIn: Boolean,
+        timezone: String,
+    ) = Unit
+
+    override suspend fun touchLastActive(userId: String) = Unit
 }
 
 private class MainDispatcherRule(
