@@ -9,6 +9,8 @@
 
 - GitHub Actions 워크플로우: `.github/workflows/notification-token-cleanup.yml`
 - 실행 주기: 매일 01:00 KST (`cron: 0 16 * * *`, UTC 기준)
+- 스케줄 타깃: `production` environment 고정
+- 수동 실행 타깃: `production` 또는 `development` 선택 가능
 - 호출 함수: `POST /functions/v1/notification_token_cleanup`
 - 요청 payload:
 
@@ -22,13 +24,14 @@
 
 ## 필수 GitHub Secrets
 
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `production`/`development` environment 각각에 아래 등록
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
 
 ## 수동 실행
 
 1. GitHub `Actions` 탭에서 `notification-token-cleanup` 워크플로우 선택
-2. `Run workflow` 실행
+2. 필요 시 `target_environment`, `stale_before_days`, `dry_run` 입력 후 `Run workflow` 실행
 3. 실행 로그에서 `deleted_count`와 오류 메시지 확인
 
 ## 점검 포인트
@@ -51,3 +54,5 @@
 - 함수 구현: `supabase/functions/notification_token_cleanup/index.ts`
 - 스모크 테스트: `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`
 - 신규 공고 요약 푸시 스케줄: `.github/workflows/new-notice-dispatch.yml` (6시간 주기)
+
+워크플로우는 `curl --fail-with-body`를 사용하므로 4xx/5xx 응답 시 즉시 실패 처리된다.
