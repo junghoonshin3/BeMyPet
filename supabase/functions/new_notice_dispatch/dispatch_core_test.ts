@@ -1,6 +1,7 @@
 import {
   buildDateWindow,
   buildNoticeKey,
+  chunkKeysForInFilter,
   matchesInterest,
   summarizeByUser,
 } from "./dispatch_core.ts";
@@ -36,5 +37,20 @@ Deno.test("summarizeByUser groups many notices into one payload", () => {
   ]);
   if (rows[0]?.matchedCount !== 2) {
     throw new Error(`grouping failed: ${JSON.stringify(rows)}`);
+  }
+});
+
+Deno.test("chunkKeysForInFilter splits long encoded keys into smaller in-filter chunks", () => {
+  const keys = Array.from({ length: 80 }, (_, i) => `전남-함평-2026-${String(i).padStart(5, "0")}`);
+  const chunks = chunkKeysForInFilter(keys, 300);
+  if (chunks.length < 2) {
+    throw new Error(`expected chunks to split: ${JSON.stringify(chunks)}`);
+  }
+
+  for (const chunk of chunks) {
+    const encodedLength = chunk.reduce((sum, key) => sum + encodeURIComponent(key).length + 1, 0);
+    if (encodedLength > 300) {
+      throw new Error(`chunk exceeds max encoded length: ${encodedLength}`);
+    }
   }
 });

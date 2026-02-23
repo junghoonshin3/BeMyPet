@@ -2,6 +2,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   buildDateWindow,
   buildNoticeKey,
+  chunkKeysForInFilter,
   matchesInterest,
   summarizeByUser,
 } from "./dispatch_core.ts";
@@ -132,15 +133,6 @@ function classifySizeCategory(weightRaw: string): string {
   if (value <= 5) return "SMALL";
   if (value <= 15) return "MEDIUM";
   return "LARGE";
-}
-
-function chunked<T>(list: T[], size: number): T[][] {
-  if (list.length == 0) return [];
-  const chunks: T[][] = [];
-  for (let i = 0; i < list.length; i += size) {
-    chunks.push(list.slice(i, i + size));
-  }
-  return chunks;
 }
 
 async function shortHash(input: string): Promise<string> {
@@ -317,7 +309,7 @@ async function cleanupExpiredSeenNotices(adminClient: any, nowIso: string): Prom
 
 async function loadExistingNoticeKeys(adminClient: any, noticeKeys: string[]): Promise<Set<string>> {
   const existing = new Set<string>();
-  for (const keys of chunked(noticeKeys, 200)) {
+  for (const keys of chunkKeysForInFilter(noticeKeys)) {
     const { data, error } = await adminClient
       .from("notification_seen_notices")
       .select("notice_key")

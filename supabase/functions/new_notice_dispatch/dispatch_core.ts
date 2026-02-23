@@ -30,6 +30,34 @@ export type UserNoticeSummary = {
   matchedCount: number;
 };
 
+export function chunkKeysForInFilter(keys: string[], maxEncodedLength = 1200): string[][] {
+  if (keys.length == 0) return [];
+  const chunks: string[][] = [];
+  let current: string[] = [];
+  let currentLength = 0;
+
+  for (const rawKey of keys) {
+    const key = rawKey.trim();
+    if (!key) continue;
+
+    const encodedLength = encodeURIComponent(key).length + 1;
+    if (current.length > 0 && (currentLength + encodedLength) > maxEncodedLength) {
+      chunks.push(current);
+      current = [];
+      currentLength = 0;
+    }
+
+    current.push(key);
+    currentLength += encodedLength;
+  }
+
+  if (current.length > 0) {
+    chunks.push(current);
+  }
+
+  return chunks;
+}
+
 function parseIsoDate(value: string): Date | null {
   const raw = value.trim();
   if (!raw) return null;
