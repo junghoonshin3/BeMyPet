@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kr.sjh.core.model.SessionState
+import kr.sjh.core.model.notification.UserInterestProfile
 import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import org.junit.Rule
@@ -18,7 +19,6 @@ import org.junit.runner.Description
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class OnboardingViewModelTest {
 
@@ -26,7 +26,7 @@ class OnboardingViewModelTest {
     private val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun `complete onboarding emits selected interests and push opt in`() {
+    fun `complete onboarding emits selected interests`() {
         val viewModel = OnboardingViewModel(
             notificationRepository = FakeNotificationRepository(),
             settingRepository = FakeSettingRepository(),
@@ -34,27 +34,23 @@ class OnboardingViewModelTest {
 
         viewModel.toggleSpecies("dog")
         viewModel.toggleRegion("6110000")
-        viewModel.setPushOptIn(true)
 
         val payload = viewModel.buildSubmitPayloadForTest()
 
         assertEquals(listOf("dog"), payload.species)
         assertEquals(listOf("6110000"), payload.regions)
-        assertTrue(payload.pushOptIn)
     }
 
     @Test
-    fun `submit with permission denied stores push opt out`() = runTest {
+    fun `submit stores push opt out by default`() = runTest {
         val fakeSettingRepository = FakeSettingRepository()
         val viewModel = OnboardingViewModel(
             notificationRepository = FakeNotificationRepository(),
             settingRepository = fakeSettingRepository,
         )
-        viewModel.setPushOptIn(true)
 
         viewModel.submit(
             session = SessionState.NoAuthenticated(isSignOut = false),
-            resolvedPushOptIn = false,
         )
         advanceUntilIdle()
 
@@ -71,6 +67,10 @@ private class FakeNotificationRepository : NotificationRepository {
         sizes: List<String>,
         pushEnabled: Boolean,
     ) = Unit
+
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? = null
+
+    override suspend fun upsertInterestPushEnabled(userId: String, pushEnabled: Boolean) = Unit
 
     override suspend fun upsertSubscription(
         userId: String,

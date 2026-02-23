@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kr.sjh.data.notification.InterestProfileSyncCoordinator
 import kr.sjh.core.model.SessionState
 import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
@@ -25,10 +26,13 @@ class StartViewModel @Inject constructor(
     private val sessionStore: SessionStore,
     private val settingRepository: SettingRepository,
     private val notificationRepository: NotificationRepository,
+    private val interestProfileSyncCoordinator: InterestProfileSyncCoordinator,
 ) : ViewModel() {
     private companion object {
         const val TAG = "StartViewModel"
     }
+
+    private var lastFavoriteInterestSyncUserId: String? = null
 
     val isDarkTheme = settingRepository.getDarkTheme()
     val hasSeenOnboarding = settingRepository.getHasSeenOnboarding()
@@ -69,6 +73,32 @@ class StartViewModel @Inject constructor(
         }.onFailure { throwable ->
             Log.e(TAG, "Failed to sync push subscription", throwable)
         }
+
+        runCatching {
+            notificationRepository.upsertInterestPushEnabled(
+                userId = normalizedUserId,
+                pushEnabled = pushOptIn,
+            )
+        }.onFailure { throwable ->
+            Log.e(TAG, "Failed to sync interest push_enabled", throwable)
+        }
+    }
+
+    fun syncInterestProfileFromFavoritesOnce(userId: String) = viewModelScope.launch {
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return@launch
+        if (lastFavoriteInterestSyncUserId == normalizedUserId) return@launch
+
+        runCatching {
+            interestProfileSyncCoordinator.syncFromFavorites(normalizedUserId)
+            lastFavoriteInterestSyncUserId = normalizedUserId
+        }.onFailure { throwable ->
+            Log.w(TAG, "Failed to sync favorite-derived interest profile", throwable)
+        }
+    }
+
+    fun clearFavoriteInterestSyncUser() {
+        lastFavoriteInterestSyncUserId = null
     }
 
     fun touchLastActive(userId: String) = viewModelScope.launch {

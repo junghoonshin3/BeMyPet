@@ -60,11 +60,13 @@ class StartActivity : ComponentActivity() {
                         val userId = session.user.id.trim()
                         if (userId.isBlank()) {
                             pushSyncPrefs.edit { remove(KEY_CURRENT_USER_ID) }
+                            startViewModel.clearFavoriteInterestSyncUser()
                             return@collect
                         }
                         pushSyncPrefs.edit { putString(KEY_CURRENT_USER_ID, userId) }
 
                         startViewModel.touchLastActive(userId)
+                        startViewModel.syncInterestProfileFromFavoritesOnce(userId)
 
                         FirebaseMessaging.getInstance().token
                             .addOnSuccessListener { token ->
@@ -76,6 +78,7 @@ class StartActivity : ComponentActivity() {
                             }
                     } else {
                         pushSyncPrefs.edit { remove(KEY_CURRENT_USER_ID) }
+                        startViewModel.clearFavoriteInterestSyncUser()
                     }
                 }
             }

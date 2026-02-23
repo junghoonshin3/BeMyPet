@@ -23,13 +23,16 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.sjh.core.model.SessionState
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.model.adoption.Pet
+import kr.sjh.data.notification.InterestProfileSyncCoordinator
 import kr.sjh.data.repository.CommentRepository
 import kr.sjh.data.repository.CompareRepository
 import kr.sjh.data.repository.CompareToggleResult
 import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.GeoLocationRepository
+import kr.sjh.data.session.SessionStore
 import kr.sjh.feature.adoption_detail.navigation.PetDetail
 import kr.sjh.feature.adoption_detail.state.AdoptionDetailEvent
 import kr.sjh.feature.adoption_detail.state.DetailUiState
@@ -51,6 +54,8 @@ data class CompareToggleUiEvent(
 class PetDetailViewModel @Inject constructor(
     private val geoLocationRepository: GeoLocationRepository,
     private val favouriteRepository: FavouriteRepository,
+    private val interestProfileSyncCoordinator: InterestProfileSyncCoordinator,
+    private val sessionStore: SessionStore,
     private val commentRepository: CommentRepository,
     private val compareRepository: CompareRepository,
     savedStateHandle: SavedStateHandle
@@ -137,6 +142,8 @@ class PetDetailViewModel @Inject constructor(
                         if (result.isFailure) {
                             _isFavorite.value = previousLike
                             SnackBarManager.showMessage("관심 상태를 변경하지 못했어요. 잠시 후 다시 시도해주세요.")
+                        } else {
+                            syncInterestProfileFromFavorites()
                         }
                     }
                 }
@@ -205,6 +212,21 @@ class PetDetailViewModel @Inject constructor(
                     selectedCount = selectedCount
                 )
             )
+        }
+    }
+
+    private suspend fun syncInterestProfileFromFavorites() {
+        val userId = (sessionStore.session.value as? SessionState.Authenticated)
+            ?.user
+            ?.id
+            ?.trim()
+            .orEmpty()
+        if (userId.isBlank()) return
+
+        runCatching {
+            interestProfileSyncCoordinator.syncFromFavorites(userId)
+        }.onFailure { throwable ->
+            Log.w(TAG, "Failed to sync interest profile from favorites", throwable)
         }
     }
 

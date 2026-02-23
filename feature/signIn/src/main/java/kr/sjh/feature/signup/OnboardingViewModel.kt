@@ -15,13 +15,11 @@ import javax.inject.Inject
 data class OnboardingSubmitPayload(
     val regions: List<String>,
     val species: List<String>,
-    val pushOptIn: Boolean,
 )
 
 data class OnboardingPreferenceUiState(
     val regions: Set<String> = emptySet(),
     val species: Set<String> = emptySet(),
-    val pushOptIn: Boolean = true,
 )
 
 @HiltViewModel
@@ -59,21 +57,11 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun setPushOptIn(enabled: Boolean) {
-        _uiState.update { it.copy(pushOptIn = enabled) }
-    }
-
-    fun submit(session: SessionState, resolvedPushOptIn: Boolean? = null) {
-        val payload = buildSubmitPayloadForTest().let {
-            if (resolvedPushOptIn == null) {
-                it
-            } else {
-                it.copy(pushOptIn = resolvedPushOptIn)
-            }
-        }
+    fun submit(session: SessionState) {
+        val payload = buildSubmitPayloadForTest()
 
         viewModelScope.launch {
-            settingRepository.updatePushOptIn(payload.pushOptIn)
+            settingRepository.updatePushOptIn(false)
             val userId = (session as? SessionState.Authenticated)?.user?.id.orEmpty()
             if (userId.isBlank()) return@launch
 
@@ -83,7 +71,7 @@ class OnboardingViewModel @Inject constructor(
                 species = payload.species,
                 sexes = emptyList(),
                 sizes = emptyList(),
-                pushEnabled = payload.pushOptIn,
+                pushEnabled = true,
             )
         }
     }
@@ -92,6 +80,5 @@ class OnboardingViewModel @Inject constructor(
         OnboardingSubmitPayload(
             regions = uiState.value.regions.sorted(),
             species = uiState.value.species.sorted(),
-            pushOptIn = uiState.value.pushOptIn,
         )
 }

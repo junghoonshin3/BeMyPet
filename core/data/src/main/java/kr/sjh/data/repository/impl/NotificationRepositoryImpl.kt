@@ -32,6 +32,26 @@ class NotificationRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? {
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return null
+
+        return notificationService.getInterestProfile(normalizedUserId)
+    }
+
+    override suspend fun upsertInterestPushEnabled(
+        userId: String,
+        pushEnabled: Boolean,
+    ) {
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return
+
+        notificationService.upsertInterestPushEnabled(
+            userId = normalizedUserId,
+            pushEnabled = pushEnabled,
+        )
+    }
+
     override suspend fun upsertSubscription(
         userId: String,
         token: String,
