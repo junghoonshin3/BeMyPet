@@ -193,6 +193,18 @@ def main():
             bad("user_interest_profiles relation exists", f"status={st} body={body}")
             raise SystemExit(1)
 
+        for table in ["notification_dispatch_state", "notification_seen_notices"]:
+            st, body = http_json(
+                "GET",
+                rest_url(f"/rest/v1/{table}?select=*&limit=1"),
+                headers=rest_headers(a_token),
+            )
+            if st == 200:
+                ok(f"{table} relation exists")
+            else:
+                bad(f"{table} relation exists", f"status={st} body={body}")
+                raise SystemExit(1)
+
         interest_url = rest_url("/rest/v1/user_interest_profiles")
         st, body = http_json(
             "POST",

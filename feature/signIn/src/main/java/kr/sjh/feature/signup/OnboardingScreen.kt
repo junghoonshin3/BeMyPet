@@ -1,6 +1,11 @@
 package kr.sjh.feature.signup
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.annotation.DrawableRes
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,10 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.core.designsystem.R
@@ -86,6 +93,13 @@ fun OnboardingRoute(
     var pageIndex by remember { mutableIntStateOf(0) }
     val page = onboardingPages[pageIndex]
     val preferenceState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.submit(session = session, resolvedPushOptIn = granted)
+        onComplete()
+    }
 
     Column(
         modifier = modifier
@@ -108,7 +122,7 @@ fun OnboardingRoute(
             }
 
             TextButton(onClick = {
-                viewModel.submit(session)
+                viewModel.submit(session = session, resolvedPushOptIn = false)
                 onSkip()
             }) {
                 Text(
@@ -186,8 +200,22 @@ fun OnboardingRoute(
                 .padding(top = 12.dp),
             onClick = {
                 if (pageIndex == onboardingPages.lastIndex) {
-                    viewModel.submit(session)
-                    onComplete()
+                    val desiredPushOptIn = preferenceState.pushOptIn
+                    if (!desiredPushOptIn) {
+                        viewModel.submit(session = session, resolvedPushOptIn = false)
+                        onComplete()
+                    } else if (
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        viewModel.submit(session = session, resolvedPushOptIn = true)
+                        onComplete()
+                    } else {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
                 } else {
                     pageIndex += 1
                 }

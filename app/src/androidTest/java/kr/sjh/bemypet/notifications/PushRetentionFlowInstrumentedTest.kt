@@ -55,7 +55,7 @@ class PushRetentionFlowInstrumentedTest {
             settingRepository = fakeSettingRepository,
             notificationRepository = fakeNotificationRepository,
         )
-        startViewModel.syncPushSubscription(userId = userId, token = token)
+        startViewModel.syncPushSubscription(userId = userId, token = token, pushOptIn = false)
 
         val subscription = fakeNotificationRepository.awaitSubscriptionUpsert()
         assertEquals(userId, subscription.userId)
