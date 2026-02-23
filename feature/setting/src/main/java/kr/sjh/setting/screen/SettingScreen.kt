@@ -1,8 +1,11 @@
 package kr.sjh.setting.screen
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +31,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -164,7 +169,8 @@ fun SettingRoute(
                 avatarBytes = avatarBytes,
                 currentAvatarUrl = currentAvatarUrl,
             )
-        }
+        },
+        onPushOptInChange = viewModel::setPushOptIn
     )
 }
 
@@ -187,7 +193,8 @@ fun SettingScreen(
     onDismissProfileEdit: (Boolean) -> Unit,
     onProfileAvatarPicked: (Uri, ByteArray?) -> Unit,
     onReopenProfileEditIfNeeded: () -> Unit,
-    onUpdateProfile: (String, String, ByteArray?, String?) -> Unit
+    onUpdateProfile: (String, String, ByteArray?, String?) -> Unit,
+    onPushOptInChange: (Boolean) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -219,6 +226,16 @@ fun SettingScreen(
             Log.d(TAG, "Image picker cancelled or no image selected.")
         }
         onReopenProfileEditIfNeeded()
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            onPushOptInChange(true)
+        } else {
+            onPushOptInChange(false)
+            SnackBarManager.showMessage("알림 권한이 거부되어 푸시 알림을 켤 수 없어요.")
+        }
     }
 
     if (profileEditDraft.isVisible && profileEditDraft.editingUserId != null) {
@@ -368,6 +385,36 @@ fun SettingScreen(
                                 onClick = { onThemeSelected(type) }
                             )
                         }
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "알림") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "새 공고 푸시 알림 받기",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Switch(
+                            checked = uiState.pushOptIn,
+                            onCheckedChange = { enabled ->
+                                if (!enabled) {
+                                    onPushOptInChange(false)
+                                } else if (hasNotificationPermission(context)) {
+                                    onPushOptInChange(true)
+                                } else {
+                                    notificationPermissionLauncher.launch(
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -654,6 +701,16 @@ private fun isSessionExpiredDeleteError(error: Exception): Boolean {
 
 private fun openExternalUrl(context: Context, url: String) {
     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+}
+
+private fun hasNotificationPermission(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        return true
+    }
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
 private const val SERVICE_TERMS_URL =

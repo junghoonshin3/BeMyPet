@@ -8,11 +8,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.SettingRepository
 import javax.inject.Inject
 
 sealed interface SettingUiEvent {
@@ -37,18 +39,26 @@ data class ProfileUiState(
     val loading: Boolean = false,
     val profile: UserProfile? = null,
     val selectedTheme: SettingType = SettingType.LIGHT_THEME,
+    val pushOptIn: Boolean = true,
     val isDeleteUserDialogVisible: Boolean = false,
     val profileEditDraft: ProfileEditDraftState = ProfileEditDraftState(),
 )
 
 @HiltViewModel
-class SettingViewModel @Inject constructor(private val authRepository: AuthRepository) :
+class SettingViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val settingRepository: SettingRepository,
+) :
     ViewModel() {
 
     private val _profileUiState = MutableStateFlow(ProfileUiState())
     val profileUiState = _profileUiState.asStateFlow()
     private val _uiEvent = MutableSharedFlow<SettingUiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
+
+    init {
+        observePushOptIn()
+    }
 
     fun syncTheme(isDarkTheme: Boolean) {
         val selectedTheme = if (isDarkTheme) SettingType.DARK_THEME else SettingType.LIGHT_THEME
@@ -63,6 +73,19 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
 
     fun selectTheme(selectedTheme: SettingType) {
         _profileUiState.update { it.copy(selectedTheme = selectedTheme) }
+    }
+
+    fun setPushOptIn(enabled: Boolean) {
+        _profileUiState.update { state ->
+            if (state.pushOptIn == enabled) {
+                state
+            } else {
+                state.copy(pushOptIn = enabled)
+            }
+        }
+        viewModelScope.launch {
+            settingRepository.updatePushOptIn(enabled)
+        }
     }
 
     fun showDeleteUserDialog() {
@@ -204,6 +227,20 @@ class SettingViewModel @Inject constructor(private val authRepository: AuthRepos
 
     private suspend fun emitMessage(message: String) {
         _uiEvent.emit(SettingUiEvent.ShowMessage(message))
+    }
+
+    private fun observePushOptIn() {
+        viewModelScope.launch {
+            settingRepository.getPushOptIn().collectLatest { enabled ->
+                _profileUiState.update { state ->
+                    if (state.pushOptIn == enabled) {
+                        state
+                    } else {
+                        state.copy(pushOptIn = enabled)
+                    }
+                }
+            }
+        }
     }
 
     companion object {
