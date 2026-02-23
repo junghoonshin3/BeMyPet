@@ -13,8 +13,10 @@ import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
 import io.ktor.client.call.body
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -27,6 +29,10 @@ import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.core.model.UserProfile
 import kr.sjh.core.supabase.service.AuthService
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
@@ -162,6 +168,30 @@ class AuthServiceImpl @Inject constructor(
         } catch (e: Exception) {
             onFailure(e)
         }
+    }
+
+    override suspend fun uploadProfileAvatar(
+        userId: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): String {
+        val normalizedUserId = userId.trim()
+        require(normalizedUserId.isNotBlank()) { "userId is blank" }
+        require(bytes.isNotEmpty()) { "avatar bytes are empty" }
+
+        val normalizedContentType = contentType.trim().ifBlank { DEFAULT_AVATAR_CONTENT_TYPE }
+        val parsedContentType = runCatching { ContentType.parse(normalizedContentType) }
+            .getOrElse { ContentType.Image.JPEG }
+
+        val objectPath = buildAvatarObjectPath(normalizedUserId)
+        val bucket = client.storage.from(PROFILE_IMAGES_BUCKET_ID)
+
+        bucket.upload(path = objectPath, data = bytes) {
+            upsert = true
+            this.contentType = parsedContentType
+        }
+
+        return appendCacheBuster(bucket.publicUrl(objectPath))
     }
 
     private suspend fun ensureProfile(user: UserInfo?): UserProfile {
@@ -372,6 +402,8 @@ class AuthServiceImpl @Inject constructor(
     companion object {
         private const val TAG = "AuthServiceImpl"
         private const val DELETE_USER_FUNCTION_NAME = "delete_user"
+        private const val PROFILE_IMAGES_BUCKET_ID = "profile-images"
+        private const val DEFAULT_AVATAR_CONTENT_TYPE = "image/jpeg"
         private const val SERVER_CODE_UNAUTHORIZED = "UNAUTHORIZED"
         private const val SERVER_CODE_FORBIDDEN = "FORBIDDEN"
         private const val SERVER_CODE_PROFILE_UPDATE_FAILED = "PROFILE_UPDATE_FAILED"
@@ -405,6 +437,36 @@ class AuthServiceImpl @Inject constructor(
 
                 else -> {
                     DELETE_ACCOUNT_FAILED_MESSAGE
+                }
+            }
+        }
+
+        fun buildAvatarObjectPathForTest(userId: String): String = buildAvatarObjectPath(userId)
+
+        fun appendCacheBusterForTest(url: String, version: Long): String = appendCacheBuster(url, version)
+
+        fun parseBannedUntilInstantForTest(raw: String): Instant? = parseBannedUntilInstant(raw)
+
+        fun isBannedNowForTest(raw: String, now: Instant): Boolean {
+            val bannedUntil = parseBannedUntilInstant(raw) ?: return false
+            return bannedUntil.isAfter(now)
+        }
+
+        private fun buildAvatarObjectPath(userId: String): String =
+            "${userId.trim()}/avatar.jpg"
+
+        private fun appendCacheBuster(url: String, version: Long = System.currentTimeMillis()): String {
+            val separator = if (url.contains("?")) "&" else "?"
+            return "${url}${separator}v=${version}"
+        }
+
+        private fun parseBannedUntilInstant(raw: String?): Instant? {
+            val value = raw?.trim().orEmpty()
+            if (value.isBlank()) return null
+
+            return runCatching { Instant.parse(value) }.getOrElse {
+                runCatching { OffsetDateTime.parse(value).toInstant() }.getOrElse {
+                    runCatching { LocalDateTime.parse(value).toInstant(ZoneOffset.UTC) }.getOrNull()
                 }
             }
         }

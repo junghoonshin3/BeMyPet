@@ -6,8 +6,10 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kr.sjh.core.model.Comment
 import kr.sjh.core.supabase.service.CommentService
 import java.time.OffsetDateTime
@@ -22,11 +24,16 @@ class CommentServiceImpl @Inject constructor(
 
     @OptIn(SupabaseExperimental::class)
     override fun getComments(noticeNo: String): Flow<List<Comment>> {
-        return commentFeedView.selectAsFlow(
-            Comment::id,
+        return commentTable.selectAsFlow(
+            primaryKeys = listOf(Comment::id),
             filter = FilterOperation("notice_no", FilterOperator.EQ, noticeNo),
-        ).map { list ->
-            list.sortedByDescending { it.createdAt }
+        ).map {
+            fetchCommentsFromFeed(noticeNo)
+        }.onStart {
+            emit(fetchCommentsFromFeed(noticeNo))
+        }.catch { throwable ->
+            Log.w(TAG, "Realtime subscription failed for comments. Falling back to latest fetch.", throwable)
+            emit(fetchCommentsFromFeed(noticeNo))
         }
     }
 
@@ -93,11 +100,18 @@ class CommentServiceImpl @Inject constructor(
     }
 
     override suspend fun getCommentCount(noticeNo: String): Int {
-        val count = commentFeedView.select {
+        return fetchCommentsFromFeed(noticeNo).size
+    }
+
+    private suspend fun fetchCommentsFromFeed(noticeNo: String): List<Comment> {
+        return commentFeedView.select {
             filter {
                 eq("notice_no", noticeNo)
             }
-        }.decodeList<Comment>().size
-        return count
+        }.decodeList<Comment>().sortedByDescending { it.createdAt }
+    }
+
+    private companion object {
+        const val TAG = "CommentServiceImpl"
     }
 }
