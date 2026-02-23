@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.supabase.realtime.kt)
     implementation(libs.supabase.postgrest.kt)
     implementation(libs.supabase.functions.kt)
+    implementation(libs.supabase.storage.kt)
     implementation(libs.ktor.client.cio)
     implementation(project(":core:ktor"))
 }

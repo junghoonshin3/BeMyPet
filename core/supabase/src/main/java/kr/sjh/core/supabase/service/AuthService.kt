@@ -26,4 +26,10 @@ interface AuthService {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     )
+
+    suspend fun uploadProfileAvatar(
+        userId: String,
+        bytes: ByteArray,
+        contentType: String = "image/jpeg",
+    ): String
 }

@@ -5,6 +5,7 @@ Apply migrations in timestamp order.
 1. `20260216_profiles_comments_auth_refactor.sql`
 2. `20260224_add_notification_retention_tables.sql`
 3. `20260225_cleanup_notification_state_on_profile_soft_delete.sql`
+4. `20260226_enable_comments_blocks_realtime_publication.sql`
 
 This migration introduces:
 - `profiles` table as app profile source
@@ -22,6 +23,10 @@ This migration introduces:
 `20260225_cleanup_notification_state_on_profile_soft_delete.sql` introduces:
 - soft-delete(`profiles.is_deleted=true`) 전환 시 `notification_subscriptions`/`user_interest_profiles` 정리 트리거
 - 기존 soft-delete 계정의 잔존 notification/interest row 일괄 정리
+
+`20260226_enable_comments_blocks_realtime_publication.sql` introduces:
+- Realtime publication(`supabase_realtime`)에 `comments`, `blocks` 테이블을 보장
+- 댓글/차단 화면의 실시간 동기화 구독 실패 방지
 
 Smoke test:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
