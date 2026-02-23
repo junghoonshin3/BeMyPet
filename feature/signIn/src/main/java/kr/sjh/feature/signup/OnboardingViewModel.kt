@@ -63,8 +63,14 @@ class OnboardingViewModel @Inject constructor(
         _uiState.update { it.copy(pushOptIn = enabled) }
     }
 
-    fun submit(session: SessionState) {
-        val payload = buildSubmitPayloadForTest()
+    fun submit(session: SessionState, resolvedPushOptIn: Boolean? = null) {
+        val payload = buildSubmitPayloadForTest().let {
+            if (resolvedPushOptIn == null) {
+                it
+            } else {
+                it.copy(pushOptIn = resolvedPushOptIn)
+            }
+        }
 
         viewModelScope.launch {
             settingRepository.updatePushOptIn(payload.pushOptIn)

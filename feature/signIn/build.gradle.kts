@@ -15,4 +15,5 @@ dependencies {
     implementation(project(":core:common"))
     implementation(libs.coil.compose)
 
+    testImplementation(libs.kotlinx.coroutines.test)
 }

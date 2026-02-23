@@ -13,7 +13,9 @@ import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.SettingRepository
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -29,7 +31,8 @@ class SettingViewModelProfileUploadTest {
     @Test
     fun updateProfileWithAvatar_uploadsFirst_thenUpdatesProfile() = runTest {
         val fakeRepository = FakeAuthRepository()
-        val viewModel = SettingViewModel(fakeRepository)
+        val settingRepository = FakeSettingRepository()
+        val viewModel = SettingViewModel(fakeRepository, settingRepository)
 
         viewModel.updateProfileWithAvatar(
             userId = "user-id",
@@ -44,7 +47,7 @@ class SettingViewModelProfileUploadTest {
 
     @Test
     fun startProfileEdit_andDismiss_keepsStateInViewModel() {
-        val viewModel = SettingViewModel(FakeAuthRepository())
+        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository())
 
         viewModel.startProfileEdit(
             userId = "user-id",
@@ -62,11 +65,20 @@ class SettingViewModelProfileUploadTest {
 
     @Test
     fun selectTheme_updatesUiStateTheme() {
-        val viewModel = SettingViewModel(FakeAuthRepository())
+        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository())
 
         viewModel.selectTheme(SettingType.DARK_THEME)
 
         assertEquals(SettingType.DARK_THEME, viewModel.profileUiState.value.selectedTheme)
+    }
+
+    @Test
+    fun setPushOptIn_updatesUiStateImmediately() {
+        val viewModel = SettingViewModel(FakeAuthRepository(), FakeSettingRepository(initialPushOptIn = true))
+
+        viewModel.setPushOptIn(false)
+
+        assertFalse(viewModel.profileUiState.value.pushOptIn)
     }
 }
 
@@ -110,6 +122,26 @@ private class FakeAuthRepository : AuthRepository {
     ): String {
         callOrder += "upload"
         return "https://example.com/avatar.jpg"
+    }
+}
+
+private class FakeSettingRepository(initialPushOptIn: Boolean = true) : SettingRepository {
+    private val pushOptIn = kotlinx.coroutines.flow.MutableStateFlow(initialPushOptIn)
+    var lastUpdatedPushOptIn: Boolean = initialPushOptIn
+
+    override fun getDarkTheme(): Flow<Boolean> = emptyFlow()
+
+    override fun getHasSeenOnboarding(): Flow<Boolean> = emptyFlow()
+
+    override fun getPushOptIn(): Flow<Boolean> = pushOptIn
+
+    override suspend fun updateIsDarkTheme(isDarkTheme: Boolean) = Unit
+
+    override suspend fun updateHasSeenOnboarding(seen: Boolean) = Unit
+
+    override suspend fun updatePushOptIn(enabled: Boolean) {
+        lastUpdatedPushOptIn = enabled
+        pushOptIn.value = enabled
     }
 }
 
