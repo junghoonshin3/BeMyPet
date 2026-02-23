@@ -1,4 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { buildDateWindow } from "./dispatch_core.ts";
 
 type DispatchNotice = {
   notice_no?: string;
@@ -75,6 +76,7 @@ Deno.serve(async (req) => {
   const dryRun = payload.dry_run ?? false;
   const notices = Array.isArray(payload.notices) ? payload.notices : [];
   const normalizedNoticeNo = notices[0]?.notice_no?.trim() || null;
+  const runWindow = buildDateWindow(null, new Date().toISOString().slice(0, 10));
 
   const { data: subscriptions, error: subscriptionError } = await adminClient
     .from("notification_subscriptions")
@@ -98,6 +100,7 @@ Deno.serve(async (req) => {
       matched_users: matched.length,
       queued: 0,
       dry_run: true,
+      window: runWindow,
     });
   }
 
@@ -137,6 +140,7 @@ Deno.serve(async (req) => {
     matched_users: matched.length,
     queued,
     dry_run: false,
+    window: runWindow,
     errors_count: errors.length,
     errors,
   });
