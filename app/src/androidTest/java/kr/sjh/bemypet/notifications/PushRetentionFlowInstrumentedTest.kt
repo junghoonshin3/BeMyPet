@@ -8,7 +8,10 @@ import kr.sjh.bemypet.StartViewModel
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.core.model.UserProfile
+import kr.sjh.core.model.notification.UserInterestProfile
+import kr.sjh.data.notification.InterestProfileSyncCoordinator
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.FavouriteRepository
 import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import kr.sjh.data.session.SessionStore
@@ -54,6 +57,11 @@ class PushRetentionFlowInstrumentedTest {
             sessionStore = SessionStore(FakeAuthRepository(session)),
             settingRepository = fakeSettingRepository,
             notificationRepository = fakeNotificationRepository,
+            interestProfileSyncCoordinator = InterestProfileSyncCoordinator(
+                favouriteRepository = FakeFavouriteRepository(),
+                notificationRepository = fakeNotificationRepository,
+                settingRepository = fakeSettingRepository,
+            ),
         )
         startViewModel.syncPushSubscription(userId = userId, token = token, pushOptIn = false)
 
@@ -72,6 +80,18 @@ class PushRetentionFlowInstrumentedTest {
         assertEquals("N-100", parsed.noticeNo)
         assertEquals("new_animal", parsed.campaignType)
     }
+}
+
+private class FakeFavouriteRepository : FavouriteRepository {
+    override fun isExist(desertionNo: String): Boolean = false
+
+    override suspend fun addPet(pet: kr.sjh.core.model.adoption.Pet) = Unit
+
+    override suspend fun removePet(desertionNo: String) = Unit
+
+    override fun getFavouritePets(): Flow<List<kr.sjh.core.model.adoption.Pet>> = flowOf(emptyList())
+
+    override suspend fun backfillFavouriteImagesIfNeeded() = Unit
 }
 
 private data class InterestUpsertCall(
@@ -129,6 +149,8 @@ private class FakeNotificationRepository : NotificationRepository {
         )
         subscriptionLatch.countDown()
     }
+
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? = null
 
     override suspend fun touchLastActive(userId: String) = Unit
 
@@ -194,4 +216,10 @@ private class FakeAuthRepository(private val sessionState: SessionState) : AuthR
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit,
     ) = Unit
+
+    override suspend fun uploadProfileAvatar(
+        userId: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): String = "https://example.com/avatar.jpg"
 }
