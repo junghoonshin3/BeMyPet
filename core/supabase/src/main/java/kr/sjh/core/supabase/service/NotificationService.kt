@@ -5,6 +5,8 @@ import kr.sjh.core.model.notification.UserInterestProfile
 interface NotificationService {
     suspend fun upsertInterestProfile(profile: UserInterestProfile)
 
+    suspend fun getInterestProfile(userId: String): UserInterestProfile?
+
     suspend fun upsertSubscription(
         userId: String,
         fcmToken: String,

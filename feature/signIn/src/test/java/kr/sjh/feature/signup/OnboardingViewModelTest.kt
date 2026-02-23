@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kr.sjh.core.model.SessionState
+import kr.sjh.core.model.notification.UserInterestProfile
 import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import org.junit.Rule
@@ -71,6 +72,8 @@ private class FakeNotificationRepository : NotificationRepository {
         sizes: List<String>,
         pushEnabled: Boolean,
     ) = Unit
+
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? = null
 
     override suspend fun upsertSubscription(
         userId: String,

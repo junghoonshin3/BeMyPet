@@ -20,6 +20,17 @@ class NotificationServiceImpl @Inject constructor(
         interestTable.upsert(profile)
     }
 
+    override suspend fun getInterestProfile(userId: String): UserInterestProfile? {
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return null
+
+        return interestTable.select {
+            filter {
+                eq("user_id", normalizedUserId)
+            }
+        }.decodeList<UserInterestProfile>().firstOrNull()
+    }
+
     override suspend fun upsertSubscription(
         userId: String,
         fcmToken: String,
