@@ -164,6 +164,9 @@ def main():
 
         if not isinstance(body, dict) or not isinstance(body.get("matched_users"), int):
             raise RuntimeError(f"invalid response payload: {body}")
+        for key in ("window", "new_notice_count", "sent_count", "failed_count"):
+            if key not in body:
+                raise RuntimeError(f"missing response key: {key} payload={body}")
 
         print("PASS  new_notice_dispatch dry-run")
         print(f"INFO  matched_users={body.get('matched_users')}")
