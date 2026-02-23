@@ -74,6 +74,12 @@ Deno.serve(async (req) => {
   }
 
   const dryRun = payload.dry_run ?? false;
+  const firebaseProjectId = Deno.env.get("FIREBASE_PROJECT_ID")?.trim() ?? "";
+  const firebaseServiceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON")?.trim() ?? "";
+  if (!dryRun && (!firebaseProjectId || !firebaseServiceAccountJson)) {
+    return json({ error: "Missing firebase configuration" }, 500);
+  }
+
   const notices = Array.isArray(payload.notices) ? payload.notices : [];
   const normalizedNoticeNo = notices[0]?.notice_no?.trim() || null;
   const runWindow = buildDateWindow(null, new Date().toISOString().slice(0, 10));
