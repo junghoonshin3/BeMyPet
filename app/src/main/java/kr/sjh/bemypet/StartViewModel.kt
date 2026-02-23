@@ -73,6 +73,15 @@ class StartViewModel @Inject constructor(
         }.onFailure { throwable ->
             Log.e(TAG, "Failed to sync push subscription", throwable)
         }
+
+        runCatching {
+            notificationRepository.upsertInterestPushEnabled(
+                userId = normalizedUserId,
+                pushEnabled = pushOptIn,
+            )
+        }.onFailure { throwable ->
+            Log.e(TAG, "Failed to sync interest push_enabled", throwable)
+        }
     }
 
     fun syncInterestProfileFromFavoritesOnce(userId: String) = viewModelScope.launch {

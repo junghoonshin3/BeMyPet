@@ -1,5 +1,6 @@
 package kr.sjh.setting.screen
 
+import android.util.Log
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 import kr.sjh.data.repository.AuthRepository
+import kr.sjh.data.repository.NotificationRepository
 import kr.sjh.data.repository.SettingRepository
 import javax.inject.Inject
 
@@ -47,6 +49,7 @@ data class ProfileUiState(
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository,
     private val settingRepository: SettingRepository,
 ) :
     ViewModel() {
@@ -75,7 +78,8 @@ class SettingViewModel @Inject constructor(
         _profileUiState.update { it.copy(selectedTheme = selectedTheme) }
     }
 
-    fun setPushOptIn(enabled: Boolean) {
+    fun setPushOptIn(enabled: Boolean, userId: String?) {
+        val previous = _profileUiState.value.pushOptIn
         _profileUiState.update { state ->
             if (state.pushOptIn == enabled) {
                 state
@@ -83,8 +87,23 @@ class SettingViewModel @Inject constructor(
                 state.copy(pushOptIn = enabled)
             }
         }
+
         viewModelScope.launch {
             settingRepository.updatePushOptIn(enabled)
+            val normalizedUserId = userId?.trim().orEmpty()
+            if (normalizedUserId.isBlank()) return@launch
+
+            runCatching {
+                notificationRepository.upsertInterestPushEnabled(
+                    userId = normalizedUserId,
+                    pushEnabled = enabled,
+                )
+            }.onFailure { throwable ->
+                Log.e(TAG, "Failed to sync interest profile while changing push opt-in", throwable)
+                settingRepository.updatePushOptIn(previous)
+                _profileUiState.update { it.copy(pushOptIn = previous) }
+                emitMessage(throwable.message ?: PUSH_SYNC_FAILED_MESSAGE)
+            }
         }
     }
 
@@ -244,7 +263,9 @@ class SettingViewModel @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "SettingViewModel"
         private const val PROFILE_UPDATED_MESSAGE = "프로필을 업데이트했어요."
         private const val PROFILE_UPDATE_FAILED_MESSAGE = "프로필 업데이트에 실패했어요."
+        private const val PUSH_SYNC_FAILED_MESSAGE = "알림 설정 저장에 실패했어요. 잠시 후 다시 시도해 주세요."
     }
 }

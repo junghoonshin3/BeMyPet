@@ -44,14 +44,13 @@ class PushRetentionFlowInstrumentedTest {
 
         onboardingViewModel.toggleRegion("6110000")
         onboardingViewModel.toggleSpecies("dog")
-        onboardingViewModel.setPushOptIn(false)
         onboardingViewModel.submit(session)
 
         val interest = fakeNotificationRepository.awaitInterestProfileUpsert()
         assertEquals(userId, interest.userId)
         assertEquals(listOf("6110000"), interest.regions)
         assertEquals(listOf("dog"), interest.species)
-        assertFalse(interest.pushEnabled)
+        assertTrue(interest.pushEnabled)
 
         val startViewModel = StartViewModel(
             sessionStore = SessionStore(FakeAuthRepository(session)),
@@ -70,6 +69,10 @@ class PushRetentionFlowInstrumentedTest {
         assertEquals(token, subscription.token)
         assertFalse(subscription.pushOptIn)
         assertTrue(subscription.timezone.isNotBlank())
+
+        val interestPushEnabled = fakeNotificationRepository.awaitInterestPushEnabledUpsert()
+        assertEquals(userId, interestPushEnabled.userId)
+        assertFalse(interestPushEnabled.pushEnabled)
 
         val parsed = PushPayloadParser.parse(
             mapOf(
@@ -108,15 +111,24 @@ private data class SubscriptionUpsertCall(
     val timezone: String,
 )
 
+private data class InterestPushEnabledUpsertCall(
+    val userId: String,
+    val pushEnabled: Boolean,
+)
+
 private class FakeNotificationRepository : NotificationRepository {
     private val interestLatch = CountDownLatch(1)
     private val subscriptionLatch = CountDownLatch(1)
+    private val interestPushEnabledLatch = CountDownLatch(1)
 
     @Volatile
     private var interestUpsert: InterestUpsertCall? = null
 
     @Volatile
     private var subscriptionUpsert: SubscriptionUpsertCall? = null
+
+    @Volatile
+    private var interestPushEnabledUpsert: InterestPushEnabledUpsertCall? = null
 
     override suspend fun upsertInterestProfile(
         userId: String,
@@ -152,6 +164,14 @@ private class FakeNotificationRepository : NotificationRepository {
 
     override suspend fun getInterestProfile(userId: String): UserInterestProfile? = null
 
+    override suspend fun upsertInterestPushEnabled(userId: String, pushEnabled: Boolean) {
+        interestPushEnabledUpsert = InterestPushEnabledUpsertCall(
+            userId = userId,
+            pushEnabled = pushEnabled,
+        )
+        interestPushEnabledLatch.countDown()
+    }
+
     override suspend fun touchLastActive(userId: String) = Unit
 
     fun awaitInterestProfileUpsert(timeoutSeconds: Long = 5): InterestUpsertCall {
@@ -162,6 +182,14 @@ private class FakeNotificationRepository : NotificationRepository {
     fun awaitSubscriptionUpsert(timeoutSeconds: Long = 5): SubscriptionUpsertCall {
         assertTrue("subscription upsert timed out", subscriptionLatch.await(timeoutSeconds, TimeUnit.SECONDS))
         return checkNotNull(subscriptionUpsert)
+    }
+
+    fun awaitInterestPushEnabledUpsert(timeoutSeconds: Long = 5): InterestPushEnabledUpsertCall {
+        assertTrue(
+            "interest push_enabled upsert timed out",
+            interestPushEnabledLatch.await(timeoutSeconds, TimeUnit.SECONDS)
+        )
+        return checkNotNull(interestPushEnabledUpsert)
     }
 }
 

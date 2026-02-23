@@ -7,6 +7,11 @@ interface NotificationService {
 
     suspend fun getInterestProfile(userId: String): UserInterestProfile?
 
+    suspend fun upsertInterestPushEnabled(
+        userId: String,
+        pushEnabled: Boolean,
+    )
+
     suspend fun upsertSubscription(
         userId: String,
         fcmToken: String,

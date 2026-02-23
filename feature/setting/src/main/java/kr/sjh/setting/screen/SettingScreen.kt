@@ -170,7 +170,12 @@ fun SettingRoute(
                 currentAvatarUrl = currentAvatarUrl,
             )
         },
-        onPushOptInChange = viewModel::setPushOptIn
+        onPushOptInChange = { enabled ->
+            viewModel.setPushOptIn(
+                enabled = enabled,
+                userId = authenticatedUserId,
+            )
+        }
     )
 }
 
@@ -390,31 +395,46 @@ fun SettingScreen(
             }
 
             item {
-                SectionCard(title = "알림") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "새 공고 푸시 알림 받기",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Switch(
-                            checked = uiState.pushOptIn,
-                            onCheckedChange = { enabled ->
-                                if (!enabled) {
-                                    onPushOptInChange(false)
-                                } else if (hasNotificationPermission(context)) {
-                                    onPushOptInChange(true)
-                                } else {
-                                    notificationPermissionLauncher.launch(
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    )
-                                }
+                when (session) {
+                    is SessionState.Authenticated -> {
+                        SectionCard(title = "알림") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "새 공고 푸시 알림 받기",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Switch(
+                                    checked = uiState.pushOptIn,
+                                    onCheckedChange = { enabled ->
+                                        if (!enabled) {
+                                            onPushOptInChange(false)
+                                        } else if (hasNotificationPermission(context)) {
+                                            onPushOptInChange(true)
+                                        } else {
+                                            notificationPermissionLauncher.launch(
+                                                Manifest.permission.POST_NOTIFICATIONS
+                                            )
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        }
+                    }
+
+                    SessionState.Initializing -> Unit
+                    is SessionState.Banned, is SessionState.NoAuthenticated, SessionState.RefreshFailure -> {
+                        SectionCard(title = "알림") {
+                            Text(
+                                text = "새 공고 푸시 알림은 회원가입 후 로그인한 사용자에게만 제공돼요.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

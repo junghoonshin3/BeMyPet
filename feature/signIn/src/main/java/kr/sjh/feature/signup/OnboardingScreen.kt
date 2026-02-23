@@ -1,11 +1,6 @@
 package kr.sjh.feature.signup
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.annotation.DrawableRes
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +18,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,12 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sjh.core.designsystem.R
@@ -65,8 +57,8 @@ private val onboardingPages = listOf(
     ),
     OnboardingPage(
         imageRes = R.drawable.baseline_pets_24,
-        title = "새 공고 알림으로 다시 만나요",
-        description = "관심 동물/지역을 선택하면 새 공고를 빠르게 알려드려요."
+        title = "회원가입 사용자 전용 알림",
+        description = "새 공고 푸시 알림은 회원가입 후 설정 화면에서 켜고 끌 수 있어요."
     )
 )
 
@@ -93,13 +85,6 @@ fun OnboardingRoute(
     var pageIndex by remember { mutableIntStateOf(0) }
     val page = onboardingPages[pageIndex]
     val preferenceState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        viewModel.submit(session = session, resolvedPushOptIn = granted)
-        onComplete()
-    }
 
     Column(
         modifier = modifier
@@ -122,7 +107,7 @@ fun OnboardingRoute(
             }
 
             TextButton(onClick = {
-                viewModel.submit(session = session, resolvedPushOptIn = false)
+                viewModel.submit(session = session)
                 onSkip()
             }) {
                 Text(
@@ -187,7 +172,6 @@ fun OnboardingRoute(
                         state = preferenceState,
                         onToggleRegion = viewModel::toggleRegion,
                         onToggleSpecies = viewModel::toggleSpecies,
-                        onPushToggle = viewModel::setPushOptIn,
                     )
                 }
             }
@@ -200,22 +184,8 @@ fun OnboardingRoute(
                 .padding(top = 12.dp),
             onClick = {
                 if (pageIndex == onboardingPages.lastIndex) {
-                    val desiredPushOptIn = preferenceState.pushOptIn
-                    if (!desiredPushOptIn) {
-                        viewModel.submit(session = session, resolvedPushOptIn = false)
-                        onComplete()
-                    } else if (
-                        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.POST_NOTIFICATIONS
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        viewModel.submit(session = session, resolvedPushOptIn = true)
-                        onComplete()
-                    } else {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
+                    viewModel.submit(session = session)
+                    onComplete()
                 } else {
                     pageIndex += 1
                 }
@@ -229,7 +199,6 @@ private fun OnboardingPreferenceSection(
     state: OnboardingPreferenceUiState,
     onToggleRegion: (String) -> Unit,
     onToggleSpecies: (String) -> Unit,
-    onPushToggle: (Boolean) -> Unit,
 ) {
     Text(
         text = "관심 지역",
@@ -269,21 +238,11 @@ private fun OnboardingPreferenceSection(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "새 공고 푸시 알림 받기",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Switch(
-            checked = state.pushOptIn,
-            onCheckedChange = onPushToggle,
-        )
-    }
+    Text(
+        text = "새 공고 푸시 알림은 설정 화면에서 켤 수 있어요.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable
