@@ -68,3 +68,29 @@ Smoke tests:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
 - `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
 - `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`
+
+## New Notice Dispatch Rollout Checklist
+
+1. DB migration 적용
+- `supabase db push --linked`
+- `notification_dispatch_state`, `notification_seen_notices` 생성 확인
+
+2. 함수 배포
+- `supabase functions deploy new_notice_dispatch`
+- 환경 변수 확인:
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `PUBLIC_PET_API_SERVICE_KEY`
+  - `FIREBASE_PROJECT_ID`
+  - `FIREBASE_SERVICE_ACCOUNT_JSON`
+
+3. 검증
+- `python3 supabase/scripts/notification_rls_smoke_test.py`
+- `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
+- `./gradlew :app:compileDevDebugKotlin --no-daemon`
+
+4. 스케줄 확인
+- GitHub Actions `new-notice-dispatch` 워크플로우 활성화
+- `production` environment secret 주입 여부 확인
+
+상세 운영 절차는 `docs/new-notice-dispatch-runbook.md` 참고.

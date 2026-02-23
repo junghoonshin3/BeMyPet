@@ -57,3 +57,40 @@
 ```bash
 supabase functions deploy new_notice_dispatch
 ```
+
+## Scheduler
+
+- GitHub Actions: `.github/workflows/new-notice-dispatch.yml`
+- 주기: 6시간 (`cron: 0 */6 * * *`)
+- environment: `production`
+- 요청: `POST /functions/v1/new_notice_dispatch` (`{"dry_run": false}`)
+
+## Quick Verification
+
+1. 함수 배포 후 스모크 테스트 실행
+
+```bash
+python3 supabase/scripts/new_notice_dispatch_smoke_test.py
+```
+
+2. 워크플로우 수동 실행 후 Actions 로그 확인
+
+```bash
+gh workflow run new-notice-dispatch.yml --repo junghoonshin3/BeMyPet
+```
+
+3. 응답/로그 확인 포인트
+- `new_notice_count`
+- `matched_users`
+- `sent_count`
+- `failed_count`
+- `invalid_token_deleted_count`
+
+## Troubleshooting
+
+- `401/403`: `SUPABASE_SERVICE_ROLE_KEY` 또는 environment secret 설정 오류
+- `500`: `PUBLIC_PET_API_SERVICE_KEY`, `FIREBASE_*` 누락/형식 오류
+- `sent_count=0`:
+  - 신규 공고(`new_notice_count`) 자체가 없음
+  - `notification_subscriptions.push_opt_in=true` 대상이 없음
+  - 관심사 매칭 결과(`matched_users`)가 0
