@@ -41,13 +41,43 @@
 
 ### Build
 
-Debug 빌드를 위해 다음 파일들이 필요합니다.
-- `app/src/debug/google-services.json`
+로컬/워크트리 빌드 시 아래 비추적 파일이 필요합니다.
+- `secrets.dev.properties`
+- `secrets.prod.properties`
+- `secrets.properties`
+- `version.properties`
+- `app/src/dev/google-services.json`
+- `app/src/prod/google-services.json`
 
-Release 빌드를 위해 다음 파일들이 필요합니다.
-- `app/src/google-services.json`
+새 worktree를 만들었을 때는 아래 명령으로 기본 워크스페이스의 로컬 파일을 동기화하세요.
 
-또한 secrets.properties로 API 키를 관리하고있습니다.
+```bash
+./scripts/bootstrap-worktree-local.sh
+```
+
+이미 있는 파일까지 덮어쓰려면 아래처럼 실행합니다.
+
+```bash
+./scripts/bootstrap-worktree-local.sh --force
+```
+
+기본 소스 루트 대신 다른 경로에서 가져오려면 환경변수를 사용하세요.
+
+```bash
+BEMYPET_LOCAL_SOURCE_ROOT=/path/to/source ./scripts/bootstrap-worktree-local.sh
+```
+
+워크트리를 자주 만든다면 아래 전역 alias를 등록해두면 `worktree add + 로컬 파일 동기화`를 한 번에 처리할 수 있습니다.
+
+```bash
+git config --global alias.wtb '!f(){ set -e; branch="$1"; if [ -z "$branch" ]; then echo "usage: git wtb <branch> [base=origin/develop] [path]"; exit 1; fi; base="${2:-origin/develop}"; repo="$(git rev-parse --show-toplevel)" || exit 1; slug="$(printf "%s" "$branch" | tr "/" "-")"; if [ -n "${3:-}" ]; then case "$3" in /*) wt="$3" ;; *) wt="$repo/$3" ;; esac; else wt="$repo/.worktrees/$slug"; fi; if [ -e "$wt" ]; then echo "worktree path already exists: $wt"; exit 1; fi; if git -C "$repo" show-ref --verify --quiet "refs/heads/$branch"; then git -C "$repo" worktree add "$wt" "$branch"; else git -C "$repo" worktree add -b "$branch" "$wt" "$base"; fi; copy_if_exists(){ src="$1"; dst="$2"; if [ -f "$src" ] && [ ! -f "$dst" ]; then mkdir -p "$(dirname "$dst")"; cp "$src" "$dst"; echo "copied: $dst"; fi; }; if [ -x "$wt/scripts/bootstrap-worktree-local.sh" ]; then "$wt/scripts/bootstrap-worktree-local.sh"; else copy_if_exists "$repo/secrets.dev.properties" "$wt/secrets.dev.properties"; copy_if_exists "$repo/secrets.prod.properties" "$wt/secrets.prod.properties"; copy_if_exists "$repo/secrets.properties" "$wt/secrets.properties"; copy_if_exists "$repo/version.properties" "$wt/version.properties"; copy_if_exists "$repo/app/src/dev/google-services.json" "$wt/app/src/dev/google-services.json"; copy_if_exists "$repo/app/src/prod/google-services.json" "$wt/app/src/prod/google-services.json"; fi; echo "ready: $wt"; }; f'
+```
+
+사용 예시:
+
+```bash
+git wtb feature/your-branch
+```
 
 ### ScreenShot
 
@@ -62,7 +92,5 @@ Release 빌드를 위해 다음 파일들이 필요합니다.
 ### Demo 
 
 https://github.com/user-attachments/assets/c3b4cbfa-d73d-4b5e-b3c1-0edf841efff7
-
-
 
 

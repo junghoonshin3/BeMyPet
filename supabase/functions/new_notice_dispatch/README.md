@@ -5,7 +5,7 @@
 - `notification_dispatch_state`를 기준으로 날짜 윈도우(`bgupd/enupd`)를 계산합니다.
 - 공공 API(또는 요청 payload의 notices)에서 공고를 수집합니다.
 - `notification_seen_notices`로 신규 공고만 dedupe합니다.
-- 관심사/구독 매칭 후 사용자별 요약 푸시 1건을 발송합니다.
+- 푸시 수신 동의 사용자 전체에게 사용자별 요약 푸시 1건을 발송합니다.
 - `notification_delivery_logs`에 `sent`/`failed`를 기록하고, 무효 토큰을 정리합니다.
 
 ## Request
@@ -36,6 +36,8 @@
   "invalid_token_deleted_count": 0
 }
 ```
+
+- `matched_users`: 이번 배치에서 실제 발송 대상이 된 사용자 수
 
 ## Required Environment Variables
 
@@ -96,4 +98,4 @@ gh workflow run new-notice-dispatch.yml --repo junghoonshin3/BeMyPet
 - `sent_count=0`:
   - 신규 공고(`new_notice_count`) 자체가 없음
   - `notification_subscriptions.push_opt_in=true` 대상이 없음
-  - 관심사 매칭 결과(`matched_users`)가 0
+  - 구독은 있으나 `fcm_token`이 비어 있거나 무효 토큰 정리로 대상이 사라짐

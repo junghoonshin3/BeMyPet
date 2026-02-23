@@ -3,8 +3,6 @@ import {
   buildDateWindow,
   buildNoticeKey,
   chunkKeysForInFilter,
-  matchesInterest,
-  summarizeByUser,
 } from "./dispatch_core.ts";
 import { classifyFcmError, getAccessToken, sendSummaryMessage } from "./fcm_client.ts";
 
@@ -29,15 +27,6 @@ type DispatchRequest = {
 type DispatchStateRow = {
   id: number;
   last_success_date: string | null;
-};
-
-type InterestProfileRow = {
-  user_id: string;
-  regions: string[] | null;
-  species: string[] | null;
-  sexes: string[] | null;
-  sizes: string[] | null;
-  push_enabled: boolean;
 };
 
 type SubscriptionRow = {
@@ -347,18 +336,6 @@ async function insertSeenNotices(adminClient: any, notices: NormalizedNotice[]):
   }
 }
 
-async function loadInterestProfiles(adminClient: any): Promise<InterestProfileRow[]> {
-  const { data, error } = await adminClient
-    .from("user_interest_profiles")
-    .select("user_id,regions,species,sexes,sizes,push_enabled")
-    .eq("push_enabled", true);
-
-  if (error) {
-    throw new Error(`Failed to query profiles: ${error.message}`);
-  }
-  return (data ?? []) as InterestProfileRow[];
-}
-
 async function loadSubscriptions(adminClient: any): Promise<SubscriptionRow[]> {
   const { data, error } = await adminClient
     .from("notification_subscriptions")
@@ -387,6 +364,23 @@ function buildSubscriptionTokenMap(subscriptions: SubscriptionRow[]): Map<string
   }
 
   return tokenMap;
+}
+
+function buildBroadcastUserSummaries(
+  tokenMap: Map<string, string[]>,
+  notices: NormalizedNotice[],
+): Array<{ userId: string; noticeKeys: string[]; matchedCount: number }> {
+  if (notices.length == 0) return [];
+
+  const noticeKeys = notices.map((notice) => notice.noticeKey);
+  return Array.from(tokenMap.entries())
+    .filter(([userId, tokens]) => userId.length > 0 && tokens.length > 0)
+    .map(([userId]) => ({
+      userId,
+      noticeKeys,
+      matchedCount: noticeKeys.length,
+    }))
+    .sort((a, b) => a.userId.localeCompare(b.userId));
 }
 
 async function upsertDeliveryLog(adminClient: any, input: {
@@ -518,40 +512,9 @@ Deno.serve(async (req) => {
       await insertSeenNotices(adminClient, newNotices);
     }
 
-    const profiles = await loadInterestProfiles(adminClient);
     const subscriptions = await loadSubscriptions(adminClient);
     const tokenMap = buildSubscriptionTokenMap(subscriptions);
-
-    const userMatches: Array<{ userId: string; noticeKey: string }> = [];
-    for (const profile of profiles) {
-      const userId = normalizeText(profile.user_id);
-      if (!userId) continue;
-      if ((tokenMap.get(userId) ?? []).length == 0) continue;
-
-      for (const notice of newNotices) {
-        const ok = matchesInterest(
-          {
-            regions: profile.regions ?? [],
-            species: profile.species ?? [],
-            sexes: profile.sexes ?? [],
-            sizes: profile.sizes ?? [],
-          },
-          {
-            uprCd: notice.uprCd,
-            orgCd: notice.orgCd,
-            upkind: notice.upkind,
-            sexCd: notice.sexCd,
-            sizeCategory: notice.sizeCategory,
-          },
-        );
-
-        if (ok) {
-          userMatches.push({ userId, noticeKey: notice.noticeKey });
-        }
-      }
-    }
-
-    const userSummaries = summarizeByUser(userMatches);
+    const userSummaries = buildBroadcastUserSummaries(tokenMap, newNotices);
     const matchedUsers = userSummaries.length;
     const targetTokenCount = userSummaries.reduce(
       (acc, summary) => acc + (tokenMap.get(summary.userId)?.length ?? 0),
