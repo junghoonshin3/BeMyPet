@@ -61,9 +61,12 @@ supabase functions deploy new_notice_dispatch
 ## Scheduler
 
 - GitHub Actions: `.github/workflows/new-notice-dispatch.yml`
-- 주기: 6시간 (`cron: 0 */6 * * *`)
-- environment: `production`
-- 요청: `POST /functions/v1/new_notice_dispatch` (`{"dry_run": false}`)
+- 주기: 6시간 (`cron: 0 */6 * * *`, `production` environment 고정)
+- 수동 실행: `production` 또는 `development` environment 선택 가능
+- 요청: `POST /functions/v1/new_notice_dispatch`
+  - schedule: `{"dry_run": false}`
+  - manual: `{"dry_run": <input>}`
+- 호출은 `curl --fail-with-body`로 실행되어 HTTP 4xx/5xx를 즉시 실패 처리
 
 ## Quick Verification
 

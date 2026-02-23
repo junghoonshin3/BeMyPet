@@ -10,6 +10,8 @@
 - Edge Function: `new_notice_dispatch`
 - Workflow: `.github/workflows/new-notice-dispatch.yml`
 - 주기: 6시간 (`cron: 0 */6 * * *`)
+- 스케줄 타깃: `production` environment 고정
+- 수동 실행 타깃: `production` 또는 `development` 선택 가능
 - 저장 테이블:
   - `notification_dispatch_state`
   - `notification_seen_notices`
@@ -30,8 +32,10 @@
   - `FIREBASE_SERVICE_ACCOUNT_JSON`
 
 3. GitHub Actions
-- `production` environment 생성
-- 해당 environment에 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` 등록
+- `production`, `development` environment 생성
+- 각 environment에 아래 시크릿을 해당 프로젝트 값으로 등록
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
 
 ## 배포 절차
 
@@ -58,6 +62,14 @@ python3 supabase/scripts/notification_rls_smoke_test.py
 
 ```bash
 gh workflow run new-notice-dispatch.yml --repo junghoonshin3/BeMyPet
+```
+
+개발 환경으로 수동 실행 예시:
+
+```bash
+gh workflow run new-notice-dispatch.yml --repo junghoonshin3/BeMyPet \
+  -f target_environment=development \
+  -f dry_run=true
 ```
 
 ## 정상 동작 기준
@@ -98,6 +110,8 @@ curl -sS -X POST "${SUPABASE_URL}/functions/v1/new_notice_dispatch" \
 2. 환경 변수/시크릿 확인
 3. Function 재배포 후 smoke test 재실행
 4. 필요 시 workflow를 일시 비활성화하고 원인 해결 후 재개
+
+참고: 워크플로우는 `curl --fail-with-body`를 사용하므로 4xx/5xx 응답 시 즉시 실패 처리된다.
 
 ## 참고
 

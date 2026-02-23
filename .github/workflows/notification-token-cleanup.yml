@@ -3,10 +3,29 @@ name: notification-token-cleanup
 on:
   schedule:
     - cron: "0 16 * * *" # 01:00 KST
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Target GitHub environment"
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - development
+      stale_before_days:
+        description: "Delete tokens inactive for this many days"
+        required: true
+        default: "30"
+      dry_run:
+        description: "Run without deleting rows"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
-  cleanup:
+  cleanup-scheduled:
+    if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -15,8 +34,28 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          curl -sS -X POST "${SUPABASE_URL}/functions/v1/notification_token_cleanup" \
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body -X POST "${SUPABASE_URL}/functions/v1/notification_token_cleanup" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
             --data '{"mode":"stale","stale_before_days":30,"dry_run":false}'
+
+  cleanup-manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
+    steps:
+      - name: Invoke stale token cleanup (manual)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STALE_BEFORE_DAYS: ${{ inputs.stale_before_days }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body -X POST "${SUPABASE_URL}/functions/v1/notification_token_cleanup" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            --data "{\"mode\":\"stale\",\"stale_before_days\":${STALE_BEFORE_DAYS},\"dry_run\":${DRY_RUN}}"
