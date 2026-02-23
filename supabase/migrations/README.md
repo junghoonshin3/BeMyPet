@@ -6,6 +6,7 @@ Apply migrations in timestamp order.
 2. `20260224_add_notification_retention_tables.sql`
 3. `20260225_cleanup_notification_state_on_profile_soft_delete.sql`
 4. `20260226_enable_comments_blocks_realtime_publication.sql`
+5. `20260227_add_notice_dispatch_state_tables.sql`
 
 This migration introduces:
 - `profiles` table as app profile source
@@ -27,6 +28,11 @@ This migration introduces:
 `20260226_enable_comments_blocks_realtime_publication.sql` introduces:
 - Realtime publication(`supabase_realtime`)에 `comments`, `blocks` 테이블을 보장
 - 댓글/차단 화면의 실시간 동기화 구독 실패 방지
+
+`20260227_add_notice_dispatch_state_tables.sql` introduces:
+- `notification_dispatch_state` table (new notice dispatch run state)
+- `notification_seen_notices` table (minimal dedupe keys with TTL)
+- `notification_dispatch_state.updated_at` trigger
 
 Smoke test:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
@@ -62,3 +68,29 @@ Smoke tests:
 - `python3 supabase/scripts/notification_rls_smoke_test.py`
 - `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
 - `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`
+
+## New Notice Dispatch Rollout Checklist
+
+1. DB migration 적용
+- `supabase db push --linked`
+- `notification_dispatch_state`, `notification_seen_notices` 생성 확인
+
+2. 함수 배포
+- `supabase functions deploy new_notice_dispatch`
+- 환경 변수 확인:
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `PUBLIC_PET_API_SERVICE_KEY`
+  - `FIREBASE_PROJECT_ID`
+  - `FIREBASE_SERVICE_ACCOUNT_JSON`
+
+3. 검증
+- `python3 supabase/scripts/notification_rls_smoke_test.py`
+- `python3 supabase/scripts/new_notice_dispatch_smoke_test.py`
+- `./gradlew :app:compileDevDebugKotlin --no-daemon`
+
+4. 스케줄 확인
+- GitHub Actions `new-notice-dispatch` 워크플로우 활성화
+- `production` environment secret 주입 여부 확인
+
+상세 운영 절차는 `docs/new-notice-dispatch-runbook.md` 참고.

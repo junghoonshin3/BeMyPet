@@ -50,3 +50,4 @@
 
 - 함수 구현: `supabase/functions/notification_token_cleanup/index.ts`
 - 스모크 테스트: `python3 supabase/scripts/notification_token_cleanup_smoke_test.py`
+- 신규 공고 요약 푸시 스케줄: `.github/workflows/new-notice-dispatch.yml` (6시간 주기)
