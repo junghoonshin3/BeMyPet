@@ -191,7 +191,7 @@ class AuthServiceImpl @Inject constructor(
             this.contentType = parsedContentType
         }
 
-        return bucket.publicUrl(objectPath)
+        return appendCacheBuster(bucket.publicUrl(objectPath))
     }
 
     private suspend fun ensureProfile(user: UserInfo?): UserProfile {
@@ -443,6 +443,8 @@ class AuthServiceImpl @Inject constructor(
 
         fun buildAvatarObjectPathForTest(userId: String): String = buildAvatarObjectPath(userId)
 
+        fun appendCacheBusterForTest(url: String, version: Long): String = appendCacheBuster(url, version)
+
         fun parseBannedUntilInstantForTest(raw: String): Instant? = parseBannedUntilInstant(raw)
 
         fun isBannedNowForTest(raw: String, now: Instant): Boolean {
@@ -452,6 +454,11 @@ class AuthServiceImpl @Inject constructor(
 
         private fun buildAvatarObjectPath(userId: String): String =
             "${userId.trim()}/avatar.jpg"
+
+        private fun appendCacheBuster(url: String, version: Long = System.currentTimeMillis()): String {
+            val separator = if (url.contains("?")) "&" else "?"
+            return "${url}${separator}v=${version}"
+        }
 
         private fun parseBannedUntilInstant(raw: String?): Instant? {
             val value = raw?.trim().orEmpty()

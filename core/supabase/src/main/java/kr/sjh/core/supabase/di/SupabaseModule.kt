@@ -13,6 +13,7 @@ import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.storage.Storage
 import io.ktor.client.engine.cio.CIO
 import kr.sjh.core.supabase.BuildConfig
 import javax.inject.Singleton
@@ -34,6 +35,7 @@ object SupabaseModule {
             }
             install(Realtime)
             install(Functions)
+            install(Storage)
         }
     }
 

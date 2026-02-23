@@ -1,15 +1,15 @@
 package kr.sjh.setting.screen
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,17 +27,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kr.sjh.core.common.ads.AdMobBanner
 import kr.sjh.core.common.credential.AccountManager
@@ -70,10 +66,10 @@ import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
 import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.model.SessionState
-import kr.sjh.core.model.UserProfile
 import kr.sjh.core.model.setting.SettingType
 
 private const val DELETE_ACCOUNT_SESSION_EXPIRED_MESSAGE = "로그인 상태가 만료되었어요. 다시 로그인 후 시도해 주세요."
+private const val TAG = "SettingScreen"
 
 @Composable
 fun SettingRoute(
@@ -89,19 +85,36 @@ fun SettingRoute(
     onNavigateToMyComments: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val profileUiState by viewModel.profileUiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.profileUiState.collectAsStateWithLifecycle()
     val authenticatedUserId = (session as? SessionState.Authenticated)?.user?.id
 
     LaunchedEffect(authenticatedUserId) {
         authenticatedUserId?.let { viewModel.loadProfile(userId = it) }
     }
+    LaunchedEffect(isDarkTheme) {
+        viewModel.syncTheme(isDarkTheme)
+    }
+    LaunchedEffect(session is SessionState.Authenticated) {
+        if (session !is SessionState.Authenticated) {
+            viewModel.clearTransientUiState()
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is SettingUiEvent.ShowMessage -> SnackBarManager.showMessage(event.message)
+            }
+        }
+    }
 
     SettingScreen(
         modifier = modifier,
-        isDarkTheme = isDarkTheme,
         session = session,
-        profile = profileUiState.profile,
-        onChangeDarkTheme = onChangeDarkTheme,
+        uiState = uiState,
+        onThemeSelected = { selectedTheme ->
+            viewModel.selectTheme(selectedTheme)
+            onChangeDarkTheme(selectedTheme == SettingType.DARK_THEME)
+        },
         onNavigateToSignIn = onNavigateToSignIn,
         onSignOut = {
             coroutineScope.launch {
@@ -109,6 +122,8 @@ fun SettingRoute(
                 viewModel.signOut()
             }
         },
+        onShowDeleteUserDialog = viewModel::showDeleteUserDialog,
+        onHideDeleteUserDialog = viewModel::hideDeleteUserDialog,
         onDeleteAccount = { userId ->
             viewModel.deleteAccount(
                 userId = userId,
@@ -136,18 +151,18 @@ fun SettingRoute(
         },
         onNavigateToBlockedUser = onNavigateToBlockedUser,
         onNavigateToMyComments = onNavigateToMyComments,
+        onStartProfileEdit = viewModel::startProfileEdit,
+        onProfileEditNameInputChange = viewModel::updateProfileEditNameInput,
+        onProfileEditVisibleChange = viewModel::setProfileEditVisible,
+        onDismissProfileEdit = viewModel::dismissProfileEdit,
+        onProfileAvatarPicked = viewModel::setPickedAvatar,
+        onReopenProfileEditIfNeeded = viewModel::reopenProfileEditDialogIfNeeded,
         onUpdateProfile = { userId, displayName, avatarBytes, currentAvatarUrl ->
             viewModel.updateProfileWithAvatar(
                 userId = userId,
                 displayName = displayName,
                 avatarBytes = avatarBytes,
                 currentAvatarUrl = currentAvatarUrl,
-                onSuccess = {
-                    SnackBarManager.showMessage("프로필을 업데이트했어요.")
-                },
-                onFailure = {
-                    SnackBarManager.showMessage(it.message ?: "프로필 업데이트에 실패했어요.")
-                }
             )
         }
     )
@@ -156,86 +171,104 @@ fun SettingRoute(
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean,
     session: SessionState,
-    profile: UserProfile?,
-    onChangeDarkTheme: (Boolean) -> Unit,
+    uiState: ProfileUiState,
+    onThemeSelected: (SettingType) -> Unit,
     onNavigateToSignIn: () -> Unit,
     onSignOut: () -> Unit,
+    onShowDeleteUserDialog: () -> Unit,
+    onHideDeleteUserDialog: () -> Unit,
     onDeleteAccount: (String) -> Unit,
     onNavigateToBlockedUser: (String) -> Unit,
     onNavigateToMyComments: (String) -> Unit,
+    onStartProfileEdit: (String, String, String?) -> Unit,
+    onProfileEditNameInputChange: (String) -> Unit,
+    onProfileEditVisibleChange: (Boolean) -> Unit,
+    onDismissProfileEdit: (Boolean) -> Unit,
+    onProfileAvatarPicked: (Uri, ByteArray?) -> Unit,
+    onReopenProfileEditIfNeeded: () -> Unit,
     onUpdateProfile: (String, String, ByteArray?, String?) -> Unit
 ) {
-    var selectedTheme by remember(isDarkTheme) {
-        mutableStateOf(if (isDarkTheme) SettingType.DARK_THEME else SettingType.LIGHT_THEME)
-    }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
-    var showProfileEditDialog by rememberSaveable { mutableStateOf(false) }
-    var editingUserId by rememberSaveable { mutableStateOf<String?>(null) }
-    var nameInput by rememberSaveable { mutableStateOf("") }
-    var selectedAvatarPreview by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedAvatarBytes by remember { mutableStateOf<ByteArray?>(null) }
+    val profile = uiState.profile
+    val profileEditDraft = uiState.profileEditDraft
+
+    fun hideKeyboardAndFocus() {
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
+    }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+        contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        runCatching {
-            AvatarImageCompressor.compress(
-                contentResolver = context.contentResolver,
-                uri = uri
-            )
-        }.onSuccess { bytes ->
-            selectedAvatarPreview = uri.toString()
-            selectedAvatarBytes = bytes
-        }.onFailure { throwable ->
-            SnackBarManager.showMessage(throwable.message ?: "이미지를 처리할 수 없어요.")
-        }
-    }
-
-    LaunchedEffect(session is SessionState.Authenticated) {
-        if (session !is SessionState.Authenticated) {
-            showProfileEditDialog = false
-            editingUserId = null
-            selectedAvatarPreview = null
-            selectedAvatarBytes = null
-        }
-    }
-
-    if (showProfileEditDialog && editingUserId != null) {
-        ProfileEditDialog(
-            nameInput = nameInput,
-            onNameInputChange = { nameInput = it },
-            avatarPreviewModel = selectedAvatarPreview,
-            onPickAvatar = {
-                imagePickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        if (uri != null) {
+            val compressedBytes = runCatching {
+                AvatarImageCompressor.compress(
+                    contentResolver = context.contentResolver,
+                    uri = uri
                 )
+            }.getOrElse { throwable ->
+                Log.w(TAG, "Failed to compress picked avatar image. uri=$uri", throwable)
+                SnackBarManager.showMessage(throwable.message ?: "이미지를 처리할 수 없어요.")
+                null
+            }
+            onProfileAvatarPicked(uri, compressedBytes)
+        } else {
+            Log.d(TAG, "Image picker cancelled or no image selected.")
+        }
+        onReopenProfileEditIfNeeded()
+    }
+
+    if (profileEditDraft.isVisible && profileEditDraft.editingUserId != null) {
+        ProfileEditDialog(
+            nameInput = profileEditDraft.nameInput,
+            onNameInputChange = onProfileEditNameInputChange,
+            avatarPreviewModel = profileEditDraft.avatarPreviewModel,
+            avatarPreviewBytes = profileEditDraft.selectedAvatarBytes,
+            hasNewAvatarSelection = profileEditDraft.hasNewAvatarSelection,
+            onPickAvatar = {
+                hideKeyboardAndFocus()
+                onProfileEditVisibleChange(false)
+                runCatching { imagePickerLauncher.launch("image/*") }
+                    .onFailure {
+                        SnackBarManager.showMessage("갤러리 열기에 실패했어요. 다시 시도해 주세요.")
+                        onReopenProfileEditIfNeeded()
+                    }
             },
             onDismiss = {
-                focusManager.clearFocus(force = true)
-                keyboardController?.hide()
-                showProfileEditDialog = false
-                selectedAvatarBytes = null
-                selectedAvatarPreview = null
+                hideKeyboardAndFocus()
+                onDismissProfileEdit(true)
             },
             onSave = {
-                val userId = editingUserId ?: return@ProfileEditDialog
-                val trimmedName = nameInput.trim()
+                val userId = profileEditDraft.editingUserId
+                val trimmedName = profileEditDraft.nameInput.trim()
                 if (trimmedName.isNotBlank()) {
+                    val selectedUri = profileEditDraft.selectedAvatarUri?.let(Uri::parse)
+                    val avatarBytesToUpload = profileEditDraft.selectedAvatarBytes ?: selectedUri?.let { uri ->
+                        runCatching {
+                            AvatarImageCompressor.compress(
+                                contentResolver = context.contentResolver,
+                                uri = uri
+                            )
+                        }.onFailure { throwable ->
+                            Log.w(TAG, "Retry compression failed before profile save. uri=$uri", throwable)
+                            SnackBarManager.showMessage(
+                                throwable.message ?: "선택한 이미지를 처리할 수 없어요. 다시 선택해 주세요."
+                            )
+                        }.getOrNull()
+                    }
+                    if (selectedUri != null && avatarBytesToUpload == null) {
+                        return@ProfileEditDialog
+                    }
                     onUpdateProfile(
                         userId,
                         trimmedName,
-                        selectedAvatarBytes,
-                        selectedAvatarPreview,
+                        avatarBytesToUpload,
+                        profileEditDraft.originalAvatarUrlForSave,
                     )
-                    focusManager.clearFocus(force = true)
-                    keyboardController?.hide()
-                    showProfileEditDialog = false
-                    selectedAvatarBytes = null
-                    selectedAvatarPreview = null
+                    onDismissProfileEdit(true)
                 }
             }
         )
@@ -276,39 +309,22 @@ fun SettingScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                SectionCard(title = "테마") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SettingType.entries.forEach { type ->
-                            CheckBoxButton(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
-                                title = type.title,
-                                selected = type == selectedTheme,
-                                onClick = {
-                                    selectedTheme = type
-                                    onChangeDarkTheme(selectedTheme == SettingType.DARK_THEME)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
                 when (session) {
                     is SessionState.Authenticated -> {
-                        ProfileSection(
+                        ProfileAccountSection(
+                            userId = session.user.id,
                             displayName = profile?.displayName ?: session.user.displayName,
                             avatarUrl = profile?.avatarUrl ?: session.user.avatarUrl,
+                            isDeleteUserDialogVisible = uiState.isDeleteUserDialogVisible,
                             onEditClick = {
-                                editingUserId = session.user.id
-                                nameInput = profile?.displayName ?: session.user.displayName
-                                selectedAvatarPreview =
-                                    profile?.avatarUrl ?: session.user.avatarUrl
-                                selectedAvatarBytes = null
-                                showProfileEditDialog = true
-                            }
+                                val displayName = profile?.displayName ?: session.user.displayName
+                                val currentAvatarUrl = profile?.avatarUrl ?: session.user.avatarUrl
+                                onStartProfileEdit(session.user.id, displayName, currentAvatarUrl)
+                            },
+                            onShowDeleteUserDialog = onShowDeleteUserDialog,
+                            onHideDeleteUserDialog = onHideDeleteUserDialog,
+                            onSignOut = onSignOut,
+                            onDeleteAccount = onDeleteAccount
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         BlockedUser(
@@ -321,12 +337,6 @@ fun SettingScreen(
                             onNavigateToMyComments = {
                                 onNavigateToMyComments(session.user.id)
                             }
-                        )
-                        Spacer(modifier = Modifier.height(14.dp))
-                        DeleteUser(
-                            userId = session.user.id,
-                            onSignOut = onSignOut,
-                            onDeleteAccount = { onDeleteAccount(session.user.id) }
                         )
                     }
 
@@ -346,30 +356,34 @@ fun SettingScreen(
             }
 
             item {
-                val context = LocalContext.current
+                SectionCard(title = "테마") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SettingType.entries.forEach { type ->
+                            CheckBoxButton(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                title = type.title,
+                                selected = type == uiState.selectedTheme,
+                                onClick = { onThemeSelected(type) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
                 SectionCard(title = "약관 및 정책") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SelectableListItem(
                             title = "서비스이용약관",
                             showCheckIcon = false,
-                            onClick = {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://chocolate-ballcap-c67.notion.site/1af950d70a6180fb9e46e95dc0d56fd2?pvs=4")
-                                )
-                                context.startActivity(intent)
-                            }
+                            onClick = { openExternalUrl(context, SERVICE_TERMS_URL) }
                         )
                         SelectableListItem(
                             title = "개인정보처리방침",
                             showCheckIcon = false,
-                            onClick = {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://chocolate-ballcap-c67.notion.site/1d7950d70a6180d0a49cd4256a282084?pvs=4")
-                                )
-                                context.startActivity(intent)
-                            }
+                            onClick = { openExternalUrl(context, PRIVACY_POLICY_URL) }
                         )
                     }
                 }
@@ -377,6 +391,7 @@ fun SettingScreen(
         }
     }
 }
+
 
 @Composable
 private fun SectionCard(
@@ -405,12 +420,34 @@ private fun SectionCard(
 }
 
 @Composable
-private fun ProfileSection(
+private fun ProfileAccountSection(
+    userId: String,
     displayName: String,
     avatarUrl: String?,
-    onEditClick: () -> Unit
+    isDeleteUserDialogVisible: Boolean,
+    onEditClick: () -> Unit,
+    onShowDeleteUserDialog: () -> Unit,
+    onHideDeleteUserDialog: () -> Unit,
+    onSignOut: () -> Unit,
+    onDeleteAccount: (String) -> Unit
 ) {
-    SectionCard(title = "프로필") {
+    if (isDeleteUserDialogVisible) {
+        BeMyPetConfirmDialog(
+            onDismissRequest = onHideDeleteUserDialog,
+            title = "회원탈퇴",
+            message = "회원탈퇴를 하시겠습니까?",
+            confirmText = "예",
+            dismissText = "아니오",
+            confirmActionStyle = BeMyPetDialogActionStyle.Destructive,
+            onConfirm = {
+                onDeleteAccount(userId)
+                onHideDeleteUserDialog()
+            },
+            onDismiss = onHideDeleteUserDialog
+        )
+    }
+
+    SectionCard(title = "프로필 및 계정") {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -441,6 +478,36 @@ private fun ProfileSection(
             showCheckIcon = false,
             onClick = onEditClick
         )
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        )
+
+        SelectableListItem(
+            title = "로그아웃",
+            showCheckIcon = false,
+            onClick = onSignOut
+        )
+
+        Button(
+            onClick = onShowDeleteUserDialog,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCorner12,
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Text(
+                text = "회원탈퇴",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onError
+            )
+        }
     }
 }
 
@@ -449,6 +516,8 @@ private fun ProfileEditDialog(
     nameInput: String,
     onNameInputChange: (String) -> Unit,
     avatarPreviewModel: String?,
+    avatarPreviewBytes: ByteArray?,
+    hasNewAvatarSelection: Boolean,
     onPickAvatar: () -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
@@ -461,27 +530,61 @@ private fun ProfileEditDialog(
         title = "프로필 수정",
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AsyncImage(
-                        modifier = Modifier
-                            .size(88.dp)
-                            .clip(CircleShape),
-                        model = avatarPreviewModel ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
-                        contentDescription = "profile_preview",
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                OutlinedButton(
-                    onClick = onPickAvatar,
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCorner12
+                    shape = RoundedCorner12,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.75f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Text("이미지 선택")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        AsyncImage(
+                            modifier = Modifier
+                                .size(92.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f),
+                                    shape = CircleShape
+                                ),
+                            model = avatarPreviewBytes
+                                ?: avatarPreviewModel?.let(Uri::parse)
+                                ?: R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
+                            contentDescription = "profile_preview",
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Text(
+                            text = "선택한 사진은 저장 시 프로필에 반영돼요",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Button(
+                            onClick = onPickAvatar,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            shape = RoundedCorner12,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            )
+                        ) {
+                            Text(
+                                text = if (hasNewAvatarSelection) "프로필사진 다시 선택" else "프로필사진 변경",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
                 }
                 OutlinedTextField(
                     value = nameInput,
@@ -507,11 +610,7 @@ private fun ProfileEditDialog(
             ) {
                 BeMyPetDialogActionButton(
                     text = "취소",
-                    onClick = {
-                        focusManager.clearFocus(force = true)
-                        keyboardController?.hide()
-                        onDismiss()
-                    },
+                    onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                     style = BeMyPetDialogActionStyle.Secondary
                 )
@@ -524,54 +623,6 @@ private fun ProfileEditDialog(
             }
         }
     )
-}
-
-@Composable
-fun DeleteUser(userId: String, onSignOut: () -> Unit, onDeleteAccount: (String) -> Unit) {
-    var isDeleteUserShow by remember {
-        mutableStateOf(false)
-    }
-
-    if (isDeleteUserShow) {
-        BeMyPetConfirmDialog(
-            onDismissRequest = { isDeleteUserShow = false },
-            title = "회원탈퇴",
-            message = "회원탈퇴를 하시겠습니까?",
-            confirmText = "예",
-            dismissText = "아니오",
-            confirmActionStyle = BeMyPetDialogActionStyle.Destructive,
-            onConfirm = {
-                onDeleteAccount(userId)
-                isDeleteUserShow = false
-            },
-            onDismiss = { isDeleteUserShow = false }
-        )
-    }
-
-    SectionCard(title = "계정") {
-        SelectableListItem(
-            title = "로그아웃",
-            showCheckIcon = false,
-            onClick = onSignOut
-        )
-
-        Button(
-            onClick = { isDeleteUserShow = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCorner12,
-            colors = ButtonDefaults.textButtonColors(
-                containerColor = MaterialTheme.colorScheme.error
-            )
-        ) {
-            Text(
-                text = "회원탈퇴",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onError
-            )
-        }
-    }
 }
 
 @Composable
@@ -600,3 +651,12 @@ private fun isSessionExpiredDeleteError(error: Exception): Boolean {
     val message = error.message.orEmpty()
     return message.contains(DELETE_ACCOUNT_SESSION_EXPIRED_MESSAGE)
 }
+
+private fun openExternalUrl(context: Context, url: String) {
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+}
+
+private const val SERVICE_TERMS_URL =
+    "https://chocolate-ballcap-c67.notion.site/1af950d70a6180fb9e46e95dc0d56fd2?pvs=4"
+private const val PRIVACY_POLICY_URL =
+    "https://chocolate-ballcap-c67.notion.site/1d7950d70a6180d0a49cd4256a282084?pvs=4"

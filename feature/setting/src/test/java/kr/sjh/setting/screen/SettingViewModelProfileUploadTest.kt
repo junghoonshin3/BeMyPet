@@ -11,9 +11,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.UserProfile
+import kr.sjh.core.model.setting.SettingType
 import kr.sjh.data.repository.AuthRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
@@ -28,20 +30,43 @@ class SettingViewModelProfileUploadTest {
     fun updateProfileWithAvatar_uploadsFirst_thenUpdatesProfile() = runTest {
         val fakeRepository = FakeAuthRepository()
         val viewModel = SettingViewModel(fakeRepository)
-        var failure: Exception? = null
 
         viewModel.updateProfileWithAvatar(
             userId = "user-id",
             displayName = "new-name",
             avatarBytes = byteArrayOf(1, 2),
             currentAvatarUrl = "https://example.com/old-avatar.jpg",
-            onSuccess = {},
-            onFailure = { failure = it },
         )
         advanceUntilIdle()
 
         assertEquals(listOf("upload", "update"), fakeRepository.callOrder)
-        assertNull(failure)
+    }
+
+    @Test
+    fun startProfileEdit_andDismiss_keepsStateInViewModel() {
+        val viewModel = SettingViewModel(FakeAuthRepository())
+
+        viewModel.startProfileEdit(
+            userId = "user-id",
+            displayName = "홍길동",
+            currentAvatarUrl = "https://example.com/a.jpg"
+        )
+        val afterStart = viewModel.profileUiState.value.profileEditDraft
+        assertTrue(afterStart.isVisible)
+        assertEquals("홍길동", afterStart.nameInput)
+        assertEquals("https://example.com/a.jpg", afterStart.originalAvatarUrlForSave)
+
+        viewModel.dismissProfileEdit(clearDraft = true)
+        assertNull(viewModel.profileUiState.value.profileEditDraft.editingUserId)
+    }
+
+    @Test
+    fun selectTheme_updatesUiStateTheme() {
+        val viewModel = SettingViewModel(FakeAuthRepository())
+
+        viewModel.selectTheme(SettingType.DARK_THEME)
+
+        assertEquals(SettingType.DARK_THEME, viewModel.profileUiState.value.selectedTheme)
     }
 }
 
