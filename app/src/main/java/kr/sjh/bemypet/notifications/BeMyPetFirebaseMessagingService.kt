@@ -1,8 +1,9 @@
 package kr.sjh.bemypet.notifications
 
-import android.util.Log
+import android.os.Bundle
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,8 +49,17 @@ class BeMyPetFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        if (message.data.isNotEmpty()) {
-            PushPayloadParser.parse(message.data)
-        }
+        val parsedPayload = PushPayloadParser.parse(message.data)
+        logPushReceived(parsedPayload)
+        PushNotificationPresenter.show(applicationContext, message, parsedPayload)
+    }
+
+    private fun logPushReceived(payload: ParsedPushPayload) {
+        FirebaseAnalytics.getInstance(applicationContext).logEvent("push_received", Bundle().apply {
+            putString("campaign_type", payload.campaignType.ifBlank { "unknown" })
+            payload.noticeNo.takeIf { it.isNotBlank() }?.let { putString("notice_no", it) }
+            payload.matchedCount?.let { putLong("matched_count", it.toLong()) }
+            payload.batchId.takeIf { it.isNotBlank() }?.let { putString("batch_id", it.take(40)) }
+        })
     }
 }
