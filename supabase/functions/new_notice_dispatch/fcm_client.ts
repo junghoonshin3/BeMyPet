@@ -148,7 +148,7 @@ export function buildSummaryMessage(token: string, matchedCount: string, batchId
       token,
       notification: {
         title: "새 공고 알림",
-        body: `관심 조건에 맞는 신규 공고 ${matchedCount}건이 등록됐어요.`,
+        body: `신규 유기동물 공고 ${matchedCount}건이 등록됐어요.`,
       },
       data: {
         campaign_type: "new_animal_summary",
