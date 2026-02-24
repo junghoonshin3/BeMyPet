@@ -1,6 +1,7 @@
 package kr.sjh.feature.adoption.screen
 
 import FilterComponent
+import android.os.Build
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -123,6 +125,8 @@ fun AdoptionRoute(
             when (sideEffect) {
                 SideEffect.HideBottomSheet -> {
                     bottomSheetState.animateTo(SheetDetent.Hidden)
+                    bottomSheetState.jumpTo(SheetDetent.Hidden)
+                    filterViewModel.onEvent(FilterEvent.BottomSheetDismissed)
                 }
 
                 SideEffect.ShowBottomSheet -> {
@@ -133,6 +137,12 @@ fun AdoptionRoute(
                     viewModel.onEvent(AdoptionEvent.Refresh(sideEffect.req))
                 }
             }
+        }
+    }
+
+    LaunchedEffect(filterUiState.selectedCategory) {
+        if (filterUiState.selectedCategory == null) {
+            bottomSheetState.jumpTo(SheetDetent.Hidden)
         }
     }
 
@@ -165,6 +175,11 @@ private fun AdoptionScreen(
     val scrollableHeightPx = with(density) { AppBarScrollableHeight.roundToPx().toFloat() }
     var appbarOffsetHeightPx by rememberSaveable { mutableFloatStateOf(0f) }
     var measuredAppBarHeightPx by remember { mutableIntStateOf(0) }
+    val statusBarInsetModifier = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        Modifier
+    } else {
+        Modifier.statusBarsPadding()
+    }
     val effectiveAppBarHeight = if (measuredAppBarHeightPx > 0) {
         with(density) { measuredAppBarHeightPx.toDp() }
     } else {
@@ -268,6 +283,7 @@ private fun AdoptionScreen(
 
         BeMyPetTopAppBar(
             modifier = Modifier
+                .then(statusBarInsetModifier)
                 .fillMaxWidth()
                 .onSizeChanged { measuredAppBarHeightPx = it.height }
                 .offset {

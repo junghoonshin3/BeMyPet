@@ -1,5 +1,6 @@
 package kr.sjh.feature.favourite.screen
 
+import android.os.Build
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -37,7 +39,9 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -46,7 +50,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -98,8 +104,20 @@ private fun FavouriteScreen(
     navigateToPetDetail: (Pet) -> Unit
 ) {
     val state = rememberPullToRefreshState()
+    val density = LocalDensity.current
+    var measuredHeaderHeightPx by remember { mutableIntStateOf(0) }
+    val statusBarInsetModifier = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        Modifier
+    } else {
+        Modifier.statusBarsPadding()
+    }
+    val effectiveHeaderHeight = if (measuredHeaderHeightPx > 0) {
+        with(density) { measuredHeaderHeightPx.toDp() }
+    } else {
+        FavouriteHeaderHeight
+    }
     val listContentPadding = PaddingValues(
-        top = FavouriteHeaderHeight + 12.dp,
+        top = effectiveHeaderHeight + 12.dp,
         bottom = 20.dp,
         start = 16.dp,
         end = 16.dp
@@ -115,7 +133,7 @@ private fun FavouriteScreen(
                 RefreshIndicator(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = FavouriteHeaderHeight + 8.dp)
+                        .padding(top = effectiveHeaderHeight + 8.dp)
                         .size(50.dp),
                     state = state,
                     isRefreshing = isRefreshing
@@ -159,7 +177,9 @@ private fun FavouriteScreen(
 
         BeMyPetTopAppBar(
             modifier = Modifier
+                .then(statusBarInsetModifier)
                 .fillMaxWidth()
+                .onSizeChanged { measuredHeaderHeightPx = it.height }
                 .zIndex(1f)
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                 .clip(RoundedCornerBottom24),
@@ -167,7 +187,7 @@ private fun FavouriteScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(

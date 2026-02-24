@@ -1,11 +1,14 @@
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import com.composables.core.ModalBottomSheet
 import com.composables.core.ModalBottomSheetState
+import com.composables.core.ModalSheetProperties
 import com.composables.core.Scrim
 import com.composables.core.Sheet
 import kr.sjh.feature.adoption.screen.filter.CalendarContent
@@ -27,10 +30,22 @@ fun FilterComponent(
 ) {
     if (filterUiState.selectedCategory == null) return
 
-    ModalBottomSheet(state = sheetState, onDismiss = {
-        onFilterEvent(FilterEvent.CloseBottomSheet)
-    }) {
-        Scrim()
+    ModalBottomSheet(
+        state = sheetState,
+        properties = ModalSheetProperties(
+            dismissOnClickOutside = false
+        ),
+        onDismiss = {
+            onFilterEvent(FilterEvent.CloseBottomSheet)
+        }
+    ) {
+        Scrim(
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures {
+                    onFilterEvent(FilterEvent.CloseBottomSheet)
+                }
+            }
+        )
         Sheet(
             modifier = modifier
                 .background(MaterialTheme.colorScheme.surface)

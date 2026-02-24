@@ -18,16 +18,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,15 +31,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.components.BeMyPetConfirmDialog
 import kr.sjh.core.designsystem.components.BeMyPetDialogActionStyle
-import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
-import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
-import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.model.Comment
 
 private val MyCommentDateFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
@@ -100,28 +93,10 @@ private fun MyCommentsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        BeMyPetTopAppBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24),
-            title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Title(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    title = "내가 쓴 댓글",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
-            }
+        BeMyPetBackAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            title = "내가 쓴 댓글",
+            onBack = onBack,
         )
 
         when {

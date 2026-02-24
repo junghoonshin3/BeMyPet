@@ -18,8 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,17 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
-import kr.sjh.core.designsystem.components.Title
 import kr.sjh.feature.navigation.BlockEvent
 
 @Composable
@@ -93,24 +87,12 @@ fun BlockScreen(
     }
 
     Column(modifier = modifier) {
-        BeMyPetTopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary),
-            title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                    )
-                }
-                Title(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    title = "차단목록",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            })
+        BeMyPetBackAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            title = "차단목록",
+            onBack = onBack,
+            roundedBottom = false,
+        )
 
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

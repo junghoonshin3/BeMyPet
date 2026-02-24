@@ -6,7 +6,10 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -57,7 +60,9 @@ fun BeMyPetBottomNavigation(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 8.dp)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -67,9 +72,12 @@ fun BeMyPetBottomNavigation(
                 shadowElevation = 2.dp
             ) {
                 NavigationBar(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(76.dp),
                     containerColor = Color.Transparent,
-                    tonalElevation = 0.dp
+                    tonalElevation = 0.dp,
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
                     destinations.forEach { destination ->
                         val selected =
@@ -77,7 +85,7 @@ fun BeMyPetBottomNavigation(
                         BeMyPetNavigationBarItem(
                             icon = {
                                 Icon(
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(22.dp),
                                     painter = painterResource(id = destination.icon),
                                     contentDescription = destination.contentDes
                                 )
