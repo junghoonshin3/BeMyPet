@@ -64,7 +64,7 @@ class StartActivity : ComponentActivity() {
                 startViewModel.pushSyncState.collect { pushSyncState ->
                     val pushSyncPrefs = getSharedPreferences(PUSH_PREF_NAME, MODE_PRIVATE)
                     val session = pushSyncState.session
-                    if (session is SessionState.Authenticated && pushSyncState.hasSeenOnboarding) {
+                    if (session is SessionState.Authenticated) {
                         val userId = session.user.id.trim()
                         if (userId.isBlank()) {
                             pushSyncPrefs.edit { remove(KEY_CURRENT_USER_ID) }
