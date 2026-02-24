@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kr.sjh.core.model.SessionState
 import kr.sjh.data.repository.AuthRepository
@@ -20,9 +21,6 @@ class SessionStore @Inject constructor(
     authRepository: AuthRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private companion object {
-        const val SESSION_RETRY_DELAY_MS = 300L
-    }
 
     val session: StateFlow<SessionState> = authRepository.getSessionFlow()
         .retryWhen { cause, _ ->
@@ -33,9 +31,30 @@ class SessionStore @Inject constructor(
             true
         }
         .catch { emit(SessionState.NoAuthenticated(isSignOut = false)) }
+        .scan<SessionState, SessionState>(SessionState.Initializing) { previous, current ->
+            stabilizeSessionTransitionForTest(previous, current)
+        }
         .stateIn(
             scope = scope,
             started = SharingStarted.Eagerly,
             initialValue = SessionState.Initializing
         )
+
+    internal companion object {
+        private const val SESSION_RETRY_DELAY_MS = 300L
+
+        fun stabilizeSessionTransitionForTest(
+            previous: SessionState,
+            current: SessionState,
+        ): SessionState {
+            return if (
+                current is SessionState.Initializing &&
+                previous !is SessionState.Initializing
+            ) {
+                previous
+            } else {
+                current
+            }
+        }
+    }
 }
