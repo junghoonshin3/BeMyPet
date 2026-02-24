@@ -16,6 +16,7 @@ sealed interface FilterEvent {
     data class FetchSigungu(val sido: Sido) : FilterEvent
     data class ConfirmLocation(val sido: Sido, val sigungu: Sigungu) : FilterEvent
     data object CloseBottomSheet : FilterEvent
+    data object BottomSheetDismissed : FilterEvent
     data object OpenBottomSheet : FilterEvent
     data class ConfirmNeuter(val neuter: Neuter) : FilterEvent
     data class ConfirmUpKind(val upkind: UpKind) : FilterEvent

@@ -38,13 +38,14 @@ class StartActivity : ComponentActivity() {
 
     private val startViewModel: StartViewModel by viewModels()
     private var isThemeLoaded by mutableStateOf(false)
+    private var isOnboardingLoaded by mutableStateOf(false)
     private var isTheme by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
         // SplashScreen 유지하면서 테마 값 로드
-        splashScreen.setKeepOnScreenCondition { !isThemeLoaded }
+        splashScreen.setKeepOnScreenCondition { !isThemeLoaded || !isOnboardingLoaded }
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -55,6 +56,14 @@ class StartActivity : ComponentActivity() {
                 startViewModel.isDarkTheme.collect { isDark ->
                     isThemeLoaded = true
                     isTheme = isDark
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                startViewModel.hasSeenOnboarding.collect {
+                    isOnboardingLoaded = true
                 }
             }
         }

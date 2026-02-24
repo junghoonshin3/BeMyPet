@@ -46,17 +46,17 @@ private data class OnboardingPage(
 
 private val onboardingPages = listOf(
     OnboardingPage(
-        imageRes = R.drawable.fg_ic_image_placeholder,
+        imageRes = R.drawable.animal_carnivore_cartoon_8_svgrepo_com,
         title = "몇 분 만에 입양 탐색을 시작해요",
         description = "필터와 카드 목록으로 필요한 조건을 빠르게 좁혀보세요."
     ),
     OnboardingPage(
-        imageRes = R.drawable.fg_ic_star_filled,
+        imageRes = R.drawable.animal_bunny_cartoon_svgrepo_com,
         title = "마음에 드는 친구를 저장해요",
         description = "관심 목록에 담고 상태 변화를 다시 확인할 수 있어요."
     ),
     OnboardingPage(
-        imageRes = R.drawable.baseline_pets_24,
+        imageRes = R.drawable.animal_carnivore_cartoon_3_svgrepo_com,
         title = "회원가입 사용자 전용 알림",
         description = "새 공고 푸시 알림은 회원가입 후 설정 화면에서 켜고 끌 수 있어요."
     )

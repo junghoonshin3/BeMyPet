@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,9 +46,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
-import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.model.adoption.Pet
 import kr.sjh.core.model.adoption.displayBreedName
 import kr.sjh.data.repository.CompareRepository
@@ -204,42 +203,22 @@ private fun CompareBoardHeader(
     onBack: () -> Unit,
     onClear: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
-            .statusBarsPadding()
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                contentDescription = "back",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
+    BeMyPetBackAppBar(
+        modifier = Modifier.fillMaxWidth(),
+        title = title,
+        subtitle = "$selectedCount/3 선택됨",
+        onBack = onBack,
+        actions = {
+            IconButton(onClick = onClear) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
+                    contentDescription = "clear",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-            Text(
-                text = "$selectedCount/3 선택됨",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
-            )
-        }
-        IconButton(onClick = onClear) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = ImageVector.vectorResource(id = R.drawable.refresh_svgrepo_com),
-                contentDescription = "clear",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
+    )
 }
 
 @Composable

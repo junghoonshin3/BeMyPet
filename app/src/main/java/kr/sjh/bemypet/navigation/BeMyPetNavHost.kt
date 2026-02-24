@@ -73,7 +73,8 @@ fun BeMyPetNavHost(
 
     NavHost(
         modifier = modifier,
-        navController = appState.navController, startDestination = Adoption,
+        navController = appState.navController,
+        startDestination = if (hasSeenOnboarding) Adoption else Onboarding,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
