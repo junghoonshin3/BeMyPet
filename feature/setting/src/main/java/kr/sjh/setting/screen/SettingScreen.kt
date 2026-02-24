@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -206,6 +207,11 @@ fun SettingScreen(
     val context = LocalContext.current
     val profile = uiState.profile
     val profileEditDraft = uiState.profileEditDraft
+    val statusBarInsetModifier = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        Modifier
+    } else {
+        Modifier.statusBarsPadding()
+    }
 
     fun hideKeyboardAndFocus() {
         focusManager.clearFocus(force = true)
@@ -299,6 +305,7 @@ fun SettingScreen(
     Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         BeMyPetTopAppBar(
             modifier = Modifier
+                .then(statusBarInsetModifier)
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
                 .clip(RoundedCornerBottom24),
@@ -306,7 +313,7 @@ fun SettingScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(

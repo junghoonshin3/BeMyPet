@@ -65,7 +65,11 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
             }
 
             FilterEvent.CloseBottomSheet -> {
-                hideBottomSheet()
+                requestHideBottomSheet()
+            }
+
+            FilterEvent.BottomSheetDismissed -> {
+                onBottomSheetDismissed()
             }
 
             FilterEvent.OpenBottomSheet -> {
@@ -74,7 +78,7 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
 
             is FilterEvent.ConfirmLocation -> {
                 confirmLocation(event.sido, event.sigungu)
-                hideBottomSheet()
+                requestHideBottomSheet()
             }
 
             is FilterEvent.FetchSigungu -> {
@@ -83,17 +87,17 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
 
             is FilterEvent.ConfirmNeuter -> {
                 confirmNeuter(event.neuter)
-                hideBottomSheet()
+                requestHideBottomSheet()
             }
 
             is FilterEvent.ConfirmUpKind -> {
                 confirmUpKind(event.upkind)
-                hideBottomSheet()
+                requestHideBottomSheet()
             }
 
             is FilterEvent.ConfirmDateRange -> {
                 confirmDateRange(event.startDate, event.endDate)
-                hideBottomSheet()
+                requestHideBottomSheet()
             }
         }
     }
@@ -153,13 +157,19 @@ class FilterViewModel @Inject constructor(private val adoptionRepository: Adopti
         }
     }
 
-    private fun hideBottomSheet() {
+    private fun requestHideBottomSheet() {
+        if (_filterUiState.value.selectedCategory == null) return
+        viewModelScope.launch {
+            _sideEffect.send(SideEffect.HideBottomSheet)
+        }
+    }
+
+    private fun onBottomSheetDismissed() {
+        if (_filterUiState.value.selectedCategory == null) return
+        fetchJob?.cancel()
         clearSigungu()
         _filterUiState.update {
             it.copy(selectedCategory = null)
-        }
-        viewModelScope.launch {
-            _sideEffect.send(SideEffect.HideBottomSheet)
         }
     }
 

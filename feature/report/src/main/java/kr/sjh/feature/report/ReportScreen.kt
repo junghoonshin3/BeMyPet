@@ -21,8 +21,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,24 +34,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.components.PrimaryActionButton
 import kr.sjh.core.designsystem.components.SelectableListItem
-import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
-import kr.sjh.core.designsystem.theme.RoundedCornerBottom24
 import kr.sjh.core.model.ReportForm
 import kr.sjh.core.model.ReportType
 import kr.sjh.feature.report.navigation.Report
@@ -126,28 +119,10 @@ fun ReportScreen(
             })
         }
     ) {
-        BeMyPetTopAppBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24),
-            title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Title(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    title = "신고",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
-            }
+        BeMyPetBackAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            title = "신고",
+            onBack = onBack,
         )
 
         Column(

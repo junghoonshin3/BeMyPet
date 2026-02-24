@@ -73,9 +73,8 @@ import com.composables.core.Sheet
 import com.composables.core.SheetDetent
 import com.composables.core.rememberModalBottomSheetState
 import kr.sjh.core.designsystem.R
-import kr.sjh.core.designsystem.components.BeMyPetTopAppBar
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
-import kr.sjh.core.designsystem.components.Title
 import kr.sjh.core.model.Comment
 import kr.sjh.core.model.ReportType
 import kr.sjh.core.model.Role
@@ -230,24 +229,12 @@ fun CommentScreen(
     }
     ReportBottomSheet(bottomSheetState, uiState, user, onEvent)
     Column(modifier = modifier) {
-        BeMyPetTopAppBar(modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary),
-            title = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "back",
-                    )
-                }
-                Title(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    title = "댓글",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            })
+        BeMyPetBackAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            title = "댓글",
+            onBack = onBack,
+            roundedBottom = false,
+        )
 
         if (uiState.loading) {
             LoadingComponent()

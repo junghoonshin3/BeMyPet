@@ -54,8 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -77,6 +76,7 @@ import kr.sjh.core.common.ads.AdMobBanner
 import kr.sjh.core.common.share.sharePet
 import kr.sjh.core.common.snackbar.SnackBarManager
 import kr.sjh.core.designsystem.R
+import kr.sjh.core.designsystem.components.BeMyPetBackAppBar
 import kr.sjh.core.designsystem.components.LoadingComponent
 import kr.sjh.core.designsystem.theme.RoundedCorner12
 import kr.sjh.core.designsystem.theme.RoundedCorner18
@@ -226,6 +226,7 @@ private fun PetDetailScreen(
     onOpenCompareBoard: () -> Unit,
     onNavigateToComments: (String) -> Unit
 ) {
+    val context = LocalContext.current
     Box(modifier = modifier) {
         when (uiState) {
             is DetailUiState.Failure -> {
@@ -245,32 +246,56 @@ private fun PetDetailScreen(
             }
 
             is DetailUiState.Success -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    PetDetailHeaderBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
-                            .clip(RoundedCornerBottom24),
-                        title = "동물 상세",
-                        isFavorite = isFavorite,
-                        onBack = onBack,
-                        onShare = { onShare(uiState.pet) },
-                        onFavorite = { onFavorite(!isFavorite) }
-                    )
+                var zoomImageUrl by remember(uiState.pet.noticeNo) { mutableStateOf<String?>(null) }
 
-                    AdMobBanner()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        PetDetailHeaderBar(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = "동물 상세",
+                            isFavorite = isFavorite,
+                            onBack = onBack,
+                            onShare = { onShare(uiState.pet) },
+                            onFavorite = { onFavorite(!isFavorite) }
+                        )
 
-                    PetDetailContent(
-                        pet = uiState.pet,
-                        isCompared = isCompared,
-                        isCommentLocked = isCommentLocked,
-                        commentCount = commentCount,
-                        comparedCount = comparedCount,
-                        state = state,
-                        onToggleCompare = onToggleCompare,
-                        onOpenCompareBoard = onOpenCompareBoard,
-                        onNavigateToComments = onNavigateToComments
-                    )
+                        AdMobBanner()
+
+                        PetDetailContent(
+                            pet = uiState.pet,
+                            isCompared = isCompared,
+                            isCommentLocked = isCommentLocked,
+                            commentCount = commentCount,
+                            comparedCount = comparedCount,
+                            state = state,
+                            onToggleCompare = onToggleCompare,
+                            onOpenCompareBoard = onOpenCompareBoard,
+                            onNavigateToComments = onNavigateToComments,
+                            onOpenImageZoom = { imageUrl ->
+                                zoomImageUrl = imageUrl
+                            }
+                        )
+                    }
+
+                    if (!zoomImageUrl.isNullOrBlank()) {
+                        val imageRequest = remember(zoomImageUrl, context) {
+                            ImageRequest.Builder(context)
+                                .data(zoomImageUrl)
+                                .crossfade(true)
+                                .build()
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(10f)
+                                .background(MaterialTheme.colorScheme.background)
+                        ) {
+                            PetPinedZoomRoute(
+                                imageRequest = imageRequest,
+                                close = { zoomImageUrl = null }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -286,57 +311,37 @@ private fun PetDetailHeaderBar(
     onShare: () -> Unit,
     onFavorite: () -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .statusBarsPadding()
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            modifier = Modifier.size(40.dp),
-            onClick = onBack
-        ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
-                contentDescription = "back",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
+    BeMyPetBackAppBar(
+        modifier = modifier,
+        title = title,
+        onBack = onBack,
+        actions = {
+            IconButton(
+                modifier = Modifier.size(40.dp),
+                onClick = onShare
+            ) {
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_share_24),
+                    contentDescription = "share",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            IconButton(
+                modifier = Modifier.size(40.dp),
+                onClick = onFavorite
+            ) {
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = ImageVector.vectorResource(
+                        id = if (isFavorite) R.drawable.like_filled else R.drawable.like
+                    ),
+                    contentDescription = "like",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        IconButton(
-            modifier = Modifier.size(40.dp),
-            onClick = onShare
-        ) {
-            Icon(
-                modifier = Modifier.size(22.dp),
-                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_share_24),
-                contentDescription = "share",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-        IconButton(
-            modifier = Modifier.size(40.dp),
-            onClick = onFavorite
-        ) {
-            Icon(
-                modifier = Modifier.size(22.dp),
-                imageVector = ImageVector.vectorResource(
-                    id = if (isFavorite) R.drawable.like_filled else R.drawable.like
-                ),
-                contentDescription = "like",
-                tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -348,10 +353,7 @@ private fun PetDetailLoadingSkeleton(
 
     Column(modifier = modifier.fillMaxSize()) {
         PetDetailHeaderBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerBottom24)
-                .clip(RoundedCornerBottom24),
+            modifier = Modifier.fillMaxWidth(),
             title = "동물 상세",
             isFavorite = false,
             onBack = onBack,
@@ -446,30 +448,10 @@ private fun PetDetailContent(
     state: LocationUiState,
     onToggleCompare: () -> Unit,
     onOpenCompareBoard: () -> Unit,
-    onNavigateToComments: (String) -> Unit
+    onNavigateToComments: (String) -> Unit,
+    onOpenImageZoom: (String) -> Unit,
 ) {
-    val context = LocalContext.current
     val imageUrls = remember(pet) { buildDetailImageUrls(pet) }
-    var isDialogShow by remember { mutableStateOf(false) }
-    var selectedImageUrl by remember(imageUrls) { mutableStateOf(imageUrls.firstOrNull()) }
-
-    if (isDialogShow && !selectedImageUrl.isNullOrBlank()) {
-        val imageRequest = remember(selectedImageUrl, context) {
-            ImageRequest.Builder(context)
-                .data(selectedImageUrl)
-                .crossfade(true)
-                .build()
-        }
-        Dialog(
-            properties = DialogProperties(
-                decorFitsSystemWindows = false,
-                usePlatformDefaultWidth = false
-            ),
-            onDismissRequest = { isDialogShow = false }
-        ) {
-            PetPinedZoomRoute(imageRequest = imageRequest, close = { isDialogShow = false })
-        }
-    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -480,8 +462,7 @@ private fun PetDetailContent(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
                 imageUrls = imageUrls,
                 onImageClick = { imageUrl ->
-                    selectedImageUrl = imageUrl
-                    isDialogShow = true
+                    onOpenImageZoom(imageUrl)
                 }
             )
         }

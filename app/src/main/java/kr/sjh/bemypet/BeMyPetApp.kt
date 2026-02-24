@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.map
 import kr.sjh.bemypet.navigation.BeMyPetBottomNavigation
 import kr.sjh.bemypet.navigation.BeMyPetNavHost
 import kr.sjh.core.designsystem.components.BeMyPetSnackbar
@@ -37,9 +38,12 @@ fun BeMyPetApp(
     }
 
     val session by startViewModel.session.collectAsStateWithLifecycle()
-    val hasSeenOnboarding by startViewModel.hasSeenOnboarding.collectAsStateWithLifecycle(
-        initialValue = false
+    val hasSeenOnboarding by startViewModel.hasSeenOnboarding
+        .map { it as Boolean? }
+        .collectAsStateWithLifecycle(
+        initialValue = null
     )
+    if (hasSeenOnboarding == null) return
 
     Scaffold(
         modifier = modifier,
@@ -69,7 +73,7 @@ fun BeMyPetApp(
         BeMyPetNavHost(
             appState = appState,
             session = session,
-            hasSeenOnboarding = hasSeenOnboarding,
+            hasSeenOnboarding = hasSeenOnboarding == true,
             modifier = Modifier
                 .fillMaxSize(),
             bottomPadding = bottomPadding,
