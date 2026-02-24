@@ -10,6 +10,10 @@ interface AuthRepository {
         idToken: String, rawNonce: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit
     )
 
+    suspend fun signInWithKakao(
+        onSuccess: () -> Unit, onFailure: (Exception) -> Unit
+    )
+
     suspend fun signOut()
 
     fun getSessionFlow(): Flow<SessionState>

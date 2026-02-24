@@ -363,7 +363,9 @@ fun SettingScreen(
                     }
 
                     SessionState.Initializing -> Unit
-                    is SessionState.Banned, is SessionState.NoAuthenticated -> {
+                    is SessionState.Banned,
+                    is SessionState.NoAuthenticated,
+                    is SessionState.EmailVerificationRequired -> {
                         SectionCard(title = "계정") {
                             PrimaryActionButton(
                                 text = "로그인",
@@ -427,7 +429,10 @@ fun SettingScreen(
                     }
 
                     SessionState.Initializing -> Unit
-                    is SessionState.Banned, is SessionState.NoAuthenticated, SessionState.RefreshFailure -> {
+                    is SessionState.Banned,
+                    is SessionState.NoAuthenticated,
+                    is SessionState.EmailVerificationRequired,
+                    SessionState.RefreshFailure -> {
                         SectionCard(title = "알림") {
                             Text(
                                 text = "새 공고 푸시 알림은 회원가입 후 로그인한 사용자에게만 제공돼요.",

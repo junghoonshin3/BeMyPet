@@ -61,21 +61,27 @@ import kr.sjh.core.designsystem.components.BeMyPetDialogActionButton
 import kr.sjh.core.designsystem.components.BeMyPetDialogActionStyle
 import kr.sjh.core.designsystem.components.BeMyPetDialogContainer
 import kr.sjh.core.designsystem.theme.RoundedCorner12
+import kr.sjh.core.model.KakaoEmailVerificationReason
+import kr.sjh.core.model.SessionState
 
 @Composable
 fun SignInRoute(
     modifier: Modifier = Modifier,
     viewModel: SignInViewModel = hiltViewModel(),
+    session: SessionState,
     accountManager: AccountManager,
     onSignInSuccess: () -> Unit,
+    onRequireKakaoEmailVerification: (KakaoEmailVerificationReason) -> Unit,
     onBack: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isSignedIn) {
-        if (uiState.isSignedIn) {
-            onSignInSuccess()
+    LaunchedEffect(session) {
+        when (session) {
+            is SessionState.Authenticated -> onSignInSuccess()
+            is SessionState.EmailVerificationRequired -> onRequireKakaoEmailVerification(session.reason)
+            else -> Unit
         }
     }
 
@@ -92,7 +98,8 @@ fun SignInRoute(
         },
         uiState = uiState,
         accountManager = accountManager,
-        onSignIn = viewModel::onSignIn,
+        onGoogleSignIn = viewModel::onGoogleSignIn,
+        onKakaoSignIn = viewModel::onKakaoSignIn,
         onBack = onBack
     )
 }
@@ -101,7 +108,8 @@ fun SignInRoute(
 private fun SignInScreen(
     modifier: Modifier = Modifier,
     uiState: SignInUiState,
-    onSignIn: (SignUpModel) -> Unit,
+    onGoogleSignIn: (String, String) -> Unit,
+    onKakaoSignIn: () -> Unit,
     accountManager: AccountManager,
     onBack: () -> Unit
 ) {
@@ -112,7 +120,7 @@ private fun SignInScreen(
     val tryGoogleSignIn: () -> Unit = {
         coroutineScope.launch {
             fun handleSuccess(result: SignInResult.Success) {
-                onSignIn(SignUpModel(result.idToken, result.nonce, "google"))
+                onGoogleSignIn(result.idToken, result.nonce)
             }
 
             when (val result = accountManager.signIn()) {
@@ -153,9 +161,7 @@ private fun SignInScreen(
         modifier = modifier,
         uiState = uiState,
         onGoogleSignInClick = tryGoogleSignIn,
-        onKakaoClick = {
-            SnackBarManager.showMessage("카카오 로그인은 준비 중이에요.")
-        }
+        onKakaoClick = onKakaoSignIn
     )
 }
 
@@ -358,7 +364,7 @@ private fun SocialLoginButtons(
                 )
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Google 로그인 중...",
+                    text = "로그인 진행 중...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

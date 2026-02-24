@@ -53,6 +53,11 @@ class AuthRepositoryImplUploadAvatarTest {
             onFailure: (Exception) -> Unit,
         ) = Unit
 
+        override suspend fun signInWithKakao(
+            onSuccess: () -> Unit,
+            onFailure: (Exception) -> Unit,
+        ) = Unit
+
         override suspend fun signOut() = Unit
 
         override fun getSessionFlow(): Flow<SessionState> = emptyFlow()
