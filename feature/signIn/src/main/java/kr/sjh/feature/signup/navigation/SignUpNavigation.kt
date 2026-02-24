@@ -7,3 +7,8 @@ data object SignUp
 
 @Serializable
 data object Onboarding
+
+@Serializable
+data class KakaoEmailVerificationNotice(
+    val reason: String,
+)

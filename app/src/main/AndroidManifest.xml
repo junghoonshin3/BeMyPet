@@ -49,8 +49,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Accepts URIs that begin with packageID, oauth -->
                 <data
-                    android:host="oauth"
-                    android:scheme="bemypet" />
+                    android:host="${AUTH_HOST}"
+                    android:scheme="${AUTH_SCHEME}" />
 
             </intent-filter>
         </activity>

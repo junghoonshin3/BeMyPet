@@ -99,6 +99,8 @@ android {
             manifestPlaceholders["crashlyticsCollectionEnabled"] = false
             manifestPlaceholders["MAPS_API_KEY"] = devSecrets.requireKey("MAPS_API_KEY")
             manifestPlaceholders["AD_ID"] = devSecrets.requireKey("AD_ID")
+            manifestPlaceholders["AUTH_SCHEME"] = "bemypet-dev"
+            manifestPlaceholders["AUTH_HOST"] = "oauth"
         }
 
         release {
@@ -112,6 +114,8 @@ android {
             manifestPlaceholders["crashlyticsCollectionEnabled"] = true
             manifestPlaceholders["MAPS_API_KEY"] = prodSecrets.requireKey("MAPS_API_KEY")
             manifestPlaceholders["AD_ID"] = prodSecrets.requireKey("AD_ID")
+            manifestPlaceholders["AUTH_SCHEME"] = "bemypet"
+            manifestPlaceholders["AUTH_HOST"] = "oauth"
         }
     }
 

@@ -10,8 +10,7 @@ class NotificationPayloadBuildTest {
 
     @Test
     fun `build upsert payload trims token and normalizes timezone`() {
-        val payload = NotificationServiceImpl.buildSubscriptionPayloadForTest(
-            userId = "u1",
+        val payload = NotificationServiceImpl.buildSubscriptionRpcPayloadForTest(
             fcmToken = " token ",
             pushOptIn = true,
             timezone = "",
@@ -24,8 +23,7 @@ class NotificationPayloadBuildTest {
 
     @Test
     fun `subscription payload should be serializable for postgrest`() {
-        val payload = NotificationServiceImpl.buildSubscriptionPayloadForTest(
-            userId = "u1",
+        val payload = NotificationServiceImpl.buildSubscriptionRpcPayloadForTest(
             fcmToken = "token",
             pushOptIn = true,
             timezone = "",

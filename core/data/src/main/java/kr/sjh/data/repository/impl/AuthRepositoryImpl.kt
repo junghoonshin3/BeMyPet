@@ -17,6 +17,13 @@ class AuthRepositoryImpl @Inject constructor(
         authService.signInWithGoogle(idToken, rawNonce, onSuccess, onFailure)
     }
 
+    override suspend fun signInWithKakao(
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        authService.signInWithKakao(onSuccess, onFailure)
+    }
+
     override suspend fun signOut() {
         authService.signOut()
     }

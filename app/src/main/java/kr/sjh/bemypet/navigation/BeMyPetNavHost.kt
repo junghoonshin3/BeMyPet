@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -21,6 +22,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kr.sjh.bemypet.BeMyPetAppState
 import kr.sjh.bemypet.canGoBack
@@ -45,8 +47,10 @@ import kr.sjh.feature.favourite.screen.FavouriteRoute
 import kr.sjh.feature.navigation.Block
 import kr.sjh.feature.report.ReportRoute
 import kr.sjh.feature.report.navigation.Report
+import kr.sjh.feature.signup.KakaoEmailVerificationRoute
 import kr.sjh.feature.signup.OnboardingRoute
 import kr.sjh.feature.signup.SignInRoute
+import kr.sjh.feature.signup.navigation.KakaoEmailVerificationNotice
 import kr.sjh.feature.signup.navigation.Onboarding
 import kr.sjh.feature.signup.navigation.SignUp
 import kr.sjh.setting.navigation.Setting
@@ -64,6 +68,7 @@ fun BeMyPetNavHost(
     onCompleteOnboarding: () -> Unit,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val accountManager = AccountManager(context)
 
     NavHost(
@@ -215,6 +220,7 @@ fun BeMyPetNavHost(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.primary)
                 .navigationBarsPadding(),
+                session = session,
                 accountManager = accountManager,
                 onSignInSuccess = {
                     if (hasSeenOnboarding) {
@@ -233,9 +239,32 @@ fun BeMyPetNavHost(
                         }
                     }
                 },
+                onRequireKakaoEmailVerification = { reason ->
+                    appState.navController.navigate(KakaoEmailVerificationNotice(reason = reason.name)) {
+                        launchSingleTop = true
+                    }
+                },
                 onBack = {
                     appState.navController.popBackStack()
                 })
+        }
+
+        composable<KakaoEmailVerificationNotice> {
+            val route = it.toRoute<KakaoEmailVerificationNotice>()
+            KakaoEmailVerificationRoute(
+                reason = route.reason,
+                onRetryLogin = {
+                    coroutineScope.launch {
+                        accountManager.signOut()
+                        val popped = appState.navController.popBackStack()
+                        if (!popped) {
+                            appState.navController.navigate(SignUp) {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                }
+            )
         }
 
         composable<Onboarding> {

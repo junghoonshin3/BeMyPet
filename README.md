@@ -21,7 +21,7 @@
 - 조건 기반 필터링, 이미지 확대/축소
 - 즐겨찾기(찜) 저장 및 관리
 - 댓글, 신고, 차단 기능
-- Google 로그인 기반 사용자 계정/프로필 관리
+- Google/Kakao 로그인 기반 사용자 계정/프로필 관리
 - 신규 공고 요약 푸시 알림 수신
   - 서버 배치(`new_notice_dispatch`)가 6시간 주기로 신규 공고를 감지
   - `push_opt_in=true` 구독 사용자 대상으로 요약 푸시 전송
@@ -79,7 +79,18 @@ cp secrets.prod.properties.example secrets.prod.properties
 
 워크트리(`git worktree`)를 사용할 경우, 위 비추적 파일들은 자동 복사되지 않으니 각 worktree에 별도로 준비해야 합니다.
 
-### 3) 빌드/테스트
+### 3) Kakao OAuth 설정 (Supabase)
+
+Kakao 로그인은 앱 키를 직접 쓰지 않고, Supabase Auth의 Kakao provider 설정을 사용합니다.  
+dev/prod는 반드시 각각의 Supabase 프로젝트에서 별도로 설정해야 합니다.
+
+- dev 프로젝트 Redirect URL: `bemypet-dev://oauth`
+- prod 프로젝트 Redirect URL: `bemypet://oauth`
+
+설정 위치:
+- Supabase Dashboard → Authentication → Providers → Kakao
+
+### 4) 빌드/테스트
 
 ```bash
 # 개발 빌드
