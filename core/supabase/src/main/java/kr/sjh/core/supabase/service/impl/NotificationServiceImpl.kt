@@ -7,13 +7,15 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kr.sjh.core.model.notification.UserInterestProfile
 import kr.sjh.core.supabase.service.NotificationService
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
 class NotificationServiceImpl @Inject constructor(
-    postgrest: Postgrest,
+    private val postgrest: Postgrest,
     private val auth: Auth,
 ) : NotificationService {
 
@@ -59,17 +61,24 @@ class NotificationServiceImpl @Inject constructor(
         pushOptIn: Boolean,
         timezone: String,
     ) {
-        val payload = buildSubscriptionPayloadForTest(
-            userId = userId,
+        val normalizedUserId = userId.trim()
+        if (normalizedUserId.isBlank()) return
+
+        val payload = buildSubscriptionRpcPayloadForTest(
             fcmToken = fcmToken,
             pushOptIn = pushOptIn,
             timezone = timezone,
         )
 
         withAuthRefreshRetry("upsertSubscription") {
-            subscriptionTable.upsert(payload) {
-                onConflict = "fcm_token"
-            }
+            postgrest.rpc(
+                function = UPSERT_SUBSCRIPTION_RPC,
+                parameters = buildJsonObject {
+                    put("p_fcm_token", payload.fcmToken)
+                    put("p_push_opt_in", payload.pushOptIn)
+                    put("p_timezone", payload.timezone)
+                }
+            )
         }
     }
 
@@ -122,6 +131,7 @@ class NotificationServiceImpl @Inject constructor(
 
     internal companion object {
         private const val TAG = "NotificationService"
+        private const val UPSERT_SUBSCRIPTION_RPC = "upsert_my_notification_subscription"
 
         internal fun shouldRetryAfterAuthRefreshForTest(
             statusCode: Int?,
@@ -139,14 +149,12 @@ class NotificationServiceImpl @Inject constructor(
             return merged.contains("jwt expired") || merged.contains("invalid jwt")
         }
 
-        fun buildSubscriptionPayloadForTest(
-            userId: String,
+        fun buildSubscriptionRpcPayloadForTest(
             fcmToken: String,
             pushOptIn: Boolean,
             timezone: String,
-        ): NotificationSubscriptionUpsertPayload {
-            return NotificationSubscriptionUpsertPayload(
-                userId = userId.trim(),
+        ): NotificationSubscriptionRpcPayload {
+            return NotificationSubscriptionRpcPayload(
                 fcmToken = fcmToken.trim(),
                 pushOptIn = pushOptIn,
                 timezone = timezone.trim().ifBlank { "Asia/Seoul" },
@@ -172,8 +180,7 @@ internal data class NotificationInterestPushUpsertPayload(
 )
 
 @Serializable
-internal data class NotificationSubscriptionUpsertPayload(
-    @SerialName("user_id") val userId: String,
+internal data class NotificationSubscriptionRpcPayload(
     @SerialName("fcm_token") val fcmToken: String,
     @SerialName("push_opt_in") val pushOptIn: Boolean,
     @SerialName("timezone") val timezone: String,
