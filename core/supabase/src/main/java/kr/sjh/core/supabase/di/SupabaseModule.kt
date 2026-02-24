@@ -32,6 +32,8 @@ object SupabaseModule {
             install(Postgrest)
             install(Auth) {
                 flowType = FlowType.PKCE
+                scheme = BuildConfig.SUPABASE_AUTH_SCHEME
+                host = BuildConfig.SUPABASE_AUTH_HOST
             }
             install(Realtime)
             install(Functions)

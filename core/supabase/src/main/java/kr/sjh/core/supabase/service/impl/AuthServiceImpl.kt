@@ -6,6 +6,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.Kakao
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -25,6 +26,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kr.sjh.core.model.Role
+import kr.sjh.core.model.KakaoEmailVerificationReason
 import kr.sjh.core.model.SessionState
 import kr.sjh.core.model.User
 import kr.sjh.core.model.UserProfile
@@ -62,6 +64,29 @@ class AuthServiceImpl @Inject constructor(
 
                 else -> {
                     Log.e(TAG, "Unexpected Google sign-in failure.", e)
+                    onFailure(e)
+                }
+            }
+        }
+    }
+
+    override suspend fun signInWithKakao(onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        try {
+            auth.signInWith(Kakao)
+            onSuccess()
+        } catch (e: Exception) {
+            when (e) {
+                is AuthRestException -> {
+                    val message = e.errorDescription
+                        .takeIf { it.isNotBlank() }
+                        ?: e.message
+                        ?: "카카오 로그인에 실패했어요."
+                    Log.e(TAG, "Supabase Kakao sign-in failed. message=$message", e)
+                    onFailure(Exception(message))
+                }
+
+                else -> {
+                    Log.e(TAG, "Unexpected Kakao sign-in failure.", e)
                     onFailure(e)
                 }
             }
@@ -306,6 +331,32 @@ class AuthServiceImpl @Inject constructor(
         return rest.statusCode == 401
     }
 
+    private fun resolveKakaoEmailVerificationReason(userInfo: UserInfo?): KakaoEmailVerificationReason? {
+        val safeUserInfo = userInfo ?: return null
+        if (!isKakaoProvider(safeUserInfo)) return null
+
+        val email = safeUserInfo.email?.trim().orEmpty()
+        return when {
+            email.isBlank() -> KakaoEmailVerificationReason.NO_EMAIL
+            safeUserInfo.emailConfirmedAt == null -> KakaoEmailVerificationReason.UNVERIFIED_EMAIL
+            else -> null
+        }
+    }
+
+    private fun isKakaoProvider(userInfo: UserInfo): Boolean {
+        val appProvider = userInfo.appMetadata
+            ?.get("provider")
+            ?.jsonPrimitive
+            ?.contentOrNull
+            ?.trim()
+            ?.lowercase()
+        if (appProvider == KAKAO_PROVIDER) return true
+
+        return userInfo.identities?.any { identity ->
+            identity.provider.trim().lowercase() == KAKAO_PROVIDER
+        } == true
+    }
+
     private fun restErrorSummary(throwable: Throwable?): String {
         val rest = throwable as? RestException
         return if (rest == null) {
@@ -352,6 +403,11 @@ class AuthServiceImpl @Inject constructor(
                 if (id.isBlank()) {
                     Log.w(TAG, "Authenticated session has blank user id.")
                     return@map SessionState.NoAuthenticated(isSignOut = false)
+                }
+
+                val kakaoEmailVerificationReason = resolveKakaoEmailVerificationReason(userInfo)
+                if (kakaoEmailVerificationReason != null) {
+                    return@map SessionState.EmailVerificationRequired(kakaoEmailVerificationReason)
                 }
                 val rawUserMetaData = userInfo?.userMetadata ?: JsonObject(emptyMap())
                 val profile = resolveProfileSafely(userInfo = userInfo, userId = id)
@@ -419,6 +475,7 @@ class AuthServiceImpl @Inject constructor(
         private const val DELETE_ACCOUNT_PROCESS_FAILED_MESSAGE = "회원탈퇴 처리 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
         private const val DELETE_ACCOUNT_FAILED_MESSAGE = "회원탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요."
         private const val SESSION_EXPIRED_MESSAGE = "로그인 상태가 만료되었어요. 다시 로그인 후 시도해 주세요."
+        private const val KAKAO_PROVIDER = "kakao"
 
         private fun mapDeleteAccountErrorMessage(errorMeta: DeleteAccountErrorMeta): String {
             val code = errorMeta.serverCode.orEmpty().uppercase()

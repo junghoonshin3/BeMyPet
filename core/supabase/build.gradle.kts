@@ -41,6 +41,8 @@ android {
                 "SUPABASE_URL",
                 "\"${devSecrets.requireKey("SUPABASE_URL")}\""
             )
+            buildConfigField("String", "SUPABASE_AUTH_SCHEME", "\"bemypet-dev\"")
+            buildConfigField("String", "SUPABASE_AUTH_HOST", "\"oauth\"")
         }
         release {
             buildConfigField(
@@ -53,6 +55,8 @@ android {
                 "SUPABASE_URL",
                 "\"${prodSecrets.requireKey("SUPABASE_URL")}\""
             )
+            buildConfigField("String", "SUPABASE_AUTH_SCHEME", "\"bemypet\"")
+            buildConfigField("String", "SUPABASE_AUTH_HOST", "\"oauth\"")
         }
     }
 }
