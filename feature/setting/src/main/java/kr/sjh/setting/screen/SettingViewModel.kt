@@ -42,6 +42,7 @@ data class ProfileUiState(
     val profile: UserProfile? = null,
     val selectedTheme: SettingType = SettingType.LIGHT_THEME,
     val pushOptIn: Boolean = true,
+    val isDeletingAccount: Boolean = false,
     val isDeleteUserDialogVisible: Boolean = false,
     val profileEditDraft: ProfileEditDraftState = ProfileEditDraftState(),
 )
@@ -189,7 +190,23 @@ class SettingViewModel @Inject constructor(
 
     fun deleteAccount(userId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         viewModelScope.launch {
-            authRepository.deleteAccount(userId, onSuccess, onFailure)
+            _profileUiState.update { it.copy(isDeletingAccount = true) }
+            runCatching {
+                authRepository.deleteAccount(
+                    userId = userId,
+                    onSuccess = {
+                        _profileUiState.update { it.copy(isDeletingAccount = false) }
+                        onSuccess()
+                    },
+                    onFailure = { exception ->
+                        _profileUiState.update { it.copy(isDeletingAccount = false) }
+                        onFailure(exception)
+                    }
+                )
+            }.onFailure { throwable ->
+                _profileUiState.update { it.copy(isDeletingAccount = false) }
+                onFailure(Exception(throwable))
+            }
         }
     }
 
