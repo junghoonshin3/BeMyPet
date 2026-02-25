@@ -10,10 +10,18 @@ import kr.sjh.data.repository.AuthRepository
 import javax.inject.Inject
 
 data class SignInUiState(
-    val isLoading: Boolean = false,
+    val loadingProvider: LoadingProvider? = null,
     val isSignedIn: Boolean = false,
     val errorMessage: String? = null
-)
+) {
+    val isLoading: Boolean
+        get() = loadingProvider != null
+}
+
+enum class LoadingProvider {
+    Google,
+    Kakao,
+}
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(private val authRepository: AuthRepository) :
@@ -40,32 +48,46 @@ class SignInViewModel @Inject constructor(private val authRepository: AuthReposi
     }
 
     private suspend fun signInWithGoogle(idToken: String, nonce: String) {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            loadingProvider = LoadingProvider.Google,
+            errorMessage = null
+        )
         authRepository.signInWithGoogle(idToken, nonce, {
             _uiState.value =
-                _uiState.value.copy(isSignedIn = true, isLoading = false, errorMessage = null)
+                _uiState.value.copy(
+                    isSignedIn = true,
+                    loadingProvider = null,
+                    errorMessage = null
+                )
         }, { e ->
             val safeMessage = mapSignInFailureMessage(e, provider = LoginProvider.Google)
             _uiState.value =
                 _uiState.value.copy(
                     isSignedIn = false,
-                    isLoading = false,
+                    loadingProvider = null,
                     errorMessage = safeMessage
                 )
         })
     }
 
     private suspend fun signInWithKakao() {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            loadingProvider = LoadingProvider.Kakao,
+            errorMessage = null
+        )
         authRepository.signInWithKakao(onSuccess = {
             _uiState.value =
-                _uiState.value.copy(isSignedIn = true, isLoading = false, errorMessage = null)
+                _uiState.value.copy(
+                    isSignedIn = true,
+                    loadingProvider = null,
+                    errorMessage = null
+                )
         }, onFailure = { e ->
             val safeMessage = mapSignInFailureMessage(e, provider = LoginProvider.Kakao)
             _uiState.value =
                 _uiState.value.copy(
                     isSignedIn = false,
-                    isLoading = false,
+                    loadingProvider = null,
                     errorMessage = safeMessage
                 )
         })

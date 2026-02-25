@@ -30,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -344,6 +345,7 @@ fun SettingScreen(
                             userId = session.user.id,
                             displayName = profile?.displayName ?: session.user.displayName,
                             avatarUrl = profile?.avatarUrl ?: session.user.avatarUrl,
+                            isDeletingAccount = uiState.isDeletingAccount,
                             isDeleteUserDialogVisible = uiState.isDeleteUserDialogVisible,
                             onEditClick = {
                                 val displayName = profile?.displayName ?: session.user.displayName
@@ -503,6 +505,7 @@ private fun ProfileAccountSection(
     userId: String,
     displayName: String,
     avatarUrl: String?,
+    isDeletingAccount: Boolean,
     isDeleteUserDialogVisible: Boolean,
     onEditClick: () -> Unit,
     onShowDeleteUserDialog: () -> Unit,
@@ -519,8 +522,8 @@ private fun ProfileAccountSection(
             dismissText = "아니오",
             confirmActionStyle = BeMyPetDialogActionStyle.Destructive,
             onConfirm = {
-                onDeleteAccount(userId)
                 onHideDeleteUserDialog()
+                onDeleteAccount(userId)
             },
             onDismiss = onHideDeleteUserDialog
         )
@@ -554,6 +557,7 @@ private fun ProfileAccountSection(
         SelectableListItem(
             title = "프로필 수정",
             selected = true,
+            enabled = !isDeletingAccount,
             showCheckIcon = false,
             onClick = onEditClick
         )
@@ -567,25 +571,48 @@ private fun ProfileAccountSection(
 
         SelectableListItem(
             title = "로그아웃",
+            enabled = !isDeletingAccount,
             showCheckIcon = false,
             onClick = onSignOut
         )
 
         Button(
             onClick = onShowDeleteUserDialog,
+            enabled = !isDeletingAccount,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCorner12,
             colors = ButtonDefaults.textButtonColors(
-                containerColor = MaterialTheme.colorScheme.error
+                containerColor = MaterialTheme.colorScheme.error,
+                disabledContainerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.45f),
+                disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = 0.85f)
             )
         ) {
-            Text(
-                text = "회원탈퇴",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onError
-            )
+            if (isDeletingAccount) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = "처리 중...",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                }
+            } else {
+                Text(
+                    text = "회원탈퇴",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onError
+                )
+            }
         }
     }
 }

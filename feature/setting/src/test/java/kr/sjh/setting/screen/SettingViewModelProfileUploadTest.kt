@@ -1,6 +1,7 @@
 package kr.sjh.setting.screen
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestDispatcher
@@ -111,10 +112,62 @@ class SettingViewModelProfileUploadTest {
         assertEquals("user-id", fakeNotificationRepository.lastUserId)
         assertEquals(true, fakeNotificationRepository.lastPushEnabled)
     }
+
+    @Test
+    fun deleteAccount_setsLoadingTrue_thenFalseWhenSuccessCallbackArrives() = runTest {
+        val fakeAuthRepository = FakeAuthRepository()
+        val viewModel = SettingViewModel(
+            fakeAuthRepository,
+            FakeNotificationRepository(),
+            FakeSettingRepository()
+        )
+
+        viewModel.deleteAccount(
+            userId = "user-id",
+            onSuccess = {},
+            onFailure = {}
+        )
+        fakeAuthRepository.awaitDeleteRequested()
+
+        assertTrue(viewModel.profileUiState.value.isDeletingAccount)
+
+        fakeAuthRepository.completeDeleteSuccess()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.profileUiState.value.isDeletingAccount)
+    }
+
+    @Test
+    fun deleteAccount_setsLoadingTrue_thenFalseWhenFailureCallbackArrives() = runTest {
+        val fakeAuthRepository = FakeAuthRepository()
+        val viewModel = SettingViewModel(
+            fakeAuthRepository,
+            FakeNotificationRepository(),
+            FakeSettingRepository()
+        )
+
+        viewModel.deleteAccount(
+            userId = "user-id",
+            onSuccess = {},
+            onFailure = {}
+        )
+        fakeAuthRepository.awaitDeleteRequested()
+
+        assertTrue(viewModel.profileUiState.value.isDeletingAccount)
+
+        fakeAuthRepository.completeDeleteFailure(IllegalStateException("fail"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.profileUiState.value.isDeletingAccount)
+    }
 }
 
 private class FakeAuthRepository : AuthRepository {
     val callOrder = mutableListOf<String>()
+    private var deleteSuccessCallback: (() -> Unit)? = null
+    private var deleteFailureCallback: ((Exception) -> Unit)? = null
+    private val deleteRequested = CompletableDeferred<Unit>()
+    private val deleteCompleted = CompletableDeferred<Unit>()
 
     override suspend fun signInWithGoogle(
         idToken: String,
@@ -136,7 +189,14 @@ private class FakeAuthRepository : AuthRepository {
         userId: String,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit,
-    ) = Unit
+    ) {
+        deleteSuccessCallback = onSuccess
+        deleteFailureCallback = onFailure
+        if (!deleteRequested.isCompleted) {
+            deleteRequested.complete(Unit)
+        }
+        deleteCompleted.await()
+    }
 
     override suspend fun getProfile(userId: String): UserProfile? = null
 
@@ -158,6 +218,24 @@ private class FakeAuthRepository : AuthRepository {
     ): String {
         callOrder += "upload"
         return "https://example.com/avatar.jpg"
+    }
+
+    fun completeDeleteSuccess() {
+        checkNotNull(deleteSuccessCallback).invoke()
+        if (!deleteCompleted.isCompleted) {
+            deleteCompleted.complete(Unit)
+        }
+    }
+
+    fun completeDeleteFailure(error: Exception) {
+        checkNotNull(deleteFailureCallback).invoke(error)
+        if (!deleteCompleted.isCompleted) {
+            deleteCompleted.complete(Unit)
+        }
+    }
+
+    suspend fun awaitDeleteRequested() {
+        deleteRequested.await()
     }
 }
 
