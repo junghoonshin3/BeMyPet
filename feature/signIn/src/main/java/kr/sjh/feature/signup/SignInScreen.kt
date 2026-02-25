@@ -276,6 +276,9 @@ private fun SocialLoginButtons(
     onGoogleSignInClick: () -> Unit,
     onKakaoClick: () -> Unit
 ) {
+    val isGoogleLoading = uiState.loadingProvider == LoadingProvider.Google
+    val isKakaoLoading = uiState.loadingProvider == LoadingProvider.Kakao
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -312,15 +315,29 @@ private fun SocialLoginButtons(
                     )
                 }
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Google로 계속하기",
-                    style = MaterialTheme.typography.labelLarge
-                )
+                if (isGoogleLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "처리 중...",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                } else {
+                    Text(
+                        text = "Google로 계속하기",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
 
         Button(
             onClick = onKakaoClick,
+            enabled = !uiState.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
@@ -328,7 +345,9 @@ private fun SocialLoginButtons(
             shape = RoundedCorner12,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
             Row(
@@ -342,32 +361,23 @@ private fun SocialLoginButtons(
                     tint = Color.Unspecified
                 )
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "카카오로 계속하기",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-
-        if (uiState.isLoading) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "로그인 진행 중...",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isKakaoLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "처리 중...",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                } else {
+                    Text(
+                        text = "카카오로 계속하기",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
     }
